@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOS 26 悬浮液态玻璃风导航栏背景。
+  用单一 shape（而非 layer-list）以便系统据此生成圆角阴影轮廓。
+  - 顶部稍亮、底部更深：模拟玻璃 specular 高光与体积感
+  - 半透明：让背后内容若隐若现，呈玻璃质感
+  - 1dp 白色细描边：玻璃边缘反光
+  - 32dp 圆角：会被系统裁剪到高度的一半，形成完整胶囊
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="@color/ios_background"
+        android:endColor="@color/ios_background"
+        android:type="linear" />
+    <corners android:radius="32dp" />
+    <stroke
+        android:width="1dp"
+        android:color="#FFFFFF" />
+</shape>

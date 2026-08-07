@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mainFragment"
+        android:icon="@drawable/ic_home"
+        android:title="首页" />
+    <item
+        android:id="@+id/wheelFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="转盘" />
+    <item
+        android:id="@+id/randomFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="随机数" />
+</menu>

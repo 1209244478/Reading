@@ -1,0 +1,63 @@
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        // 阿里云镜像仓库
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+
+        // 华为云镜像仓库
+        maven { url 'https://mirrors.huaweicloud.com/repository/maven' }
+
+        // 腾讯云镜像仓库
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public' }
+
+        // 清华镜像仓库
+        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/gradle/android-studio-plugin-gradle' }
+
+        maven { url "https://jitpack.io" }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        // 阿里云镜像仓库
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+
+        // 华为云镜像仓库
+        maven { url 'https://mirrors.huaweicloud.com/repository/maven' }
+
+        // 腾讯云镜像仓库
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public' }
+
+        // 清华镜像仓库
+        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/gradle/android-studio-plugin-gradle' }
+
+        maven { url "https://jitpack.io" }
+        google()
+        mavenCentral()
+
+        // 4thline 仓库：Cling DLNA/UPnP 库（仅查询 cling/seamless 相关组）
+        maven {
+            url 'http://4thline.org/m2'
+            allowInsecureProtocol = true
+            content {
+                includeGroup 'org.fourthline.cling'
+                includeGroup 'org.seamless'
+            }
+        }
+    }
+}
+
+rootProject.name = "Reading"
+include ':app'

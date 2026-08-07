@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M16,2l4,5h-8z"/>
+    <!-- 内圈 -->
+    <path
+        android:fillColor="@color/apple_red"
+        android:pathData="M16,6c5.52,0 10,4.48 10,10s-4.48,10 -10,10 -10,-4.48 -10,-10S10.48,6 16,6z"/>
+    <!-- 指针箭头 -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M16,13a3,3 0 1,1 0,6a3,3 0 1,1 0,-6"/>
+</vector>

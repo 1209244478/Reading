@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 夜间模式 iOS 色板覆盖 -->
+    <color name="ios_text_primary">#F5F5F7</color>
+    <color name="ios_text_secondary">#98989D</color>
+    <color name="ios_text_placeholder">#48484A</color>
+    <color name="ios_background">#1C1C1E</color>
+    <color name="ios_border">#38383A</color>
+    <color name="ios_click_ripple">#2C2C2E</color>
+    <color name="ios_blue">#0A84FF</color>
+    <color name="ios_button_background">#0A84FF</color>
+    <color name="ios_card_background">#2C2C2E</color>
+    <color name="color_wheel_list">#2C2C2E</color>
+
+    <!-- 通用色板夜间覆盖 -->
+    <color name="color_primary">#2C2C2E</color>
+    <color name="text_primary">#F5F5F7</color>
+    <color name="text_secondary">#98989D</color>
+    <color name="border_light">#38383A</color>
+</resources>
+

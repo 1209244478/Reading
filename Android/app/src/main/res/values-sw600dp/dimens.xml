@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="wheel_width">350dp</dimen>
+    <dimen name="wheel_height">350dp</dimen>
+
+</resources>

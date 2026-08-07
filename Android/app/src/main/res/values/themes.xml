@@ -1,0 +1,153 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Reading" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand color. -->
+        <!-- 移除 ActionBar -->
+
+        <item name="colorPrimary">@color/ios_blue</item>
+        <item name="colorPrimaryVariant">@color/ios_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Background color. -->
+        <item name="android:colorBackground">@color/black</item>
+        <item name="colorSurface">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/gray_900</item>
+        <!-- Customize your theme here. -->
+        <!-- 移除 ActionBar -->
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+
+        <!--<item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>-->
+    </style>
+
+    <style name="Theme.ComicReader.FullScreen" parent="Theme.Reading">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- 文件选择器特定样式 -->
+    <style name="FileSelectorTheme" parent="Theme.Reading">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!-- 阅读器 Toolbar 覆盖主题：强制控件为白色，适配透明背景 + 渐变遮罩 -->
+    <style name="ThemeOverlay.ReaderToolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:textColorSecondary">@color/white</item>
+    </style>
+
+    <!-- 阅读器弹出菜单主题：浅色背景 + 深色文字，保证菜单可读 -->
+    <style name="ThemeOverlay.ReaderPopup" parent="ThemeOverlay.MaterialComponents.Light">
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:textColor">@color/ios_text_primary</item>
+    </style>
+
+    <!-- 列表项样式 -->
+    <style name="FileItemStyle">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- 选中状态 -->
+    <style name="SelectedItemStyle">
+        <item name="android:background">#E3F2FD</item>
+        <item name="android:backgroundTint">#E3F2FD</item>
+    </style>
+
+    <!-- 图标背景样式 -->
+    <style name="IconContainerStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+    </style>
+
+    <!-- 文件夹图标背景 -->
+    <style name="FolderIconBackground">
+        <item name="android:background">#FFF8E1</item>
+        <item name="android:tint">#FFC107</item>
+    </style>
+
+    <!-- 图片文件图标背景 -->
+    <style name="ImageIconBackground">
+        <item name="android:background">#E8F5E9</item>
+        <item name="android:tint">#4CAF50</item>
+    </style>
+
+    <!-- 文档文件图标背景 -->
+    <style name="DocumentIconBackground">
+        <item name="android:background">#E3F2FD</item>
+        <item name="android:tint">#2196F3</item>
+    </style>
+
+    <!-- 选择指示器样式 -->
+    <style name="SelectIndicatorStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="strokeColor">#BDBDBD</item>
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+    </style>
+
+    <!-- 选中时的指示器样式 -->
+    <style name="SelectedIndicatorStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">#2196F3</item>
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+    </style>
+
+    <!-- 对话框样式 -->
+    <style name="FolderDialogStyle" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="dialogCornerRadius">8dp</item>
+        <item name="colorPrimary">#2196F3</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+    </style>
+
+    <!-- 路径Chip样式 -->
+    <style name="PathChipStyle" parent="Widget.MaterialComponents.Chip.Action">
+        <item name="chipBackgroundColor">#E3F2FD</item>
+        <item name="chipCornerRadius">16dp</item>
+        <item name="chipMinHeight">32dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="chipIconVisible">false</item>
+    </style>
+
+    <!-- 激活的路径Chip样式 -->
+    <style name="ActivePathChipStyle" parent="Widget.MaterialComponents.Chip.Action">
+        <item name="chipBackgroundColor">#1976D2</item>
+        <item name="chipCornerRadius">16dp</item>
+        <item name="chipMinHeight">32dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="chipIconVisible">false</item>
+    </style>
+
+    <!-- Chip选择器样式 -->
+    <style name="ChipStyle" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="android:checkable">true</item>
+        <item name="chipBackgroundColor">@color/chip_bg_selector</item>
+        <item name="itemTextColor">@color/chip_text_selector</item>
+        <item name="chipCornerRadius">20dp</item>
+    </style>
+
+    <!-- 底部导航选中状态 -->
+    <style name="BottomNavigationItem" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemIconTint">@color/bottom_nav_item_selector</item>
+        <item name="itemTextColor">@color/bottom_nav_item_selector</item>
+    </style>
+
+</resources>

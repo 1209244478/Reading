@@ -1,0 +1,135 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.wrz.reading'
+    compileSdk {
+        version = release(36)
+    }
+
+    defaultConfig {
+        applicationId "com.wrz.reading"
+        minSdk 27
+        targetSdk 36
+        versionCode 2026080423
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    packaging {
+        resources {
+            // Cling 的 cling-core 与 cling-support 均携带 beans.xml，打包时需去重
+            excludes += ['META-INF/beans.xml']
+        }
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+    implementation libs.firebase.crashlytics.buildtools
+    implementation libs.recyclerview
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+//    implementation 'com.google.android.flexbox:flexbox:3.0.0'
+    implementation "io.github.cymchad:BaseRecyclerViewAdapterHelper:3.0.14"
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'com.google.android.flexbox:flexbox:3.0.0'
+
+    implementation 'androidx.room:room-runtime:2.5.2'
+    annotationProcessor 'androidx.room:room-compiler:2.5.2'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+
+    // 添加7z压缩库
+    implementation 'org.tukaani:xz:1.9'
+    implementation 'com.github.junrar:junrar:7.5.4'
+
+    // 添加异步任务库
+    implementation 'androidx.concurrent:concurrent-futures:1.1.0'
+    implementation 'com.google.guava:guava:31.1-android'
+
+    // 添加PDF支持
+//    implementation 'com.github.barteksc:android-pdf-viewer:2.8.2'
+
+    // webkit
+    implementation 'androidx.webkit:webkit:1.6.1'
+
+    // 解压EPUB
+    implementation 'org.apache.commons:commons-compress:1.21'
+
+
+    // 定义 BOM（依赖清单）以统一管理版本[citation:6]
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.11.0"))
+    // 引入核心库（无需指定版本）
+    implementation("com.squareup.okhttp3:okhttp")
+    // （可选）引入日志拦截器
+    implementation("com.squareup.okhttp3:logging-interceptor")
+
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // PhotoView：图片缩放查看（双指/双击缩放）
+    implementation 'com.github.chrisbanes:photoview:2.3.0'
+
+    // ExoPlayer：应用内视频播放
+    implementation 'androidx.media3:media3-exoplayer:1.3.1'
+    implementation 'androidx.media3:media3-ui:1.3.1'
+
+    // MediaRouter：视频投屏（系统路由选择器，支持无线显示/蓝牙等）
+    implementation 'androidx.mediarouter:mediarouter:1.7.0'
+
+    // Cling DLNA/UPnP：投屏到智能电视（小米电视/B站电视版等）
+    implementation 'org.fourthline.cling:cling-core:2.1.2'
+    implementation('org.fourthline.cling:cling-support:2.1.2') {
+        // 排除桌面端 Swing 依赖，避免 Android dexing 失败
+        exclude group: 'org.seamless', module: 'seamless-swing'
+    }
+    // Jetty 8：Cling 的 AndroidUpnpServiceConfiguration 默认用 JettyServletContainer
+    // 作为 StreamServer（非 optional 依赖在 Gradle 中不传递，需显式引入，否则运行时 NoClassDefFoundError）
+    implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
+    implementation 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
+    implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+    // javax.servlet API：jetty-servlet 依赖其为 provided 作用域，Android 不自带，需显式引入
+    implementation 'javax.servlet:javax.servlet-api:3.1.0'
+    // CDI API：Cling 部分类带 @Alternative 等注解，继承/覆盖时编译期需要该类，运行时不用（compileOnly）
+    compileOnly 'javax.enterprise:cdi-api:1.2'
+    // NanoHTTPD：投屏时本地提供视频文件给电视拉取
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+    api fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation 'com.github.li-xiaojun:XPopup:2.9.4'
+    implementation 'androidx.preference:preference:1.2.1'
+
+
+    /*implementation 'com.github.dhaval2404:colorpicker:2.0'
+
+    implementation 'com.jaredrummler:colorpicker:1.1.0'*/
+
+}

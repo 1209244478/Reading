@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首页/末页合并项：左右各一半，中间分隔线 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageButton
+        android:id="@+id/btn_go_first_page"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="前往首页"
+        android:padding="10dp"
+        android:src="@drawable/ic_first_page"
+        app:tint="@color/white"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+    <View
+        android:layout_width="0.5dp"
+        android:layout_height="20dp"
+        android:background="@color/white"
+        android:alpha="0.3" />
+
+    <ImageButton
+        android:id="@+id/btn_go_last_page"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="前往末页"
+        android:padding="10dp"
+        android:src="@drawable/ic_last_page"
+        app:tint="@color/white"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+</LinearLayout>

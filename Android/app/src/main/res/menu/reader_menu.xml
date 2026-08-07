@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 首页/末页合并项：Toolbar 上左右各一半 -->
+    <item
+        android:id="@+id/action_page_jump"
+        android:title="跳转页面"
+        app:actionLayout="@layout/menu_item_page_jump"
+        app:showAsAction="always" />
+
+    <!-- 排序子菜单：使用 group 实现单选选中状态 -->
+    <item
+        android:id="@+id/action_sort_by_name"
+        android:title="按名称排序"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/action_sort_name_asc"
+                    android:title="升序"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_name_desc"
+                    android:title="降序"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_sort_by_modified_time"
+        android:title="按修改时间排序"
+        app:showAsAction="never" />
+
+    <!-- 翻页方向：合并为一个切换项，标题动态显示当前方向 -->
+    <item
+        android:id="@+id/action_toggle_scroll_orientation"
+        android:title="切换为上下滑动翻页"
+        app:showAsAction="never" />
+
+    <!-- 缩放模式：开启后可双指/双击缩放图片，单击不再触发翻页 -->
+    <item
+        android:id="@+id/action_toggle_zoom"
+        android:title="缩放模式"
+        android:checkable="true"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/set_cover_image"
+        android:title="设为封面"
+        app:showAsAction="never" />
+
+    <!-- 自动播放二级菜单 -->
+    <item
+        android:id="@+id/auto_play"
+        android:title="自动播放"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/action_auto_play_start"
+                    android:title="开启"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_auto_play_stop"
+                    android:title="关闭"
+                    app:showAsAction="never" />
+            </group>
+            <item
+                android:id="@+id/action_auto_play_interval"
+                android:title="播放间隔"
+                app:showAsAction="never">
+                <menu>
+                    <group android:checkableBehavior="single">
+                        <item
+                            android:id="@+id/action_interval_1s"
+                            android:title="1 秒"
+                            app:showAsAction="never" />
+                        <item
+                            android:id="@+id/action_interval_3s"
+                            android:title="3 秒"
+                            app:showAsAction="never" />
+                        <item
+                            android:id="@+id/action_interval_5s"
+                            android:title="5 秒"
+                            app:showAsAction="never" />
+                        <item
+                            android:id="@+id/action_interval_10s"
+                            android:title="10 秒"
+                            app:showAsAction="never" />
+                    </group>
+                </menu>
+            </item>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_exit"
+        android:title="退出阅读"
+        app:showAsAction="never" />
+</menu>

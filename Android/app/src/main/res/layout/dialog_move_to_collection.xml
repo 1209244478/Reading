@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_rounded"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- 标题区 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_move_folder"
+            app:tint="@color/ios_blue" />
+
+        <TextView
+            android:id="@+id/move_dialog_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="移动到"
+            android:textColor="@color/ios_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- 副标题 -->
+    <TextView
+        android:id="@+id/move_dialog_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="选择目标集合"
+        android:textColor="@color/ios_text_secondary"
+        android:textSize="13sp" />
+
+    <!-- 集合列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/move_target_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:clipToPadding="false"
+        android:maxHeight="320dp"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never" />
+
+    <!-- 创建新集合按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/move_btn_create"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="20dp"
+        android:text="+ 创建新集合"
+        android:textColor="@color/ios_blue"
+        app:cornerRadius="12dp"
+        app:icon="@drawable/ic_folder"
+        app:iconGravity="textStart"
+        app:iconTint="@color/ios_blue"
+        app:strokeColor="@color/ios_blue"
+        app:strokeWidth="1dp" />
+
+    <!-- 取消按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/move_btn_cancel"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="10dp"
+        android:text="取消"
+        android:textColor="@color/ios_text_secondary"
+        app:cornerRadius="12dp"
+        app:strokeColor="@color/ios_border"
+        app:strokeWidth="1dp" />
+
+</LinearLayout>

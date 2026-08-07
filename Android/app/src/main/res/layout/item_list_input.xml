@@ -1,0 +1,31 @@
+<com.google.android.material.textfield.TextInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/collection_name_layout"
+    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="20dp"
+    android:background="@drawable/bg_dialog_rounded"
+    android:hint="名称"
+    app:boxCornerRadiusBottomEnd="12dp"
+    app:boxCornerRadiusBottomStart="12dp"
+    app:boxCornerRadiusTopEnd="12dp"
+    app:boxCornerRadiusTopStart="12dp"
+    app:boxStrokeColor="@color/ios_border"
+    app:boxStrokeWidth="1dp"
+    app:endIconMode="clear_text"
+    app:endIconTint="@color/ios_text_secondary"
+    app:startIconDrawable="@drawable/ic_edit"
+    app:startIconTint="@color/ios_text_secondary">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/collection_name_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textColor="@color/ios_text_primary"
+        android:textSize="15sp" />
+
+</com.google.android.material.textfield.TextInputLayout>

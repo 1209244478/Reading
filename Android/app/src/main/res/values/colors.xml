@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 基础颜色 -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_50">#FAFAFA</color>
+    <color name="gray_100">#F5F5F5</color>
+    <color name="gray_200">#EEEEEE</color>
+    <color name="gray_300">#E0E0E0</color>
+    <color name="gray_400">#BDBDBD</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_600">#757575</color>
+    <color name="gray_700">#616161</color>
+    <color name="gray_800">#424242</color>
+    <color name="gray_900">#212121</color>
+
+    <!-- 小米风格颜色 -->
+    <color name="primary_color">#FF6700</color>
+    <color name="primary_dark">#E65C00</color>
+    <color name="primary_light">#FF8F40</color>
+    <color name="secondary_color">#2196F3</color>
+
+    <!-- 背景颜色 -->
+    <color name="background_light">#F5F5F5</color>
+    <color name="background_dark">#121212</color>
+
+    <!-- 文字颜色 -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#BDBDBD</color>
+
+    <!-- 强调颜色 -->
+    <color name="accent_red">#F44336</color>
+    <color name="accent_green">#4CAF50</color>
+    <color name="accent_blue">#2196F3</color>
+    <color name="accent_yellow">#FFC107</color>
+
+    <!-- 主题颜色 -->
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
+    <color name="colorAccent">#4CAF50</color>
+
+    <!-- 背景色 -->
+    <color name="backgroundLight">#F5F5F5</color>
+    <color name="backgroundWhite">#FFFFFF</color>
+
+    <!-- 文件图标背景色 -->
+    <color name="folderIconBg">#FFF8E1</color>
+    <color name="folderIconTint">#FFC107</color>
+    <color name="imageIconBg">#E8F5E9</color>
+    <color name="imageIconTint">#4CAF50</color>
+    <color name="documentIconBg">#E3F2FD</color>
+    <color name="documentIconTint">#2196F3</color>
+
+    <!-- 文本颜色 -->
+    <color name="textPrimary">#333333</color>
+    <color name="textSecondary">#757575</color>
+    <color name="textLight">#9E9E9E</color>
+
+    <!-- 选中状态 -->
+    <color name="selectedItemBg">#E3F2FD</color>
+    <color name="selectedIndicatorBg">#2196F3</color>
+
+    <!-- 边框颜色 -->
+    <color name="borderLight">#F0F0F0</color>
+    <color name="borderMedium">#BDBDBD</color>
+
+    <!-- 按钮颜色 -->
+    <color name="buttonPrimary">#2196F3</color>
+    <color name="buttonPrimaryDisabled">#BBDEFB</color>
+    <color name="buttonCancel">#F5F5F5</color>
+
+    <!-- 路径Chip颜色 -->
+    <color name="pathChipBg">#E3F2FD</color>
+    <color name="pathChipText">#1976D2</color>
+    <color name="pathChipActiveBg">#1976D2</color>
+    <color name="pathChipActiveText">#FFFFFF</color>
+
+    <color name="secondary">#ff6d00</color>
+
+    <!-- 背景色 -->
+    <color name="background">#121212</color>
+    <color name="surface">#1e1e1e</color>
+    <color name="search_color">#1e1e1e</color>
+
+    <!-- 文本色 -->
+
+    <!-- 分割线 -->
+    <color name="divider">#333333</color>
+
+    <!-- 进度条 -->
+    <color name="progress_track">#333333</color>
+
+    <!-- Chip颜色 -->
+    <color name="chip_bg_default">#1e1e1e</color>
+    <color name="chip_bg_selected">#ff6d00</color>
+    <color name="chip_text_default">#b0b0b0</color>
+    <color name="chip_text_selected">#ffffff</color>
+
+    <!-- 封面图标 -->
+    <color name="cover_icon_tint">#b0b0b0</color>
+
+    <!-- 底部导航 -->
+    <color name="bottom_nav_default">#b0b0b0</color>
+    <color name="bottom_nav_selected">#45B7D1</color>
+
+    <color name="reader_menu_bg_color">#191919</color>
+
+
+    <!--通用背景色-->
+    <color name="common_color">@color/white</color>
+    <!--通用触摸背景色-->
+    <color name="common_touch_bg">#E3E3E3</color>
+
+    <color name="light_black">#515151</color>
+
+    <!--通用分割线细-->
+    <color name="common_divider_narrow">#E3E3E3</color>
+
+    <color name="light_red">#EC4A48</color>
+
+    <!-- 红色系 -->
+    <color name="apple_red">#FF6B6B</color>
+    <color name="apple_light_red">#FFA07A</color>
+    <color name="apple_dark_red">#D64545</color>
+    <color name="apple_tomato">#FF6347</color>
+
+    <!-- 蓝色系 -->
+    <color name="apple_blue">#4ECDC4</color>
+    <color name="apple_light_blue">#45B7D1</color>
+    <color name="apple_dark_blue">#2E86AB</color>
+    <color name="apple_sky">#85C1E9</color>
+    <color name="apple_navy">#1E3A5F</color>
+    <color name="apple_azure">#007FFF</color>
+    <color name="apple_cerulean">#007BA7</color>
+
+    <!-- 绿色系 -->
+    <color name="apple_green">#96CEB4</color>
+    <color name="apple_light_green">#77DD77</color>
+    <color name="apple_dark_green">#2E8B57</color>
+    <color name="apple_mint">#98E7D3</color>
+    <color name="apple_emerald">#50C878</color>
+    <color name="apple_forest">#228B22</color>
+    <color name="apple_lime">#32CD32</color>
+
+    <!-- 黄色系 -->
+    <color name="apple_yellow">#FFEAA7</color>
+    <color name="apple_light_yellow">#FFFFE0</color>
+    <color name="apple_gold">#F7DC6F</color>
+    <color name="apple_banana">#F1C40F</color>
+    <color name="apple_lemon">#FDEE87</color>
+    <color name="apple_sand">#F4D03F</color>
+
+    <!-- 紫色系 -->
+    <color name="apple_purple">#DDA0DD</color>
+    <color name="apple_light_purple">#D8BFD8</color>
+    <color name="apple_dark_purple">#8B008B</color>
+    <color name="apple_lavender">#BB8FCE</color>
+    <color name="apple_violet">#8A2BE2</color>
+    <color name="apple_indigo">#4B0082</color>
+    <color name="apple_lilac">#C8A2C8</color>
+
+    <!-- 橙色系 -->
+    <color name="apple_orange">#FFB347</color>
+    <color name="apple_light_orange">#FFCC99</color>
+    <color name="apple_dark_orange">#FF8C00</color>
+    <color name="apple_tangerine">#FF8C42</color>
+    <color name="apple_peach">#FFDAB9</color>
+    <color name="apple_coral">#FF7F50</color>
+
+    <!-- 粉色系 -->
+    <color name="apple_pink">#FF69B4</color>
+    <color name="apple_light_pink">#FFB6C1</color>
+    <color name="apple_dark_pink">#FF1493</color>
+    <color name="apple_rose">#FF007F</color>
+    <color name="apple_magenta">#FF00FF</color>
+
+    <!-- 棕色系 -->
+    <color name="apple_brown">#A52A2A</color>
+    <color name="apple_light_brown">#CD853F</color>
+    <color name="apple_dark_brown">#654321</color>
+    <color name="apple_tan">#D2B48C</color>
+    <color name="apple_sienna">#A0522D</color>
+    <color name="apple_coffee">#6F4E37</color>
+
+    <!-- 灰色系（中性色） -->
+    <color name="apple_gray">#808080</color>
+    <color name="apple_light_gray">#D3D3D3</color>
+    <color name="apple_dark_gray">#404040</color>
+    <color name="apple_silver">#C0C0C0</color>
+    <color name="apple_charcoal">#36454F</color>
+    <color name="apple_smoke">#708090</color>
+    <color name="apple_graphite">#2F4F4F</color>
+
+    <!-- 其他苹果风色系 -->
+    <color name="apple_teal">#008080</color>
+    <color name="apple_aqua">#00FFFF</color>
+    <color name="apple_cyan">#00BFFF</color>
+    <color name="apple_jade">#00A86B</color>
+    <color name="apple_olive">#808000</color>
+    <color name="apple_maroon">#800000</color>
+    <color name="apple_burgundy">#800020</color>
+
+    <!-- 柔和的过渡色（适合背景/卡片） -->
+    <color name="apple_cream">#FFFDD0</color>
+    <color name="apple_beige">#F5F5DC</color>
+    <color name="apple_ivory">#FFFFF0</color>
+    <color name="apple_alabaster">#FAEBD7</color>
+    <color name="apple_cotton">#F8F4E6</color>
+    <color name="apple_eggshell">#F0EAD6</color>
+
+    <!-- 深色系（适合文字/图标） -->
+    <color name="apple_black">#000000</color>
+    <color name="apple_ink">#1C1C1C</color>
+    <color name="apple_charcoal_dark">#2C3E50</color>
+    <color name="apple_midnight">#191970</color>
+
+    <!-- 半透明色（用于遮罩/叠加） -->
+    <color name="apple_transparent">#00000000</color>
+    <color name="apple_white_50">#80FFFFFF</color>
+    <color name="apple_black_50">#80000000</color>
+    <color name="apple_black_20">#33000000</color>
+    <color name="apple_black_80">#CC000000</color>
+
+    <color name="color_primary">#f5f5f7</color>
+    <color name="border_light">#e0e0e0</color>
+    <color name="shadow_light">#1a000000</color>
+    <color name="color_null">#00000000</color>
+
+    <color name="ios_text_primary">#1D1D1F</color>
+    <color name="ios_background">#F5F7FA</color>
+    <color name="ios_button_background">#0071E3</color>
+    <color name="ios_click_ripple">#E5E5EA</color>
+    <color name="color_wheel_list">#FFFFFF</color>
+    <color name="ios_blue">#0071E3</color>
+    <color name="ios_border">#E5E5EA</color>
+    <color name="ios_card_background">#FFFFFF</color>
+    <color name="ios_text_secondary">#86868B</color>
+    <color name="ios_text_placeholder">#C7C7CC</color>
+
+    <color name="color_option_item_divider">#E5E5EA</color>
+
+    <color name="_xpopup_list_divider">#EEEEEE</color>
+    <color name="_xpopup_title_color">#444444</color>
+    <color name="_xpopup_content_color">#333333</color>
+    <color name="_xpopup_white_color">#f1f1f1</color>
+    <color name="_xpopup_dark_color">#232323</color>
+    <color name="_xpopup_light_color">#FFFFFF</color>
+    <color name="_xpopup_list_dark_divider">#444444</color>
+
+</resources>

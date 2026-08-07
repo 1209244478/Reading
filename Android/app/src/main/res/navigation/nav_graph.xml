@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.wrz.reading.ui.read.fragment.MainFragment"
+        android:label="MainFragment"
+        tools:layout="@layout/activity_main">
+        <action
+            android:id="@+id/action_main_to_collectionDetail"
+            app:destination="@id/collectionDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/collectionDetailFragment"
+        android:name="com.wrz.reading.ui.read.fragment.CollectionDetailFragment"
+        android:label="CollectionDetailFragment"
+        tools:layout="@layout/fragment_collection_detail" />
+
+    <fragment
+        android:id="@+id/wheelFragment"
+        android:name="com.wrz.reading.ui.wheel.fragment.WheelFragment"
+        android:label="WheelFragment"
+        tools:layout="@layout/fragment_setting" />
+
+    <fragment
+        android:id="@+id/randomFragment"
+        android:name="com.wrz.reading.ui.random.fragment.RandomFragment"
+        android:label="RandomFragment"
+        tools:layout="@layout/fragment_setting" />
+
+</navigation>

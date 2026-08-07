@@ -1,0 +1,503 @@
+<resources>
+    <string name="app_name">妙妙小工具</string>
+
+    <string name="not_comic_yet">书架空空如也</string>
+    <string name="empty_state_hint">点击右下角按钮，导入漫画目录或压缩包</string>
+    <string name="refresh">刷新</string>
+
+    <!-- 文件选择器标题 -->
+    <string name="file_selector_title">选择目录</string>
+
+    <!-- 路径显示 -->
+    <string name="path_internal_storage">内部存储</string>
+    <string name="path_pictures">Pictures</string>
+    <string name="path_screenshots">Screenshots</string>
+
+    <!-- 按钮文本 -->
+    <string name="btn_cancel">取消</string>
+    <string name="btn_confirm_select">选择此目录</string>
+    <string name="btn_confirm">确认</string>
+    <string name="btn_create">创建</string>
+    <string name="btn_go_back">返回上级</string>
+    <string name="select_all">全选</string>
+    <string name="select_nothing">全不选</string>
+
+    <!-- 对话框通用文案 -->
+    <string name="name_should_not_empty">名称不能为空</string>
+    <string name="jump_to_page">跳转到指定页码</string>
+
+    <!-- 搜索提示 -->
+    <string name="hint_search">搜索文件夹...</string>
+
+    <!-- 文件夹名称输入提示 -->
+    <string name="hint_folder_name">输入文件夹名称</string>
+
+    <!-- 对话框标题 -->
+    <string name="dialog_new_folder_title">新建文件夹</string>
+
+    <!-- 选择信息 -->
+    <string name="selected_count">已选择: 0 项</string>
+
+    <!-- 空状态文本 -->
+    <string name="empty_folder">该文件夹为空</string>
+    <string name="no_search_results">没有找到匹配的文件或文件夹</string>
+
+    <!-- 内容描述 -->
+    <string name="cd_back_button">返回</string>
+    <string name="cd_home_button">主页</string>
+    <string name="cd_more_options">更多选项</string>
+    <string name="cd_create_folder">新建文件夹</string>
+    <string name="cd_sort">排序</string>
+    <string name="cd_view_mode">视图模式</string>
+    <string name="cd_search">搜索</string>
+    <string name="cd_select_indicator">选择指示器</string>
+
+    <!-- 文件类型 -->
+    <string name="type_folder">文件夹</string>
+    <string name="type_image">图片</string>
+    <string name="type_document">文档</string>
+
+    <!-- 项目数量格式 -->
+    <string name="items_count">%d 个项目</string>
+
+    <!-- 时间格式 -->
+    <string name="time_just_now">刚刚创建</string>
+    <string name="time_today">今天</string>
+    <string name="time_yesterday">昨天</string>
+
+
+    <string name="my_library">我的漫画库</string>
+    <string name="search">搜索</string>
+    <string name="more">更多</string>
+    <string name="search_hint">搜索本地漫画...</string>
+    <string name="search_hint_text">搜索栏已展开，再次点击图标可收起</string>
+    <string name="notification_text">本地漫画已同步 - 共有12本漫画</string>
+
+    <!-- 分类 -->
+    <string name="category_all">全部</string>
+    <string name="category_completed">已完结</string>
+    <string name="category_ongoing">连载中</string>
+    <string name="category_chinese">国漫</string>
+    <string name="category_japanese">日漫</string>
+    <string name="category_korean">韩漫</string>
+    <string name="category_unread">未读</string>
+    <string name="category_favorites">收藏</string>
+
+    <!-- 空状态 -->
+    <string name="empty_title">没有找到漫画</string>
+    <string name="empty_message">尝试调整搜索条件或导入新漫画</string>
+
+    <!-- 漫画信息 -->
+    <string name="comic_cover">漫画封面</string>
+    <string name="sample_title">斗蛐蛐</string>
+    <string name="sample_chapter">第328话 新的征程</string>
+
+    <!-- 底部导航 -->
+    <string name="nav_home">首页</string>
+    <string name="nav_library">书架</string>
+    <string name="nav_discover">发现</string>
+    <string name="nav_profile">我的</string>
+
+    <!-- menu -->
+    <string name="sort_by_name">按名称排序</string>
+    <string name="sort_by_last_read_time">按上次阅读时间排序</string>
+    <string name="into_select_mode">编辑</string>
+    <string name="change_sort">改变\n排列</string>
+    <string name="exit">退出</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="title_wheel">今晚吃什么？</string>
+    <string name="hint_wheel">点击开始旋转</string>
+    <string name="hint_spinning">正在旋转…</string>
+    <string name="btn_start">开始旋转</string>
+    <string name="btn_edit">编辑选项</string>
+    <string name="hint_tips">💡 小提示：点击选项可暂时禁用\n点击结果可重置转盘</string>
+
+    <string name="dialog_title">编辑选项</string>
+    <string name="hint_add_option">输入新的选项名称</string>
+    <string name="hint_add_option_wheel">输入新的转盘名称</string>
+    <string name="btn_add">添加</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_save">保存</string>
+
+    <string name="wheel_title">我的转盘</string>
+    <string name="wheel_template">转盘模板</string>
+
+    <string name="message_empty_options">请先添加选项！</string>
+    <string name="message_empty_input">请输入选项名称！</string>
+    <string name="message_option_exists">该选项已存在！</string>
+    <string name="message_delete_confirm">确定要删除"%s"吗？</string>
+    <string name="message_result">选择了：%s</string>
+    <string name="message_option_add">已添加"%s"</string>
+    <string name="title_activity_new_main">NewMainActivity</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="delete_notification">至少保留 "%s" 个嘛</string>
+    <string name="generate_random_number">生成随机数</string>
+    <string name="setting">设置</string>
+
+    <string name="message_option_count">"%s" 个选项</string>
+
+    <string name="edit">编辑</string>
+    <string name="edit_name">编辑名字</string>
+    <string name="delete">删除</string>
+    <string name="colors">颜色</string>
+    <string name="edit_color">修改颜色</string>
+
+    <string name="notification_all_selected">已经全部都选中了</string>
+    <string name="click_to_reset">点击我重置</string>
+
+    <string name="cpv_default_title">选择一个颜色</string>
+    <string name="cpv_presets">预设</string>
+    <string name="cpv_custom">自定义</string>
+    <string name="cpv_select">选择</string>
+    <string name="cpv_transparency">透明度</string>
+    <string name="allow_duplicates">允许重复</string>
+    <string name="add_new_option">添加新选项</string>
+    <string name="quantity">数量</string>
+    <string name="scope">范围</string>
+    <string name="clear">清除全部</string>
+
+
+    <string name="start_spinning">开始旋转</string>
+    <string name="add">添加</string>
+
+
+    <string name="hide_weight">隐藏权重</string>
+    <string name="use_weight">使用权重</string>
+    <string name="enter_the_option">请输入选项\n每行一个</string>
+    <string name="add_batch_option">批量添加选项</string>
+
+    <string name="edit_wheel">编辑转盘</string>
+    <string name="create_wheel">新建转盘</string>
+    <string name="create_template">新建模板</string>
+    <string name="edit_template">编辑模板</string>
+    <string name="category_hint">输入分类名称</string>
+    <string name="select_wheel">选择转盘</string>
+    <string name="my_wheel">我的转盘</string>
+    <string name="wheel">转盘</string>
+    <string name="random_number">随机数</string>
+    <string name="flip_coin">抛硬币</string>
+    <string name="lottery">随机抽签点名系统</string>
+    <string name="select_template">选择模板</string>
+    <string name="create_from_template">从模板创建</string>
+    <string name="create_from_default">从默认模板创建</string>
+    <string name="create_from_blank">从空白模板创建</string>
+    <string name="create_blank_wheel">新建空白转盘</string>
+
+
+    <!-- 城市选项 -->
+    <string name="city_chongqing">重庆市</string>
+    <string name="city_beijing">北京市</string>
+    <string name="city_shanghai">上海市</string>
+    <string name="city_guangzhou">广州市</string>
+    <string name="city_shenzhen">深圳市</string>
+    <string name="city_hangzhou">杭州市</string>
+    <string name="city_chengdu">成都市</string>
+    <string name="city_xian">西安市</string>
+    <string name="city_nanjing">南京市</string>
+    <string name="city_suzhou">苏州市</string>
+    <string name="city_xiamen">厦门市</string>
+    <string name="city_qingdao">青岛市</string>
+    <string name="city_sanya">三亚市</string>
+    <string name="city_lijiang">丽江市</string>
+    <string name="city_guilin">桂林市</string>
+    <string name="city_zhangjiajie">张家界市</string>
+    <string name="city_lhasa">拉萨市</string>
+
+    <string name="hot">热门</string>
+    <string name="blank">空白</string>
+    <string name="hot_cities">热门城市</string>
+    <string name="self_care_ways">爱自己的方式</string>
+    <string name="today_food">今天吃什么</string>
+
+    <string name="food">美食</string>
+    <string name="breakfast">早餐</string>
+    <string name="lunch">午餐</string>
+    <string name="dinner">晚餐</string>
+    <string name="regional_cuisine">各地美食</string>
+    <string name="cantonese_cuisine">广东菜</string>
+    <string name="beijing_cuisine">北京菜</string>
+    <string name="shanghai_cuisine">上海菜</string>
+    <string name="hangzhou_cuisine">杭州菜</string>
+
+    <string name="china_version">国内版</string>
+    <string name="asia_version">亚洲版</string>
+    <string name="global_version">全球版</string>
+
+    <string name="love_title">恋爱</string>
+    <string name="date_ideas">约会做什么</string>
+    <string name="gift_for_girlfriend">送女朋友什么礼物？</string>
+    <string name="gift_for_boyfriend">送男朋友什么礼物？</string>
+
+    <string name="travel_title">旅游</string>
+    <string name="holiday_destinations">放假去哪玩</string>
+
+    <string name="game">游戏</string>
+    <string name="truth_or_dare">真心话或大冒险</string>
+    <string name="truth">真心话</string>
+    <string name="dare">大冒险</string>
+
+    <string name="sports_title">运动</string>
+    <string name="workout_today">今天做什么运动</string>
+    <string name="fitness_equipment">健身器材</string>
+    <string name="adjust_weights">修改权重</string>
+    <string name="adjust_time">修改时间</string>
+    <string name="confirm_deletion">确认删除</string>
+
+    <string name="default_list">默认列表</string>
+
+    <string name="load_error">加载失败</string>
+
+    <string name="food_hotpot_chain">海底捞</string>
+    <string name="food_hotpot">火锅</string>
+    <string name="food_bbq">烧烤</string>
+    <string name="food_pizza">披萨</string>
+    <string name="food_hamburger">汉堡</string>
+    <string name="food_sushi">寿司</string>
+    <string name="food_spicy_pot">麻辣烫</string>
+    <string name="food_sichuan_cuisine">川菜</string>
+    <string name="food_cantonese_cuisine">粤菜</string>
+    <string name="food_korean_food">韩餐</string>
+
+
+    <string name="self_love_meditation">冥想与正念</string>
+    <string name="self_love_exercise">定期锻炼</string>
+    <string name="self_love_reading">阅读喜欢的书籍</string>
+    <string name="self_love_diary">写日记记录心情</string>
+    <string name="self_love_boundaries">设定个人界限</string>
+    <string name="self_love_healthy_food">享受健康的美食</string>
+    <string name="self_love_hobby">培养新的兴趣爱好</string>
+    <string name="self_love_friends">与支持你的朋友交流</string>
+    <string name="self_love_reflection">定期自我反思</string>
+    <string name="self_love_break">给自己放个假</string>
+    <string name="self_love_learn">学习新技能</string>
+    <string name="self_love_sleep">保持充足的睡眠</string>
+    <string name="self_love_volunteer">做志愿者帮助他人</string>
+    <string name="self_love_nature">欣赏大自然</string>
+    <string name="self_love_gratitude">练习感恩</string>
+    <string name="self_love_acceptance">接受自己的不完美</string>
+    <string name="self_love_gift">给自己买一份小礼物</string>
+    <string name="self_love_breathing">进行深呼吸练习</string>
+    <string name="self_love_positive">保持积极的心态</string>
+    <string name="self_love_health_check">定期体检关注健康</string>
+
+
+    <string name="food_soy_milk_youtiao">豆浆油条</string>
+    <string name="food_egg_sandwich">煎蛋三明治</string>
+    <string name="food_oatmeal_milk">牛奶燕麦</string>
+    <string name="food_pidan_porridge">皮蛋瘦肉粥</string>
+    <string name="food_green_vegetable_porridge">青菜瘦肉粥</string>
+    <string name="food_sweet_potato_porridge">地瓜粥</string>
+    <string name="food_oatmeal_milk_porridge">燕麦牛奶粥</string>
+    <string name="food_mung_bean_porridge">绿豆粥</string>
+    <string name="food_corn_pumpkin_porridge">玉米南瓜粥</string>
+    <string name="food_red_bean_porridge">红豆粥</string>
+    <string name="food_fuding_pork_slice">福鼎肉片</string>
+    <string name="food_eight_treasure_porridge">八宝粥</string>
+    <string name="food_laba_porridge">腊八粥</string>
+    <string name="food_rice_ball">饭团</string>
+
+
+    <string name="food_rice_tomato_egg">米饭+西红柿炒蛋</string>
+    <string name="food_beef_noodles">牛肉面</string>
+    <string name="food_covered_rice">盖浇饭</string>
+    <string name="food_sandwich_salad">三明治+沙拉</string>
+
+
+    <string name="food_braised_pork_with_vegetables">红烧肉+青菜</string>
+    <string name="food_steamed_fish_with_rice">清蒸鱼+米饭</string>
+    <string name="food_dumplings">饺子</string>
+    <string name="food_beef_steak_with_vegetables">煎牛排+蔬菜</string>
+
+
+    <string name="food_shrimp_dumpling">虾饺</string>
+    <string name="food_dry_shumai">干蒸烧卖</string>
+    <string name="food_char_siu_bun">叉烧包</string>
+    <string name="food_egg_tart">蛋挞</string>
+    <string name="food_chicken_feet">凤爪</string>
+    <string name="food_pork_ribs">排骨</string>
+    <string name="food_glutinous_rice_chicken">糯米鸡</string>
+    <string name="food_rice_noodle_roll">肠粉</string>
+    <string name="food_bean_curd_roll">腐皮卷</string>
+    <string name="food_spring_roll">春卷</string>
+    <string name="food_pan_fried_dumplings">煎饺</string>
+    <string name="food_salty_corn_cake">咸水角</string>
+    <string name="food_radish_cake">萝卜糕</string>
+    <string name="food_taro_cake">芋头糕</string>
+    <string name="food_salty_egg_yolk_bun">流沙包</string>
+    <string name="food_custard_bun">奶黄包</string>
+    <string name="food_mala_cake">马拉糕</string>
+    <string name="food_coconut_jelly">椰汁糕</string>
+    <string name="food_mango_pomelo_sago">杨枝甘露</string>
+
+
+    <string name="food_douzhi">豆汁儿</string>
+    <string name="food_chaogan">炒肝</string>
+    <string name="food_miancha">面茶</string>
+    <string name="food_doufunao">豆腐脑(不知甜咸)</string>
+    <string name="food_millet_porridge">小米粥</string>
+    <string name="food_shaobing">烧饼</string>
+    <string name="food_youbing">油饼</string>
+    <string name="food_baozi">包子</string>
+    <string name="food_xianbing">馅饼</string>
+    <string name="food_dalianhuoshao">褡裢火烧</string>
+    <string name="food_zhagao">炸糕</string>
+    <string name="food_qiegao">切糕</string>
+    <string name="food_jiaoquan">焦圈</string>
+    <string name="food_xiancaisi">咸菜丝</string>
+    <string name="food_luzhu_huoshao">卤煮火烧</string>
+
+
+    <string name="food_shengjian">生煎</string>
+    <string name="food_xiaolongbao">小笼包</string>
+    <string name="food_dabing">大饼</string>
+    <string name="food_youtiao">油条</string>
+    <string name="food_mantou">馒头</string>
+    <string name="food_huajuan">花卷</string>
+    <string name="food_doujiang">豆浆</string>
+    <string name="food_paofan">泡饭</string>
+    <string name="food_xiaohuntun">小馄饨</string>
+    <string name="food_yangchunmian">阳春面</string>
+    <string name="food_xianjiang">咸浆</string>
+    <string name="food_congyoubing">葱油饼</string>
+    <string name="food_laohujiaozhao">老虎脚爪</string>
+    <string name="food_cifantuan">粢饭团</string>
+    <string name="food_danbing">蛋饼</string>
+    <string name="food_guotie">锅贴</string>
+    <string name="food_tanggao">糖糕</string>
+
+
+    <string name="food_west_lake_vinegar_fish">西湖醋鱼</string>
+    <string name="food_kfc">肯德基</string>
+    <string name="food_mcdonalds">麦当劳</string>
+    <string name="food_tastien">塔斯汀</string>
+    <string name="food_wallace">华莱士</string>
+    <string name="food_catch_fish_west_lake">西湖里抓鱼</string>
+
+
+    <string name="activity_watch_movie">看电影</string>
+    <string name="activity_eat_dinner">吃大餐</string>
+    <string name="activity_visit_art_museum">参观美术馆</string>
+    <string name="activity_visit_museum">参观博物馆</string>
+    <string name="activity_walk_in_park">去公园散步</string>
+    <string name="activity_local_travel">周边旅游</string>
+    <string name="activity_watch_concert">看演唱会</string>
+    <string name="activity_werewolf_game">狼人杀</string>
+    <string name="activity_hike">爬山</string>
+    <string name="activity_shopping">逛街</string>
+
+
+    <string name="gift_bag">包包</string>
+    <string name="gift_flowers">鲜花</string>
+    <string name="gift_clothes">衣服</string>
+    <string name="gift_lip_gloss">唇膏</string>
+    <string name="gift_necklace">项链</string>
+    <string name="gift_ring">戒指</string>
+    <string name="gift_lipstick">口红</string>
+    <string name="gift_foundation">粉底</string>
+    <string name="gift_highlighter">高光</string>
+    <string name="gift_brightening">提亮</string>
+    <string name="gift_earrings">耳坠</string>
+    <string name="gift_eyebrow_pencil">眉笔(79元)</string>
+
+
+    <string name="gift_sneakers">球鞋</string>
+    <string name="gift_switch">Switch</string>
+    <string name="gift_ps5">PS5</string>
+    <string name="gift_keyboard">键盘</string>
+    <string name="gift_gpu">显卡(RTX5090)</string>
+    <string name="gift_headphones">耳机</string>
+    <string name="gift_camera">相机</string>
+    <string name="gift_watch">手表</string>
+    <string name="gift_carrier_battle_group">航母战斗群</string>
+    <string name="gift_gaokao_books">三年高考五年模拟</string>
+
+    <string name="city_xinjiang">新疆</string>
+    <string name="city_macao">澳门</string>
+    <string name="city_taipei">台北</string>
+
+
+    <string name="city_tokyo">东京</string>
+    <string name="city_seoul">首尔</string>
+    <string name="city_bangkok">曼谷</string>
+    <string name="city_bali">巴厘岛</string>
+    <string name="city_singapore">新加坡</string>
+    <string name="city_phuket">普吉岛</string>
+    <string name="city_jakarta">雅加达</string>
+    <string name="city_chiang_mai">清迈</string>
+
+
+    <string name="city_paris">巴黎</string>
+    <string name="city_dubai">迪拜</string>
+    <string name="city_madrid">马德里</string>
+    <string name="city_amsterdam">阿姆斯特丹</string>
+    <string name="city_berlin">柏林</string>
+    <string name="city_rome">罗马</string>
+    <string name="city_new_york">纽约</string>
+    <string name="city_barcelona">巴塞罗那</string>
+    <string name="city_london">伦敦</string>
+    <string name="city_munich">慕尼黑</string>
+    <string name="city_milan">米兰</string>
+    <string name="city_dublin">都柏林</string>
+    <string name="city_vienna">维也纳</string>
+    <string name="city_los_angeles">洛杉矶</string>
+    <string name="city_prague">布拉格</string>
+
+
+    <string name="question_dinner_choice">如果必须选一个在座的人共进晚餐，你会选谁？</string>
+    <string name="question_cry_moment">你最近一次感动到哭是什么时候？</string>
+    <string name="question_animal">你觉得自己最像哪种动物？为什么？</string>
+    <string name="question_secret_photos">你手机里最不想让人看到的照片是什么？</string>
+    <string name="question_embarrassing_date">描述一次尴尬的约会经历。</string>
+    <string name="question_opposite_gender">如果变成异性一天，你最想做什么？</string>
+    <string name="question_deep_secret">你最不可告人的秘密是什么？</string>
+    <string name="question_hug_choice">如果必须和在场一个人拥抱1分钟，你会选谁？</string>
+    <string name="question_favorite_body_part">最满意的身体部位</string>
+
+
+    <string name="task_princess_carry_opposite">公主抱离你最近的异性</string>
+    <string name="task_princess_carry_same">公主抱离你最近的同性</string>
+    <string name="task_sing">唱几句歌</string>
+    <string name="task_sexy_expression">做一个性感的表情或动作</string>
+    <string name="task_hold_hands_stare">与指定人十指紧扣对视30秒。</string>
+    <string name="task_post_funny_moment">发一条搞笑的朋友圈。</string>
+    <string name="task_imitate_leader">学一段领导的经典发言。</string>
+    <string name="task_joke_dialect">用方言讲一个笑话。</string>
+    <string name="task_pushups">做5个俯卧撑。（下次翻倍）</string>
+
+
+    <string name="sport_running">跑步</string>
+    <string name="sport_swimming">游泳</string>
+    <string name="sport_yoga">瑜伽</string>
+    <string name="sport_dancing">跳舞</string>
+    <string name="sport_fitness">健身</string>
+    <string name="sport_cycling">骑自行车</string>
+    <string name="sport_hiking">徒步</string>
+    <string name="sport_mountain_climbing">爬山</string>
+    <string name="sport_badminton">羽毛球</string>
+    <string name="sport_basketball">篮球</string>
+    <string name="sport_football">足球</string>
+
+
+    <string name="equipment_treadmill">跑步机</string>
+    <string name="equipment_spinning_bike">动感单车</string>
+    <string name="equipment_dumbbell">哑铃</string>
+    <string name="equipment_squat_rack">深蹲架</string>
+    <string name="equipment_push_up_board">俯卧撑板</string>
+    <string name="equipment_rowing_machine">划船机</string>
+    <string name="equipment_arm_strengthening_rod">臂力棒</string>
+    <string name="equipment_stair_climber">爬楼机</string>
+    <string name="equipment_stepper">踏步机</string>
+    <string name="equipment_walking_machine">漫步机</string>
+
+    <string name="choose_one_option">请选择一项</string>
+
+    <string name="count_down">倒数日</string>
+
+    <string name="input_empty">输入为空</string>
+    <string name="about_us">关于我们</string>
+    <string name="make_a_copy">复制一份</string>
+    <string name="close">关闭</string>
+    <string name="wheel_time">转盘旋转时间</string>
+</resources>
