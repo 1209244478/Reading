@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black">
@@ -9,22 +10,78 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="visible"
         app:resize_mode="fit"
         app:show_buffering="when_playing"
         app:use_controller="true" />
 
-    <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
-    <ImageButton
-        android:id="@+id/cast_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="投屏"
-        android:src="@drawable/ic_cast"
-        app:tint="@android:color/white" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal">
+
+        <!-- 标题：文件名 -->
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="24dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:visibility="visible"
+            tools:text="@string/about_us" />
+
+
+
+        <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
+        <ImageButton
+            android:id="@+id/cast_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="投屏"
+            android:src="@drawable/ic_cast"
+            app:tint="@android:color/white" />
+
+        <!-- 列表按钮：点击弹出 播放视频列表 -->
+        <ImageButton
+            android:id="@+id/play_list"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="播放列表"
+            android:src="@drawable/menu_24px"
+            app:tint="@android:color/white" />
+
+    </LinearLayout>
+
+
+    <!-- 手势提示：双击/滑动时居中短暂显示位置/亮度/音量变化 -->
+    <TextView
+        android:id="@+id/gesture_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="#80000000"
+        android:paddingStart="24dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="12dp"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:visibility="gone" />
 
     <!-- 投屏控制浮层：投屏成功后覆盖整个屏幕，统一控制电视端 -->
     <FrameLayout
@@ -58,9 +115,20 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:singleLine="true"
                 android:ellipsize="end"
+                android:singleLine="true"
                 android:text="投屏中"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_keep_watch"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="本机继续看"
                 android:textColor="@android:color/white"
                 android:textSize="14sp" />
 

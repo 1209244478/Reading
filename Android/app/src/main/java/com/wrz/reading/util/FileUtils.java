@@ -42,10 +42,17 @@ public class FileUtils {
     public static final String EPUB_FORMATS = ".epub";
     public static final String VIDEO_FORMATS = "video";
 
-    private static final String[] SUPPORTED_IMG_FORMAT = {".jpg", ".jpeg", ".png", ".gif", ".webp"};
-    private static final String[] SUPPORTED_EXT_FORMAT = {".zip", ".pdf", ".epub"};
+    private static final String[] SUPPORTED_IMG_FORMAT = {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp"
+    };
+    private static final String[] SUPPORTED_EXT_FORMAT = {
+            ".zip", ".pdf", ".epub"
+    };
     private static final String[] SUPPORTED_VIDEO_FORMAT = {
             ".mp4", ".mkv", ".avi", ".mov", ".flv", ".ts", ".webm", ".3gp", ".m4v", ".wmv", ".rmvb", ".rm"
+    };
+    private static final String[] SUPPORTED_MUSIC_FORMAT = {
+            ".mp3", ".wav", ".flac", ".aac", ".ogg", ".wma"
     };
 
     public static List<File> getImageFiles(File directory, boolean sortByName) {
@@ -132,7 +139,7 @@ public class FileUtils {
         for (File file : files) {
             if (file.isDirectory()) {
                 collectMediaFilesRecursive(file, mediaFiles);
-            } else if (file.isFile() && (isImageFile(file.getName()) || isVideoFile(file.getName()))) {
+            } else if (file.isFile() && (isImageFile(file.getName()) || isVideoFile(file.getName())|| isMusicFile(file.getName()))) {
                 mediaFiles.add(file);
             }
         }
@@ -233,6 +240,17 @@ public class FileUtils {
     public static boolean isVideoFile(String fileName) {
         String lowerFileName = fileName.toLowerCase();
         for (String extension : SUPPORTED_VIDEO_FORMAT) {
+            if (lowerFileName.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 判断是否为支持的音乐文件 */
+    public static boolean isMusicFile(String fileName) {
+        String lowerFileName = fileName.toLowerCase();
+        for (String extension : SUPPORTED_MUSIC_FORMAT) {
             if (lowerFileName.endsWith(extension)) {
                 return true;
             }

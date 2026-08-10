@@ -53,8 +53,8 @@ import java.util.Objects;
 /**
  * 集合详情页：展示某个集合（或未分组）内的漫画列表。
  * <p>
- * 通过 {@link MainFragment#ARG_COLLECTION_ID} 和 {@link MainFragment#ARG_COLLECTION_NAME} 传参。
- * 当 collectionId == {@link MainFragment#UNCATEGORIZED_ID} 时表示「未分组」。
+ * 通过 {@link CollectionFragment#ARG_COLLECTION_ID} 和 {@link CollectionFragment#ARG_COLLECTION_NAME} 传参。
+ * 当 collectionId == {@link CollectionFragment#UNCATEGORIZED_ID} 时表示「未分组」。
  * <p>
  * 功能：
  * - 点击漫画打开对应阅读器
@@ -74,7 +74,7 @@ public class CollectionDetailFragment extends BaseFragment {
     private String collectionName;
 
     private final List<Comic> allComics = new ArrayList<>();
-    private final List<Comic> displayComics = new ArrayList<>();
+    public static final List<Comic> displayComics = new ArrayList<>();
 
     private RecyclerView comicRecyclerView;
     private ComicAdapter comicAdapter;
@@ -137,10 +137,10 @@ public class CollectionDetailFragment extends BaseFragment {
     public void initData() {
         Bundle args = getArguments();
         if (args != null) {
-            collectionId = args.getLong(MainFragment.ARG_COLLECTION_ID, MainFragment.UNCATEGORIZED_ID);
-            collectionName = args.getString(MainFragment.ARG_COLLECTION_NAME, "");
+            collectionId = args.getLong(CollectionFragment.ARG_COLLECTION_ID, CollectionFragment.UNCATEGORIZED_ID);
+            collectionName = args.getString(CollectionFragment.ARG_COLLECTION_NAME, "");
         } else {
-            collectionId = MainFragment.UNCATEGORIZED_ID;
+            collectionId = CollectionFragment.UNCATEGORIZED_ID;
             collectionName = "";
         }
 
@@ -225,6 +225,11 @@ public class CollectionDetailFragment extends BaseFragment {
     }
 
     @Override
+    public void goBack() {
+
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         // 从阅读器/播放器返回时差量刷新：仅更新有变化的项（如进度），避免整列表闪烁与滚动跳动
@@ -246,7 +251,7 @@ public class CollectionDetailFragment extends BaseFragment {
     private void loadComics(boolean useDiff) {
         singleThread.execute(() -> {
             List<Comic> comics;
-            if (collectionId == MainFragment.UNCATEGORIZED_ID) {
+            if (collectionId == CollectionFragment.UNCATEGORIZED_ID) {
                 comics = MyApplication.comicDatabase.comicDao().getUncategorizedComics();
             } else {
                 comics = MyApplication.comicDatabase.comicDao().getComicsByCollection(collectionId);
@@ -340,7 +345,7 @@ public class CollectionDetailFragment extends BaseFragment {
             PdfReaderActivity.start(activity, comic);
         } else if (type == FileType.EPUB) {
             EpubReaderActivity.start(activity, comic);
-        } else if (type == FileType.VIDEO) {
+        } else if (type == FileType.VIDEO || type == FileType.MUSIC) {
             openVideoWithExternalPlayer(comic);
         } else {
             ReaderActivity.start(activity, comic);
@@ -464,8 +469,8 @@ public class CollectionDetailFragment extends BaseFragment {
             List<Collection> collections = MyApplication.comicDatabase.collectionDao().getAllCollections();
             // 在后台线程构建目标列表（含数量查询），避免主线程访问数据库
             List<MoveTargetAdapter.MoveTarget> targets = new ArrayList<>();
-            if (collectionId != MainFragment.UNCATEGORIZED_ID) {
-                targets.add(new MoveTargetAdapter.MoveTarget(MainFragment.UNCATEGORIZED_ID, "未分组", "未归入任何集合"));
+            if (collectionId != CollectionFragment.UNCATEGORIZED_ID) {
+                targets.add(new MoveTargetAdapter.MoveTarget(CollectionFragment.UNCATEGORIZED_ID, "未分组", "未归入任何集合"));
             }
             for (Collection c : collections) {
                 if (c.getId() != collectionId) {
@@ -546,7 +551,7 @@ public class CollectionDetailFragment extends BaseFragment {
             ids.add(c.getId());
         }
         singleThread.execute(() -> {
-            if (targetCollectionId == MainFragment.UNCATEGORIZED_ID) {
+            if (targetCollectionId == CollectionFragment.UNCATEGORIZED_ID) {
                 MyApplication.comicDatabase.comicDao().moveOutOfCollection(ids);
             } else {
                 MyApplication.comicDatabase.comicDao().moveToCollection(targetCollectionId, ids);
@@ -580,7 +585,7 @@ public class CollectionDetailFragment extends BaseFragment {
                 Comic comic = buildComicFromFile(file);
                 if (comic != null && !isComicExists(comic.getOriginalPath())) {
                     // 命名集合页导入的漫画直接归属当前集合
-                    if (collectionId != MainFragment.UNCATEGORIZED_ID) {
+                    if (collectionId != CollectionFragment.UNCATEGORIZED_ID) {
                         comic.setCollectionId(collectionId);
                     }
                     MyApplication.comicDatabase.comicDao().insertComic(comic);
@@ -631,11 +636,15 @@ public class CollectionDetailFragment extends BaseFragment {
         if (FileUtils.EPUB_FORMATS.equals(ext)) {
             return Comic.uncompressed(name, file.getAbsolutePath(), "", 0, FileType.EPUB.getCode());
         }
-        // 视频文件：交由第三方播放器打开
+        // 视频文件：交由播放器打开
         if (FileUtils.isVideoFile(name)) {
             // 生成非首帧缩略图作为封面，避免纯黑封面
             String cover = VideoUtils.generateThumbnailFile(file, name);
             return Comic.uncompressed(name, file.getAbsolutePath(), cover, 1, FileType.VIDEO.getCode());
+        }
+        // 音乐文件：交由播放器打开
+        if (FileUtils.isMusicFile(name)) {
+            return Comic.uncompressed(name, file.getAbsolutePath(), "", 1, FileType.MUSIC.getCode());
         }
         return null;
     }

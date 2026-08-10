@@ -130,6 +130,11 @@ public class WheelFragment extends BaseFragment {
         }
     }
 
+    @Override
+    public void goBack() {
+
+    }
+
     /**
      * 开始旋转
      */

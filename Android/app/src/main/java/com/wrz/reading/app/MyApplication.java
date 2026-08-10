@@ -7,6 +7,7 @@ import com.wrz.reading.data.EmojiData;
 import com.wrz.reading.data.Template;
 import com.wrz.reading.data.WheelDatabase;
 import com.wrz.reading.data.WheelRepository;
+import com.wrz.reading.dlna.DlnaRendererManager;
 import com.wrz.reading.util.PrefManager;
 
 public class MyApplication extends Application {
@@ -35,5 +36,10 @@ public class MyApplication extends Application {
 
         // 初始化emoji数据（懒加载，首次使用时初始化）
         EmojiData.init();
+
+        boolean enabled = DlnaRendererManager.isReceiverEnabled(app);
+        if (enabled) {
+            DlnaRendererManager.getInstance().start(app);
+        }
     }
 }

@@ -214,4 +214,24 @@ public class PrefManager {
     public String getLastAdd() {
         return preferences.getString(ComicSortPrefs.KEY_LAST_ADD, "");
     }
+
+
+
+    /**
+     * 保存上次导入漫画的目录地址
+     */
+    public void saveCastName(String lastAdd) {
+        preferences.edit().putString(ComicSortPrefs.KEY_CAST_NAME, lastAdd).apply();
+    }
+
+
+
+    /**
+     * 获取上次导入漫画的目录地址
+     */
+    public String getCastName() {
+        return preferences.getString(ComicSortPrefs.KEY_CAST_NAME, "随便什么名字");
+    }
+
+
 }

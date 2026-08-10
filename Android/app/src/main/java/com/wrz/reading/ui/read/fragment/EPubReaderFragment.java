@@ -293,4 +293,9 @@ public class EPubReaderFragment extends BaseFragment {
             mSafeHandler.removeCallbacksAndMessages(null);
         }
     }
+
+    @Override
+    public void goBack() {
+
+    }
 }

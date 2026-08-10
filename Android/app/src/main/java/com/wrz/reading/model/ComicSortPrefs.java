@@ -28,5 +28,5 @@ public class ComicSortPrefs {
 
     public static final String KEY_EVENT_COUNT = "option_count";
 
-
+    public static final String KEY_CAST_NAME = "key_cast_name";
 }

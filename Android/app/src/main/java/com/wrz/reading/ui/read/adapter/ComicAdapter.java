@@ -101,7 +101,7 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
         ProgressBar comicProgressBar = holder.getView(R.id.comic_progress_bar);
         comicProgressBar.setMax((int) comic.getTotal());
 
-        if (fileType == FileType.VIDEO) {
+        if (fileType == FileType.VIDEO || fileType == FileType.MUSIC) {
             // 视频进度为播放位置（毫秒），格式化为时间；视频无总时长字段，隐藏进度条
             holder.setText(R.id.comic_progress, VideoUtils.formatTime(comic.getVideoPosition()) + "\n" + VideoUtils.formatTime(comic.getTotal()) );
             /*holder.setGone(R.id.comic_progress_bar, true);*/

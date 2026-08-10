@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wrz.reading.R;
-import com.wrz.reading.ui.read.fragment.MainFragment;
+import com.wrz.reading.ui.read.fragment.CollectionFragment;
 
 import java.util.List;
 
@@ -61,7 +61,7 @@ public class MoveTargetAdapter extends RecyclerView.Adapter<MoveTargetAdapter.Ta
         holder.name.setText(t.name);
         holder.subtitle.setText(t.subtitle);
         // 未分组使用灰色图标，已分组使用蓝色图标
-        if (t.id == MainFragment.UNCATEGORIZED_ID) {
+        if (t.id == CollectionFragment.UNCATEGORIZED_ID) {
             holder.icon.setImageResource(R.drawable.ic_folder);
             holder.icon.setColorFilter(holder.itemView.getContext().getColor(R.color.ios_text_secondary));
         } else {

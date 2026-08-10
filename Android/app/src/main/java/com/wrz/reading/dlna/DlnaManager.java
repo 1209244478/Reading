@@ -14,16 +14,18 @@ import android.util.Log;
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
 import org.fourthline.cling.controlpoint.ControlPoint;
+import org.fourthline.cling.model.action.ActionArgumentValue;
 import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.message.UpnpResponse;
+import org.fourthline.cling.model.meta.Action;
 import org.fourthline.cling.model.meta.Device;
 import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.model.meta.Service;
 import org.fourthline.cling.model.types.UDAServiceType;
+import org.fourthline.cling.model.types.UnsignedIntegerFourBytes;
 import org.fourthline.cling.registry.DefaultRegistryListener;
 import org.fourthline.cling.registry.Registry;
 import org.fourthline.cling.registry.RegistryListener;
-import org.fourthline.cling.support.avtransport.callback.GetPositionInfo;
 import org.fourthline.cling.support.avtransport.callback.Pause;
 import org.fourthline.cling.support.avtransport.callback.Play;
 import org.fourthline.cling.support.avtransport.callback.Seek;
@@ -31,7 +33,6 @@ import org.fourthline.cling.support.avtransport.callback.SetAVTransportURI;
 import org.fourthline.cling.support.avtransport.callback.Stop;
 import org.fourthline.cling.support.contentdirectory.DIDLParser;
 import org.fourthline.cling.support.model.DIDLContent;
-import org.fourthline.cling.support.model.PositionInfo;
 import org.fourthline.cling.support.model.ProtocolInfo;
 import org.fourthline.cling.support.model.Res;
 import org.fourthline.cling.support.model.item.VideoItem;
@@ -94,7 +95,13 @@ public class DlnaManager {
 
     /** 播放进度查询回调（在 Cling 后台线程触发） */
     public interface PlaybackInfoListener {
-        void onResult(long positionMs, long durationMs);
+        /**
+         * @param positionMs     当前播放位置（毫秒），不支持时为 0
+         * @param durationMs     总时长（毫秒），不支持时为 0
+         * @param transportState 传输状态字符串（PLAYING / PAUSED_PLAYBACK / STOPPED 等），
+         *                       查询失败或未知时为空串
+         */
+        void onResult(long positionMs, long durationMs, String transportState);
 
         void onFailure(String message);
     }
@@ -348,15 +355,18 @@ public class DlnaManager {
      * @param device     目标 MediaRenderer 设备
      * @param videoFile  本地视频文件
      * @param title      视频标题（用于电视端显示）
+     * @param startPositionMs 投屏起始位置（毫秒），<0 或 0 表示从头播放
      * @param listener   投屏结果回调（在 Cling 后台线程触发）
      */
-    public void cast(Device device, File videoFile, String title, CastListener listener) {
+    public void cast(Device device, File videoFile, String title, long startPositionMs, boolean isChangeCast, CastListener listener) {
         if (upnpService == null) {
             if (listener != null) listener.onFailure("DLNA 服务未就绪");
             return;
         }
         // 先停止之前的投屏
-        stopCastInternal();
+        if (!isChangeCast) {
+            stopCastInternal();
+        }
 
         castingDevice = device;
 
@@ -376,7 +386,14 @@ public class DlnaManager {
             if (listener != null) listener.onFailure("无法获取本机 IP，请确认已连接 WiFi");
             return;
         }
-        final String videoUrl = "http://" + ip + ":" + serverPort + "/";
+        String casterParam;
+        try {
+            casterParam = java.net.URLEncoder.encode(
+                    com.wrz.reading.app.MyApplication.manager.getCastName(), "UTF-8");
+        } catch (Exception e) {
+            casterParam = "unknown";
+        }
+        final String videoUrl = "http://" + ip + ":" + serverPort + "/?caster=" + casterParam;
         String mimeType = LocalVideoServer.getMimeType(videoFile.getName());
         String protocolInfo = "http-get:*:" + mimeType + ":*";
 
@@ -410,6 +427,26 @@ public class DlnaManager {
                 cp.execute(new Play(avTransport) {
                     @Override
                     public void success(ActionInvocation invocation) {
+                        // 从指定位置继续播放（投屏时带上本机当前进度）
+                        if (startPositionMs > 0) {
+                            String target = formatTimeForSeek(startPositionMs);
+                            Log.d(TAG, "cast: 投屏后 seek 到 " + target + " (" + startPositionMs + "ms)");
+                            try {
+                                cp.execute(new Seek(avTransport, target) {
+                                    @Override
+                                    public void success(ActionInvocation inv) {
+                                        Log.d(TAG, "cast seek 成功");
+                                    }
+
+                                    @Override
+                                    public void failure(ActionInvocation inv, UpnpResponse op, String msg) {
+                                        Log.w(TAG, "cast seek 失败: " + msg);
+                                    }
+                                });
+                            } catch (Exception e) {
+                                Log.w(TAG, "cast seek 异常", e);
+                            }
+                        }
                         if (finalListener != null) finalListener.onSuccess();
                     }
 
@@ -469,32 +506,80 @@ public class DlnaManager {
     }
 
     /**
-     * 查询电视端当前播放进度。
+     * 查询电视端当前播放进度与传输状态。
+     * 先取 GetPositionInfo（进度），成功后再取 GetTransportInfo（状态），
+     * 合并后回调；状态查询失败不阻塞进度回调（state 置空）。
+     *
+     * <p>实现说明：不使用 cling-support 的 {@code GetPositionInfo}/{@code GetTransportInfo}
+     * 回调（它们在 {@code success()} 中构建 {@code PositionInfo}/{@code TransportInfo} 对象，
+     * 若解析抛异常会被线程池吞掉，导致 {@code received}/{@code failure} 都不触发、轮询永久挂起）。
+     * 改用原生 {@link ActionCallback} 直接读取输出参数，规避该解析路径。
      * 在 Cling 后台线程回调，调用方需自行切回主线程。
      */
     public void getPlaybackInfo(PlaybackInfoListener listener) {
+        Log.d(TAG, "getPlaybackInfo: upnpService=" + (upnpService != null)
+                + " castingDevice=" + (castingDevice != null));
         if (upnpService == null || castingDevice == null) {
             if (listener != null) listener.onFailure("未在投屏");
             return;
         }
-        Service avTransport = castingDevice.findService(AV_TRANSPORT);
+        final Service avTransport = castingDevice.findService(AV_TRANSPORT);
         if (avTransport == null) {
             if (listener != null) listener.onFailure("设备不支持 AVTransport");
             return;
         }
         final PlaybackInfoListener finalListener = listener;
+        final ControlPoint cp = upnpService.getControlPoint();
+        Action getPositionAction = avTransport.getAction("GetPositionInfo");
+        if (getPositionAction == null) {
+            if (listener != null) listener.onFailure("设备不支持 GetPositionInfo");
+            return;
+        }
+        Log.d(TAG, "getPlaybackInfo: 执行 GetPositionInfo");
         try {
-            upnpService.getControlPoint().execute(new GetPositionInfo(avTransport) {
+            ActionInvocation getPositionInv = new ActionInvocation(getPositionAction);
+            getPositionInv.setInput("InstanceID", new UnsignedIntegerFourBytes(0));
+            cp.execute(new ActionCallback(getPositionInv) {
                 @Override
-                public void received(ActionInvocation invocation, PositionInfo positionInfo) {
-                    if (finalListener == null) return;
-                    long pos = parseTimeToMs(positionInfo.getRelTime());
-                    long dur = parseTimeToMs(positionInfo.getTrackDuration());
-                    finalListener.onResult(pos, dur);
+                public void success(ActionInvocation invocation) {
+                    String relTime = readOutput(invocation, "RelTime");
+                    String trackDur = readOutput(invocation, "TrackDuration");
+                    final long pos = parseTimeToMs(relTime);
+                    final long dur = parseTimeToMs(trackDur);
+                    Log.d(TAG, "GetPositionInfo received: relTime=" + relTime
+                            + " trackDur=" + trackDur + " -> pos=" + pos + " dur=" + dur);
+                    // 进度已拿到，再查传输状态（失败时以空状态回调，不阻塞进度刷新）
+                    Action getTransportAction = avTransport.getAction("GetTransportInfo");
+                    if (getTransportAction == null) {
+                        if (finalListener != null) finalListener.onResult(pos, dur, "");
+                        return;
+                    }
+                    try {
+                        ActionInvocation getTransportInv = new ActionInvocation(getTransportAction);
+                        getTransportInv.setInput("InstanceID", new UnsignedIntegerFourBytes(0));
+                        cp.execute(new ActionCallback(getTransportInv) {
+                            @Override
+                            public void success(ActionInvocation invocation) {
+                                String state = readOutput(invocation, "CurrentTransportState");
+                                Log.d(TAG, "GetTransportInfo received: state=" + state);
+                                if (finalListener != null) finalListener.onResult(pos, dur, state);
+                            }
+
+                            @Override
+                            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                                Log.w(TAG, "GetTransportInfo 失败: " + defaultMsg);
+                                if (finalListener != null) finalListener.onResult(pos, dur, "");
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.w(TAG, "GetTransportInfo 异常", e);
+                        if (finalListener != null) finalListener.onResult(pos, dur, "");
+                    }
                 }
 
                 @Override
                 public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                    Log.w(TAG, "GetPositionInfo 失败: " + defaultMsg);
                     if (finalListener != null) finalListener.onFailure(defaultMsg);
                 }
             });
@@ -503,6 +588,17 @@ public class DlnaManager {
             if (finalListener != null) finalListener.onFailure(e.getMessage());
         }
     }
+
+    /** 安全读取 ActionInvocation 输出参数，参数不存在或值为 null 时返回空串。 */
+    private static String readOutput(ActionInvocation invocation, String argumentName) {
+        try {
+            ActionArgumentValue v = invocation.getOutput(argumentName);
+            return v != null && v.getValue() != null ? v.getValue().toString() : "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
 
     /** 暂停电视端播放 */
     public void pause(SimpleCallback callback) {

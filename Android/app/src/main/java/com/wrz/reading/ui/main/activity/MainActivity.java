@@ -52,7 +52,7 @@ public class MainActivity extends BaseActivity {
             ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
             // 16dp 为 XML 中声明的基础悬浮间距，再叠加系统 inset
             float density = v.getResources().getDisplayMetrics().density;
-            lp.bottomMargin = (int) (16 * density) + bottomInset;
+            lp.bottomMargin = (int) (8 * density) + bottomInset;
             return insets;
         });
     }

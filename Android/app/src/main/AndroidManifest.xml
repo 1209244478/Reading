@@ -24,6 +24,10 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- Cling AndroidRouter 创建 WifiLock 需要 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- 接收端 DLNA 服务以前台服务运行，避免退出 Activity 后进程被回收导致设备消失 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".app.MyApplication"
@@ -89,10 +93,16 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Cling DLNA/UPnP 服务：负责 SSDP 设备发现与控制 -->
+        <!-- Cling DLNA/UPnP 服务：负责 SSDP 设备发现与控制。
+             接收端开启时以前台服务运行，保证退出 Activity 后仍可被发现。 -->
         <service
             android:name="com.wrz.reading.dlna.CustomAndroidUpnpServiceImpl"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="DLNA MediaRenderer,接收投屏" />
+        </service>
     </application>
 
 </manifest>

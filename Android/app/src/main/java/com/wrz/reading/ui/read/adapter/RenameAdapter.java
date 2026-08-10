@@ -26,9 +26,9 @@ public class RenameAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
 
     @Override
     protected void convert(@NonNull BaseViewHolder holder, Comic comic) {
-        holder.setText(R.id.collection_name_edit, comic.getTitle());
+        holder.setText(R.id.et_collection_name, comic.getTitle());
 
-        TextInputEditText nameEdit = holder.getView(R.id.collection_name_edit);
+        TextInputEditText nameEdit = holder.getView(R.id.et_collection_name);
         TextInputLayout nameLayout = holder.getView(R.id.collection_name_layout);
 
         nameEdit.setOnFocusChangeListener((v, hasFocus) -> {

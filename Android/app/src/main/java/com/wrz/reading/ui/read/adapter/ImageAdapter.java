@@ -47,6 +47,7 @@ public class ImageAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
     protected void convert(@NotNull BaseViewHolder holder, File imageFile) {
         ReaderPhotoView photoView = holder.getView(R.id.image_view);
         boolean isVideo = FileUtils.isVideoFile(imageFile.getName());
+        boolean isMusic = FileUtils.isMusicFile(imageFile.getName());
 
         if (isVideo) {
             Glide.with(holder.itemView)
@@ -63,14 +64,14 @@ public class ImageAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
                     .into(photoView);
         }
 
-        if (zoomMode && !isVideo) {
+        if (zoomMode && !isVideo && !isMusic) {
             photoView.setZoomable(true);
             photoView.setOnPhotoTapListener((view, x, y) -> listener.onComicClick());
             photoView.setOnMatrixChangeListener(rect -> listener.onScroll());
         } else {
             photoView.setZoomable(false);
             photoView.setOnTapListener(xPercent -> {
-                if (isVideo) {
+                if (isVideo || isMusic) {
                     listener.onVideoClick(imageFile);
                 } else if (xPercent < 0.33f) {
                     listener.onSwipe(false);

@@ -129,4 +129,9 @@ public class RandomFragment extends BaseFragment {
 
     }
 
+    @Override
+    public void goBack() {
+
+    }
+
 }

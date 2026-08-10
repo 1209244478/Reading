@@ -19,7 +19,7 @@
     app:startIconTint="@color/ios_text_secondary">
 
     <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/collection_name_edit"
+        android:id="@+id/et_collection_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:imeOptions="actionDone"

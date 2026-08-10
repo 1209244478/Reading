@@ -303,7 +303,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
             if (files != null) {
                 for (File file : files) {
                     if (!file.getName().startsWith(".") && !file.isHidden()) {
-                        if (file.isDirectory() || FileUtils.isVideoFile(file.getName())) {
+                        if (file.isDirectory()) {
                             folderList.add(file);
                         }
                     }
@@ -319,7 +319,8 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
             if (files != null) {
                 for (File file : files) {
                     if (!file.getName().startsWith(".") && !file.isHidden()) {
-                        if (!FileUtils.isSupportedExtFormat(file.getName()).isEmpty()) {
+                        if (!FileUtils.isSupportedExtFormat(file.getName()).isEmpty() || FileUtils.isVideoFile(file.getName())
+                                || FileUtils.isMusicFile(file.getName())) {
                             filesList.add(file);
                         }
                     }

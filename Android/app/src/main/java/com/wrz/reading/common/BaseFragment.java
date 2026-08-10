@@ -17,11 +17,14 @@ package com.wrz.reading.common;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.window.OnBackInvokedDispatcher;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.appcompat.widget.Toolbar;
@@ -235,5 +238,25 @@ public abstract class BaseFragment extends Fragment {
             mIsToolBarVisible = toolbarHelper.isVisible();
         }
     }
+
+    public void initBackCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // 注册预测性返回回调
+            this.getSupportActivity().getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_OVERLAY,
+                    this::goBack
+            );
+        } else {
+            // 兼容旧版本的返回处理
+            this.getSupportActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                    goBack();
+                }
+            });
+        }
+    }
+
+    public abstract void goBack();
 
 }

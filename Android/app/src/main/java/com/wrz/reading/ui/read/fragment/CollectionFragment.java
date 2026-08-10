@@ -27,7 +27,7 @@ import java.util.List;
  * 书库首页：展示漫画集合列表。点击集合进入详情页查看集合内漫画。
  * 未分组的漫画通过「未分组」入口查看。
  */
-public class MainFragment extends BaseFragment {
+public class CollectionFragment extends BaseFragment {
 
     /** 未分组集合的特殊 ID */
     public static final long UNCATEGORIZED_ID = -1L;
@@ -46,11 +46,13 @@ public class MainFragment extends BaseFragment {
 
     @Override
     public int getLayoutResId() {
-        return R.layout.fragment_main;
+        return R.layout.fragment_collection;
     }
 
     @Override
     public void initView() {
+        initBackCallback();
+
         collectionRecyclerView = findId(R.id.collection_recycler_view);
         emptyStateText = findId(R.id.empty_state_text);
         addFab = findId(R.id.add_comic_fab);
@@ -107,6 +109,15 @@ public class MainFragment extends BaseFragment {
         });
     }
 
+    @Override
+    public void goBack() {
+        if (collectionAdapter.isSelectMode()) {
+            toggleSelectMode();
+        } else {
+            this.getSupportActivity().finish();
+        }
+    }
+
     private void navigateToDetail(CollectionItem item) {
         Bundle args = new Bundle();
         args.putLong(ARG_COLLECTION_ID, item.getCollection().getId());
@@ -134,11 +145,11 @@ public class MainFragment extends BaseFragment {
 
             boolean empty = collections.isEmpty() && uncategorizedCount == 0;
             runOnUiIfAlive(() -> {
-                if (empty) {
+                /*if (empty) {
                     showEmptyState();
-                } else {
+                } else {*/
                     hideEmptyState();
-                }
+                /*}*/
                 collectionItems.clear();
                 collectionItems.addAll(tempList);
                 collectionAdapter.notifyDataSetChanged();

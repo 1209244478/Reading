@@ -18,6 +18,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.model.Comic;
 import com.wrz.reading.ui.read.adapter.RenameAdapter;
+import com.wrz.reading.view.dialog.TextInputDialog;
 
 import java.util.List;
 
@@ -87,13 +88,16 @@ public final class DialogHelper {
     public static void showTextInputDialog(Activity activity, String title, String subtitle,
                                            String confirmText, String initialText,
                                            final TextInputCallback callback) {
-        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+
+        new TextInputDialog(activity, title, subtitle, confirmText, initialText, callback).show();
+
+        /*if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_create_collection, null);
         TextView titleView = dialogView.findViewById(R.id.dialog_title);
         TextView subtitleView = dialogView.findViewById(R.id.dialog_subtitle);
         MaterialButton confirmBtn = dialogView.findViewById(R.id.btn_confirm);
         TextInputLayout nameLayout = dialogView.findViewById(R.id.collection_name_layout);
-        TextInputEditText nameEdit = dialogView.findViewById(R.id.collection_name_edit);
+        TextInputEditText nameEdit = dialogView.findViewById(R.id.et_collection_name);
 
         if (title != null) titleView.setText(title);
         if (subtitle != null) subtitleView.setText(subtitle);
@@ -119,7 +123,7 @@ public final class DialogHelper {
             dialog.dismiss();
         });
 
-        dialog.show();
+        dialog.show();*/
     }
 
     /**

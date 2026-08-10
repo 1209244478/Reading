@@ -17,8 +17,10 @@ public enum FileType {
     PDF(".pdf"),
     /** EPUB 电子书 */
     EPUB(".epub"),
-    /** 视频文件（交由第三方播放器打开） */
-    VIDEO("video");
+    /** 视频文件（交由播放器打开） */
+    VIDEO("video"),
+    /** 音乐文件（交由播放器打开） */
+    MUSIC("music");
 
     private final String code;
 

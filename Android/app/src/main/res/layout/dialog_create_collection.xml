@@ -51,7 +51,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:hint="集合名称"
         app:boxCornerRadiusBottomEnd="12dp"
         app:boxCornerRadiusBottomStart="12dp"
         app:boxCornerRadiusTopEnd="12dp"
@@ -64,7 +63,7 @@
         app:startIconTint="@color/ios_text_secondary">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/collection_name_edit"
+            android:id="@+id/et_collection_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"

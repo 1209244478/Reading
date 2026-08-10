@@ -7,9 +7,9 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.wrz.reading.ui.read.fragment.MainFragment"
+        android:name="com.wrz.reading.ui.read.fragment.CollectionFragment"
         android:label="MainFragment"
-        tools:layout="@layout/activity_main">
+        tools:layout="@layout/fragment_collection">
         <action
             android:id="@+id/action_main_to_collectionDetail"
             app:destination="@id/collectionDetailFragment" />
@@ -25,12 +25,18 @@
         android:id="@+id/wheelFragment"
         android:name="com.wrz.reading.ui.wheel.fragment.WheelFragment"
         android:label="WheelFragment"
-        tools:layout="@layout/fragment_setting" />
+        tools:layout="@layout/fragment_wheel" />
 
     <fragment
         android:id="@+id/randomFragment"
         android:name="com.wrz.reading.ui.random.fragment.RandomFragment"
         android:label="RandomFragment"
+        tools:layout="@layout/fragment_random" />
+
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.wrz.reading.ui.main.fragment.SettingFragment"
+        android:label="SettingFragment"
         tools:layout="@layout/fragment_setting" />
 
 </navigation>
