@@ -14,7 +14,7 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 
 import java.util.List;
 import java.util.Objects;

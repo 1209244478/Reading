@@ -2,13 +2,13 @@ package com.wrz.reading.app;
 
 import android.app.Application;
 
-import com.wrz.reading.data.ComicDatabase;
-import com.wrz.reading.data.EmojiData;
-import com.wrz.reading.data.Template;
-import com.wrz.reading.data.WheelDatabase;
-import com.wrz.reading.data.WheelRepository;
-import com.wrz.reading.dlna.DlnaRendererManager;
-import com.wrz.reading.util.PrefManager;
+import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.wheel.data.EmojiData;
+import com.wrz.reading.ui.wheel.data.Template;
+import com.wrz.reading.ui.wheel.data.WheelDatabase;
+import com.wrz.reading.ui.wheel.data.WheelRepository;
+import com.wrz.reading.ui.read.dlna.DlnaRendererManager;
+import com.wrz.reading.ui.main.utils.PrefManager;
 
 public class MyApplication extends Application {
 

@@ -20,7 +20,7 @@ import android.graphics.Color;
 import androidx.annotation.StringDef;
 
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.util.FileUtils;
+import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

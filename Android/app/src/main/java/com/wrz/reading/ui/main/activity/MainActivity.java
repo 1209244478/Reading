@@ -17,6 +17,9 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseActivity;
+import com.wrz.reading.ui.read.fragment.CollectionDetailFragment;
+
+import java.util.Objects;
 
 public class MainActivity extends BaseActivity {
 
@@ -89,14 +92,35 @@ public class MainActivity extends BaseActivity {
                 navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                     Log.d(TAG, "Navigating to: " + destination.getLabel());
 
-                    // 可以在这里处理不同页面的特殊逻辑
+                    // 确保 BottomNavigationView 的选中状态与当前目的地一致
                     int vId = destination.getId();
-                    if (vId == R.id.mainFragment) {
-
-                    } else if (vId == R.id.wheelFragment) {
-
+                    if (vId == R.id.mainFragment || vId == R.id.wheelFragment ||
+                            vId == R.id.randomFragment || vId == R.id.settingFragment) {
+                        // 对于顶部菜单对应的 Fragment，确保 BottomNavigationView 的选中状态正确
+                        MenuItem menuItem = bottomNavigationView.getMenu().findItem(vId);
+                        if (menuItem != null) {
+                            menuItem.setChecked(true);
+                        }
+                    } else if (Objects.equals(destination.getLabel(), CollectionDetailFragment.class.getSimpleName())) {
+                        MenuItem menuItem = bottomNavigationView.getMenu().findItem(R.id.mainFragment);
+                        if (menuItem != null) {
+                            menuItem.setChecked(true);
+                        }
                     }
                 });
+
+                // 设置 BottomNavigationView 的项目选择监听器
+                // 当从 CollectionDetailFragment 切换到其他顶部菜单时，确保正确处理回退栈
+                /*bottomNavigationView.setOnItemSelectedListener(item -> {
+                    int itemId = item.getItemId();
+                    // 如果当前在 CollectionDetailFragment，需要先弹出它
+                    if (navController.getCurrentDestination() != null &&
+                            navController.getCurrentDestination().getId() == R.id.collectionDetailFragment) {
+                        // 弹出 CollectionDetailFragment，然后导航到目标 Fragment
+                        navController.popBackStack();
+                    }
+                    return NavigationUI.onNavDestinationSelected(item, navController);
+                });*/
             } else {
                 Log.e(TAG, "NavHostFragment not found");
             }
@@ -112,7 +136,7 @@ public class MainActivity extends BaseActivity {
         if (navController != null && navController.navigateUp()) {
             return;
         }
-        finish();
+        /*finish();*/
     }
 
     @Override

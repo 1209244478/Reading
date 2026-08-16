@@ -57,7 +57,7 @@
                     android:layout_gravity="center"
                     android:layout_marginBottom="20dp">
 
-                    <com.wrz.reading.view.wheelview.WheelView
+                    <com.wrz.reading.ui.wheel.view.wheelview.WheelView
                         android:id="@+id/wheel"
                         android:layout_width="@dimen/wheel_width"
                         android:layout_height="@dimen/wheel_height"

@@ -15,11 +15,12 @@ import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.model.Option;
-import com.wrz.reading.model.Wheel;
-import com.wrz.reading.ui.wheel.activity.OptionListActivity;
+import com.wrz.reading.ui.wheel.model.Option;
+import com.wrz.reading.ui.wheel.model.Wheel;
+import com.wrz.reading.ui.wheel.activity.CreateEditActivity;
 import com.wrz.reading.ui.wheel.activity.WheelListActivity;
-import com.wrz.reading.view.wheelview.WheelView;
+import com.wrz.reading.ui.wheel.model.Request;
+import com.wrz.reading.ui.wheel.view.wheelview.WheelView;
 
 import java.util.List;
 
@@ -185,7 +186,7 @@ public class WheelFragment extends BaseFragment {
     }
 
     private void showEditPage() {
-        OptionListActivity.start(activity, wheel.getId());
+        CreateEditActivity.start(activity, wheel.getId(), -1, Request.Edit_Wheel);
     }
 
     private void showListDialog() {

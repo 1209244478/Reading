@@ -8,8 +8,8 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.flexbox.FlexboxLayoutManager;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Emoji;
-import com.wrz.reading.view.popupView.EmojiPopup;
+import com.wrz.reading.ui.wheel.model.Emoji;
+import com.wrz.reading.ui.main.popupView.EmojiPopup;
 
 import java.util.List;
 

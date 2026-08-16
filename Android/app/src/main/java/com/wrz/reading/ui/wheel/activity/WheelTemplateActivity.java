@@ -1,7 +1,7 @@
 package com.wrz.reading.ui.wheel.activity;
 
-import static com.wrz.reading.model.Wheel.TYPE_CONTENT;
-import static com.wrz.reading.model.Wheel.TYPE_TITLE;
+import static com.wrz.reading.ui.wheel.model.Wheel.TYPE_CONTENT;
+import static com.wrz.reading.ui.wheel.model.Wheel.TYPE_TITLE;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -17,10 +17,11 @@ import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.util.DialogHelper;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.model.Wheel;
+import com.wrz.reading.ui.wheel.model.Wheel;
 import com.wrz.reading.ui.wheel.adapter.WheelTemplateListAdapter;
+import com.wrz.reading.ui.wheel.model.Request;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -69,7 +70,7 @@ public class WheelTemplateActivity extends BaseActivity {
         templateListAdapter.setOnItemClickListener((adapter, view, position) -> {
             Wheel item = list.get(position);
             if (item.getType() == TYPE_CONTENT) {
-                OptionListActivity.startFromTemplate(this, item.getId(), REQUEST_CODE_ADD);
+                CreateEditActivity.start(this, item.getId(), REQUEST_CODE_ADD, Request.Create_Wheel);
             }
         });
 
@@ -86,7 +87,7 @@ public class WheelTemplateActivity extends BaseActivity {
 
         FloatingActionButton btn_add = findViewById(R.id.btn_add);
         btn_add.setOnClickListener(v ->
-                OptionListActivity.startCreateTemplate(this, REQUEST_CODE_CREATE_TEMPLATE));
+                CreateEditActivity.start(this, REQUEST_CODE_CREATE_TEMPLATE, Request.Create_Template));
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -141,7 +142,7 @@ public class WheelTemplateActivity extends BaseActivity {
                         new String[]{getString(R.string.btn_edit), getString(R.string.delete), getString(R.string.make_a_copy)},
                         (index, text) -> {
                             if (index == 0) {
-                                OptionListActivity.startEditTemplate(this, list.get(position).getId(), REQUEST_CODE_EDIT_TEMPLATE);
+                                CreateEditActivity.start(this, list.get(position).getId(), REQUEST_CODE_EDIT_TEMPLATE, Request.Edit_Template);
                             } else if (index == 1) {
                                 delTemplate(position);
                             } else if (index == 2) {

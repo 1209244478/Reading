@@ -52,7 +52,7 @@
             android:name=".ui.wheel.activity.WheelListActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.wheel.activity.OptionListActivity"
+            android:name=".ui.wheel.activity.CreateEditActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
@@ -96,7 +96,7 @@
         <!-- Cling DLNA/UPnP 服务：负责 SSDP 设备发现与控制。
              接收端开启时以前台服务运行，保证退出 Activity 后仍可被发现。 -->
         <service
-            android:name="com.wrz.reading.dlna.CustomAndroidUpnpServiceImpl"
+            android:name="com.wrz.reading.ui.read.dlna.CustomAndroidUpnpServiceImpl"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property

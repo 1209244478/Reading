@@ -29,9 +29,9 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.model.Collection;
-import com.wrz.reading.model.Comic;
-import com.wrz.reading.model.FileType;
+import com.wrz.reading.ui.read.model.Collection;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.FileType;
 import com.wrz.reading.ui.read.activity.EpubReaderActivity;
 import com.wrz.reading.ui.read.activity.FolderPickerActivity;
 import com.wrz.reading.ui.read.activity.PdfReaderActivity;
@@ -39,9 +39,9 @@ import com.wrz.reading.ui.read.activity.ReaderActivity;
 import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 import com.wrz.reading.ui.read.adapter.ComicAdapter;
 import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
-import com.wrz.reading.util.DialogHelper;
-import com.wrz.reading.util.FileUtils;
-import com.wrz.reading.util.VideoUtils;
+import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.utils.FileUtils;
+import com.wrz.reading.ui.read.utils.VideoUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -394,6 +394,9 @@ public class CollectionDetailFragment extends BaseFragment {
             btnMove.setVisibility(View.VISIBLE);
             btnEditName.setVisibility(View.VISIBLE);
 
+            btnSplash.setVisibility(View.GONE);
+            btnChangeSort.setVisibility(View.GONE);
+
         } else {
             btnSelectMode.setImageResource(R.drawable.ic_photo_library);
             // 退出选择模式：FAB 恢复为添加按钮，隐藏移动和重命名按钮
@@ -401,6 +404,10 @@ public class CollectionDetailFragment extends BaseFragment {
             addFab.setOnClickListener(v -> launchFolderPicker());
             btnMove.setVisibility(View.GONE);
             btnEditName.setVisibility(View.GONE);
+
+            btnSplash.setVisibility(View.VISIBLE);
+            btnChangeSort.setVisibility(View.VISIBLE);
+
             clearSelections();
         }
         comicAdapter.notifyDataSetChanged();
@@ -577,6 +584,7 @@ public class CollectionDetailFragment extends BaseFragment {
      */
     private void importComicsFromFolders(List<String> folderPaths) {
         singleThread.execute(() -> {
+            runOnUiIfAlive(this::showLoading);
             int imported = 0;
             for (String path : folderPaths) {
                 File file = new File(path);
@@ -594,6 +602,7 @@ public class CollectionDetailFragment extends BaseFragment {
             }
             final int count = imported;
             runOnUiIfAlive(() -> {
+                dismissLoading();
                 Toast.makeText(activity, "已导入 " + count + " 本漫画", Toast.LENGTH_SHORT).show();
                 loadComics();
             });

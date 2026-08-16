@@ -7,7 +7,6 @@ import android.os.Environment;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -24,14 +23,13 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.model.Comic;
-import com.wrz.reading.model.FolderBean;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.FolderBean;
 import com.wrz.reading.ui.read.adapter.FolderAdapter;
-import com.wrz.reading.util.FileUtils;
+import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 

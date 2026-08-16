@@ -6,8 +6,8 @@ import android.widget.ImageView;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
-import com.wrz.reading.model.FolderBean;
-import com.wrz.reading.util.FileUtils;
+import com.wrz.reading.ui.read.model.FolderBean;
+import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.util.List;
 

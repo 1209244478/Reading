@@ -60,16 +60,6 @@
                     app:tint="@color/ios_text_primary" />
 
                 <ImageButton
-                    android:id="@+id/btn_select_mode"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/into_select_mode"
-                    android:src="@drawable/ic_photo_library"
-                    app:tint="@color/ios_text_primary" />
-
-                <ImageButton
                     android:id="@+id/btn_move"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
@@ -92,6 +82,16 @@
                     android:src="@drawable/ic_edit"
                     android:visibility="gone"
                     app:tint="@color/ios_blue" />
+
+                <ImageButton
+                    android:id="@+id/btn_select_mode"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/into_select_mode"
+                    android:src="@drawable/ic_photo_library"
+                    app:tint="@color/ios_text_primary" />
 
             </LinearLayout>
 

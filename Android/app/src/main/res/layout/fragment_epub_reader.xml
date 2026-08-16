@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.wrz.reading.view.epubview.ObservableWebView
+    <com.wrz.reading.ui.read.view.epubview.ObservableWebView
         android:id="@+id/contentWebView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="5dp" />
 
-    <com.wrz.reading.view.epubview.VerticalSeekbar
+    <com.wrz.reading.ui.read.view.epubview.VerticalSeekbar
         android:id="@+id/scrollSeekbar"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

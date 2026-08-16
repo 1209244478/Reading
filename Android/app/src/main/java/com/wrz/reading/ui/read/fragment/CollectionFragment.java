@@ -14,10 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.util.DialogHelper;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.model.Collection;
-import com.wrz.reading.model.CollectionItem;
+import com.wrz.reading.ui.read.model.Collection;
+import com.wrz.reading.ui.read.model.CollectionItem;
 import com.wrz.reading.ui.read.adapter.CollectionAdapter;
 
 import java.util.ArrayList;
@@ -51,8 +51,6 @@ public class CollectionFragment extends BaseFragment {
 
     @Override
     public void initView() {
-        initBackCallback();
-
         collectionRecyclerView = findId(R.id.collection_recycler_view);
         emptyStateText = findId(R.id.empty_state_text);
         addFab = findId(R.id.add_comic_fab);

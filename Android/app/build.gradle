@@ -84,6 +84,12 @@ dependencies {
     // 解压EPUB
     implementation 'org.apache.commons:commons-compress:1.21'
 
+    // epublib：EPUB 解析（提供 nl.siegmann.epublib.* 包）
+    // 排除 xmlpull：其接口类与 kxml2 重复，且 Android 平台已自带 org.xmlpull.v1.*
+    implementation('com.positiondev.epublib:epublib-core:3.1') {
+        exclude group: 'xmlpull', module: 'xmlpull'
+    }
+
 
     // 定义 BOM（依赖清单）以统一管理版本[citation:6]
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.11.0"))

@@ -10,7 +10,7 @@ import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Option;
+import com.wrz.reading.ui.wheel.model.Option;
 
 public class OptionAdapter extends BaseMultiItemQuickAdapter<Option, BaseViewHolder> {
 

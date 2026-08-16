@@ -21,13 +21,13 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.adapter.ImageAdapter;
-import com.wrz.reading.util.AutoPlayController;
-import com.wrz.reading.util.DialogHelper;
-import com.wrz.reading.util.FileSorter;
-import com.wrz.reading.util.FileUtils;
-import com.wrz.reading.util.ZipUtils;
+import com.wrz.reading.ui.read.utils.AutoPlayController;
+import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.utils.FileSorter;
+import com.wrz.reading.ui.read.utils.FileUtils;
+import com.wrz.reading.ui.read.utils.ZipUtils;
 
 import java.io.File;
 import java.util.ArrayList;

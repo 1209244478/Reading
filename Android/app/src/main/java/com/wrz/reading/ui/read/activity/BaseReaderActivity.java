@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 
 /**
  * 三个 Reader（图片/PDF/EPUB）的共同基类：

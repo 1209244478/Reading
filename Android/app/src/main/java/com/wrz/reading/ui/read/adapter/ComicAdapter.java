@@ -12,9 +12,9 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.model.Comic;
-import com.wrz.reading.model.FileType;
-import com.wrz.reading.util.VideoUtils;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.FileType;
+import com.wrz.reading.ui.read.utils.VideoUtils;
 
 import java.io.File;
 import java.util.List;

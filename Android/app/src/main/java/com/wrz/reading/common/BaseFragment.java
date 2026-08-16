@@ -32,8 +32,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.wrz.reading.R;
-import com.wrz.reading.util.ExecutorManager;
-import com.wrz.reading.view.loadding.CustomDialog;
+import com.wrz.reading.ui.main.utils.ExecutorManager;
+import com.wrz.reading.ui.main.dialog.LoadingDialog;
 
 import java.util.concurrent.ExecutorService;
 
@@ -46,7 +46,7 @@ public abstract class BaseFragment extends Fragment {
     public ExecutorService threadPool;
     protected Context mContext;
 
-    private CustomDialog dialog;
+    private LoadingDialog LoadingDialog;
 
     public Toolbar mCommonToolbar;
     private ToolbarHelper toolbarHelper;
@@ -159,27 +159,27 @@ public abstract class BaseFragment extends Fragment {
         return parentView;
     }
 
-    public CustomDialog getDialog() {
-        if (dialog == null) {
-            dialog = CustomDialog.instance(getActivity());
-            dialog.setCancelable(false);
+    public LoadingDialog getLoadingDialog() {
+        if (LoadingDialog == null) {
+            LoadingDialog = com.wrz.reading.ui.main.dialog.LoadingDialog.instance(getActivity());
+            LoadingDialog.setCancelable(false);
         }
-        return dialog;
+        return LoadingDialog;
     }
 
-    public void hideDialog() {
-        if (dialog != null)
-            dialog.hide();
+    public void hideLoading() {
+        if (LoadingDialog != null)
+            LoadingDialog.hide();
     }
 
-    public void showDialog() {
-        getDialog().show();
+    public void showLoading() {
+        getLoadingDialog().show();
     }
 
-    public void dismissDialog() {
-        if (dialog != null) {
-            dialog.dismiss();
-            dialog = null;
+    public void dismissLoading() {
+        if (LoadingDialog != null) {
+            LoadingDialog.dismiss();
+            LoadingDialog = null;
         }
     }
 

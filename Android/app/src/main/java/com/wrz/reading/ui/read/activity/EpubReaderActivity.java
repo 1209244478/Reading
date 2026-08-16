@@ -11,15 +11,15 @@ import android.widget.Toast;
 
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.bean.BookMixAToc;
+import com.wrz.reading.ui.read.model.BookMixAToc;
 import com.wrz.reading.common.BaseDialog;
 import com.wrz.reading.common.Constant;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.adapter.EPubReaderAdapter;
-import com.wrz.reading.util.FileUtils;
-import com.wrz.reading.view.dialog.ChaptersDialog;
-import com.wrz.reading.view.epubview.DirectionalViewpager;
-import com.wrz.reading.view.epubview.ReaderCallback;
+import com.wrz.reading.ui.read.utils.FileUtils;
+import com.wrz.reading.ui.read.view.dialog.ChaptersDialog;
+import com.wrz.reading.ui.read.view.epubview.DirectionalViewpager;
+import com.wrz.reading.ui.read.view.epubview.ReaderCallback;
 
 import java.io.FileInputStream;
 import java.io.InputStream;

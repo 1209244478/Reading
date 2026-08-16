@@ -1,14 +1,14 @@
 package com.wrz.reading.ui.wheel.adapter;
 
-import static com.wrz.reading.model.Wheel.TYPE_CONTENT;
-import static com.wrz.reading.model.Wheel.TYPE_TITLE;
+import static com.wrz.reading.ui.wheel.model.Wheel.TYPE_CONTENT;
+import static com.wrz.reading.ui.wheel.model.Wheel.TYPE_TITLE;
 
 import androidx.annotation.NonNull;
 
 import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Wheel;
+import com.wrz.reading.ui.wheel.model.Wheel;
 
 public class WheelTemplateListAdapter extends BaseMultiItemQuickAdapter<Wheel, BaseViewHolder> {
     public WheelTemplateListAdapter() {

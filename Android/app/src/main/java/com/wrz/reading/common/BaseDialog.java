@@ -7,7 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.EditText;
+import android.widget.TextView;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 
 import com.wrz.reading.R;
@@ -60,6 +63,20 @@ public abstract class BaseDialog extends Dialog {
         super.dismiss();
         if (listener != null) {
             listener.dismiss();
+        }
+    }
+
+    public <T extends View> T findId(@IdRes int id) {
+        return parentView.findViewById(id);
+    }
+
+    public void setText(View view, String text) {
+        if (view != null && text != null) {
+            if (view instanceof TextView) {
+                ((TextView) view).setText(text);
+            } else if (view instanceof EditText) {
+                ((EditText) view).setText(text);
+            }
         }
     }
 

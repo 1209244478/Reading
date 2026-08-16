@@ -1,10 +1,50 @@
 pluginManagement {
     repositories {
-        google {
+        // 阿里云 google 镜像（替代 dl.google.com，优先解析 AndroidX/AGP 等）
+        maven {
+            url 'https://maven.aliyun.com/repository/google'
             content {
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
                 includeGroupByRegex("androidx.*")
+            }
+        }
+        // 阿里云镜像仓库
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+
+        // 华为云镜像仓库
+        maven { url 'https://mirrors.huaweicloud.com/repository/maven' }
+
+        // 腾讯云镜像仓库
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public' }
+
+        // 清华镜像仓库
+        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/gradle/android-studio-plugin-gradle' }
+
+        maven { url "https://jitpack.io" }
+        mavenCentral()
+        gradlePluginPortal()
+        google()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        // 本地 maven 仓库：JitPack 制品离线缓存（JDK 访问 jitpack.io TLS 不稳定）
+        maven {
+            url = file('local-repo')
+            content {
+                includeGroup 'com.github.li-xiaojun'
+                includeGroup 'com.github.chrisbanes'
+            }
+        }
+        // JitPack 官方：本地仓库的兜底（仅处理 JitPack-only 的 group）
+        maven {
+            url 'https://jitpack.io'
+            content {
+                includeGroup 'com.github.li-xiaojun'
+                includeGroup 'com.github.chrisbanes'
             }
         }
         // 阿里云镜像仓库
@@ -21,29 +61,6 @@ pluginManagement {
         // 清华镜像仓库
         maven { url 'https://mirrors.tuna.tsinghua.edu.cn/gradle/android-studio-plugin-gradle' }
 
-        maven { url "https://jitpack.io" }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        // 阿里云镜像仓库
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-
-        // 华为云镜像仓库
-        maven { url 'https://mirrors.huaweicloud.com/repository/maven' }
-
-        // 腾讯云镜像仓库
-        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public' }
-
-        // 清华镜像仓库
-        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/gradle/android-studio-plugin-gradle' }
-
-        maven { url "https://jitpack.io" }
         google()
         mavenCentral()
 

@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 
 import java.util.List;
 

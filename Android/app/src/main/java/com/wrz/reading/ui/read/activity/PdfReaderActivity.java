@@ -8,10 +8,10 @@ import android.widget.TextView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.wrz.reading.R;
-import com.wrz.reading.util.DialogHelper;
-import com.wrz.reading.model.Comic;
-import com.wrz.reading.view.pdfview.PDFPagerAdapter;
-import com.wrz.reading.view.pdfview.PDFViewPager;
+import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.view.pdfview.PDFPagerAdapter;
+import com.wrz.reading.ui.read.view.pdfview.PDFViewPager;
 
 public class PdfReaderActivity extends BaseReaderActivity {
 

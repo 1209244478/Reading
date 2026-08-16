@@ -20,7 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wrz.reading.R;
-import com.wrz.reading.util.ExecutorManager;
+import com.wrz.reading.ui.main.utils.ExecutorManager;
 
 import java.util.concurrent.ExecutorService;
 
@@ -49,7 +49,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         getIntentData();
 
-        initBackCallback();
+        /*initBackCallback();*/
 
         mCommonToolbar = findViewById(R.id.toolbar);
         if (mCommonToolbar != null) {

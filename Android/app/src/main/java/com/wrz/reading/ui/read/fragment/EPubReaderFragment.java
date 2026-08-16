@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,10 +19,10 @@ import androidx.fragment.app.Fragment;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.model.Comic;
+import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.activity.EpubReaderActivity;
-import com.wrz.reading.view.epubview.ObservableWebView;
-import com.wrz.reading.view.epubview.VerticalSeekbar;
+import com.wrz.reading.ui.read.view.epubview.ObservableWebView;
+import com.wrz.reading.ui.read.view.epubview.VerticalSeekbar;
 
 import java.lang.ref.WeakReference;
 

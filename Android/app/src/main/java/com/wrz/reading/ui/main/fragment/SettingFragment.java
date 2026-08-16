@@ -9,8 +9,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.dlna.DlnaRendererManager;
-import com.wrz.reading.util.DialogHelper;
+import com.wrz.reading.ui.read.dlna.DlnaRendererManager;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 
 public class SettingFragment extends BaseFragment {
 

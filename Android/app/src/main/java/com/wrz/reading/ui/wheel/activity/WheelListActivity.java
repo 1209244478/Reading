@@ -12,9 +12,10 @@ import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.util.DialogHelper;
+import com.wrz.reading.ui.wheel.model.Request;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.model.Wheel;
+import com.wrz.reading.ui.wheel.model.Wheel;
 import com.wrz.reading.ui.wheel.adapter.WheelListAdapter;
 
 import java.util.List;
@@ -89,7 +90,7 @@ public class WheelListActivity extends BaseActivity {
                                 WheelTemplateActivity.start(this);
                             } else if (index == 1) {
                                 // id 传 -1：OptionListActivity 会基于默认选项创建新转盘
-                                OptionListActivity.start(this, "-1");
+                                CreateEditActivity.start(this, -1, Request.Create_Wheel_Fron_Blank);
                             }
                         })
                 .show();
@@ -109,7 +110,7 @@ public class WheelListActivity extends BaseActivity {
                         new String[]{getString(R.string.btn_edit), getString(R.string.delete), getString(R.string.make_a_copy)},
                         (index, text) -> {
                             if (index == 0) {
-                                OptionListActivity.start(this, list.get(position).getId());
+                                CreateEditActivity.start(this, list.get(position).getId(), -1, Request.Edit_Wheel);
                             } else if (index == 1) {
                                 delWheel(position);
                             } else if (index == 2) {

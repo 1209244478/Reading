@@ -6,8 +6,8 @@ import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
-import com.wrz.reading.util.FileUtils;
-import com.wrz.reading.view.ReaderPhotoView;
+import com.wrz.reading.ui.read.utils.FileUtils;
+import com.wrz.reading.ui.read.view.ReaderPhotoView;
 
 import org.jetbrains.annotations.NotNull;
 

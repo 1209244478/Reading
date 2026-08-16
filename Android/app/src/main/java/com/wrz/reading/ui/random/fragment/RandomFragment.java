@@ -13,7 +13,7 @@ import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
 import com.wrz.reading.ui.random.adapter.RandomAdapter;
-import com.wrz.reading.view.popupView.RandomSettingPopup;
+import com.wrz.reading.ui.main.popupView.RandomSettingPopup;
 
 import java.util.ArrayList;
 import java.util.Random;

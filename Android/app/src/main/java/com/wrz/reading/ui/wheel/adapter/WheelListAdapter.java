@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
-import com.wrz.reading.model.Wheel;
+import com.wrz.reading.ui.wheel.model.Wheel;
 
 public class WheelListAdapter extends BaseQuickAdapter<Wheel, BaseViewHolder> {
     public WheelListAdapter(int layoutResId) {
