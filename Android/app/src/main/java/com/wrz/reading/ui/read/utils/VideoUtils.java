@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.util.Log;
 
+import com.wrz.reading.ui.main.Log.LogUtil;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Locale;
@@ -57,7 +59,7 @@ public final class VideoUtils {
             }
             return bmp;
         } catch (Exception e) {
-            Log.e(TAG, "extractThumbnail failed: " + videoFile.getName(), e);
+            LogUtil.e(TAG, "extractThumbnail failed: " + videoFile.getName(), e);
             return null;
         } finally {
             if (mmr != null) {
@@ -99,7 +101,7 @@ public final class VideoUtils {
                 return file.getAbsolutePath();
             }
         } catch (Exception e) {
-            Log.e(TAG, "saveThumbnail failed", e);
+            LogUtil.e(TAG, "saveThumbnail failed", e);
         }
         return null;
     }

@@ -66,8 +66,15 @@ public interface ComicDao {
     void updateVideoProgress(long id, long positionMs, long lastRead, long total);
 
     /**
+     * 仅更新 percentMap，避免整行更新的潜在问题。
+     */
+    @Query("UPDATE comics SET percentMap = :percentMapJson WHERE id = :id")
+    void updatePercentMap(long id, String percentMapJson);
+
+    /**
      * 仅更新封面路径，用于旧视频懒生成封面后持久化。
      */
     @Query("UPDATE comics SET coverPath = :coverPath WHERE id = :id")
     void updateCoverPath(long id, String coverPath);
+
 }

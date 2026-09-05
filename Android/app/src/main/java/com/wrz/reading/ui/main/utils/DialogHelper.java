@@ -1,22 +1,19 @@
 package com.wrz.reading.ui.main.utils;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
-import com.wrz.reading.ui.read.model.Comic;
-import com.wrz.reading.ui.read.adapter.RenameAdapter;
+import com.wrz.reading.common.BaseDialog;
 import com.wrz.reading.ui.main.dialog.TextInputDialog;
+import com.wrz.reading.ui.read.adapter.RenameCollectionItemAdapter;
+import com.wrz.reading.ui.read.adapter.RenameComicAdapter;
+import com.wrz.reading.ui.read.model.CollectionItem;
+import com.wrz.reading.ui.read.model.Comic;
 
 import java.util.List;
 
@@ -31,27 +28,6 @@ public final class DialogHelper {
     }
 
     /**
-     * 单文本输入确认回调：返回 trim 后的文本
-     */
-    public interface TextInputCallback {
-        void onConfirm(String text);
-    }
-
-    /**
-     * 单文本输入确认回调：返回 trim 后的文本
-     */
-    public interface ListInputCallback {
-        void onConfirm(List<Comic> list);
-    }
-
-    /**
-     * 页码跳转回调：返回目标页（0-based）
-     */
-    public interface PageJumpCallback {
-        void onJumpTo(int page);
-    }
-
-    /**
      * 通用的删除确认对话框（2 按钮：确认 / 取消）。
      *
      * @param activity  宿主 Activity
@@ -59,7 +35,7 @@ public final class DialogHelper {
      * @param message   对话框正文
      * @param onConfirm 点击确认后回调（在主线程）
      */
-    public static void showDeleteConfirm(Activity activity, String title, String message,
+    public static void showConfirmDialog(Activity activity, String title, String message,
                                          final Runnable onConfirm) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         new AlertDialog.Builder(activity)
@@ -70,6 +46,13 @@ public final class DialogHelper {
                 })
                 .setNegativeButton(R.string.btn_cancel, null)
                 .show();
+    }
+
+    /**
+     * 单文本输入确认回调：返回 trim 后的文本
+     */
+    public interface TextInputCallback {
+        void onConfirm(String text);
     }
 
     /**
@@ -86,9 +69,14 @@ public final class DialogHelper {
     public static void showTextInputDialog(Activity activity, String title, String subtitle,
                                            String confirmText, String initialText,
                                            final TextInputCallback callback) {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
 
         new TextInputDialog(activity, title, subtitle, confirmText, initialText, callback).show();
 
+    }
+
+    public interface RenameComicCallback {
+        void onConfirm(List<Comic> list);
     }
 
     /**
@@ -99,46 +87,125 @@ public final class DialogHelper {
      * @param title       标题
      * @param subtitle    副标题
      * @param confirmText 确认按钮文案（如 "创建" / "保存"）
-     * @param Comics      漫画列表（可为空）
+     * @param comics      漫画列表（可为空）
          * @param callback    确认回调（已校验非空）
      */
-    public static void showListInputDialog(Activity activity, String title, String subtitle,
-                                           String confirmText, List<Comic> Comics,
-                                           final ListInputCallback callback) {
+    public static void showRenameComicsDialog(Activity activity, String title, String subtitle,
+                                              String confirmText, List<Comic> comics,
+                                              final RenameComicCallback callback) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
-        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_list_input, null);
-        TextView titleView = dialogView.findViewById(R.id.dialog_title);
-        TextView subtitleView = dialogView.findViewById(R.id.dialog_subtitle);
-        MaterialButton confirmBtn = dialogView.findViewById(R.id.btn_confirm);
-        RecyclerView recyclerView = dialogView.findViewById(R.id.collection_recycler_view);
 
-        RenameAdapter renameAdapter = new RenameAdapter(Comics);
+        new BaseDialog(activity) {
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_list_input;
+            }
 
-        recyclerView.setAdapter(renameAdapter);
-        LinearLayoutManager manager = new LinearLayoutManager(activity);
-        manager.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(manager);
+            @Override
+            public void initView() {
+                setText(R.id.dialog_title, title);
+                setText(R.id.dialog_subtitle, subtitle);
+                setText(R.id.btn_confirm, confirmText);
 
-        if (title != null) titleView.setText(title);
-        if (subtitle != null) subtitleView.setText(subtitle);
-        if (confirmText != null) confirmBtn.setText(confirmText);
+                RecyclerView recyclerView = findId(R.id.collection_recycler_view);
 
-        // 改用普通 Dialog（非 AlertDialog）：AlertDialog 的 window 配置存在 IME 抑制缺陷，
-        // dialog 内 EditText 永远 "is not served"，IME 弹到 Activity 的 served view 上。
-        // 普通 Dialog 的 window 能正确成为 IME target。
-        Dialog dialog = new Dialog(activity);
-        dialog.setContentView(dialogView);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        // 必须在 show() 之前设置，否则 IMM 已记录默认 hidden 状态，后续 showSoftInput 被抑制。
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                RenameComicAdapter adapter = new RenameComicAdapter(comics);
 
-        dialogView.findViewById(R.id.btn_cancel).setOnClickListener(v -> dialog.dismiss());
-        confirmBtn.setOnClickListener(v -> {
-            if (callback != null) callback.onConfirm(renameAdapter.getData());
-            dialog.dismiss();
-        });
+                recyclerView.setAdapter(adapter);
+                LinearLayoutManager manager = new LinearLayoutManager(getContext());
+                manager.setOrientation(LinearLayoutManager.VERTICAL);
+                recyclerView.setLayoutManager(manager);
+
+                findId(R.id.btn_cancel).setOnClickListener(v -> this.dismiss());
+                findId(R.id.btn_confirm).setOnClickListener(v -> {
+                    if (callback != null) callback.onConfirm(adapter.getEdited());
+                    this.dismiss();
+                });
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+
+        }.show();
+
+    }
+
+    /**
+     * 单文本输入确认回调：返回 trim 后的文本
+     */
+    public interface RenameCollectionCallback {
+        void onConfirm(List<CollectionItem> list);
+    }
+
+    /**
+     * 修改重命名合集，复用 dialog_list_input 布局（iOS 风格圆角卡片）。
+     * 适用于重命名合集场景。
+     *
+     * @param activity    宿主 Activity
+     * @param title       标题
+     * @param subtitle    副标题
+     * @param confirmText 确认按钮文案（如 "创建" / "保存"）
+     * @param collections      合集列表（可为空）
+         * @param callback    确认回调（已校验非空）
+     */
+    public static void showRenameCollectionsDialog(Activity activity, String title, String subtitle,
+                                           String confirmText, List<CollectionItem> collections,
+                                           final RenameCollectionCallback callback) {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+
+        /*RenameCollectionsDialog dialog = new RenameCollectionsDialog(activity, collections);
 
         dialog.show();
+
+        dialog.setCallback(callback);
+
+        dialog.setText(R.id.dialog_title, title);
+        dialog.setText(R.id.dialog_subtitle, subtitle);
+        dialog.setText(R.id.btn_confirm, confirmText);*/
+
+        new BaseDialog(activity) {
+
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_list_input;
+            }
+
+            @Override
+            public void initView() {
+                setText(R.id.dialog_title, title);
+                setText(R.id.dialog_subtitle, subtitle);
+                setText(R.id.btn_confirm, confirmText);
+
+                RecyclerView recyclerView = findId(R.id.collection_recycler_view);
+
+                RenameCollectionItemAdapter renameCollectionItemAdapter = new RenameCollectionItemAdapter(collections);
+
+                recyclerView.setAdapter(renameCollectionItemAdapter);
+                LinearLayoutManager manager = new LinearLayoutManager(getContext());
+                manager.setOrientation(LinearLayoutManager.VERTICAL);
+                recyclerView.setLayoutManager(manager);
+
+                findId(R.id.btn_cancel).setOnClickListener(v -> this.dismiss());
+                findId(R.id.btn_confirm).setOnClickListener(v -> {
+                    if (callback != null) callback.onConfirm(renameCollectionItemAdapter.getEdited());
+                    this.dismiss();
+                });
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+        }.show();
+    }
+
+    /**
+     * 页码跳转回调：返回目标页（0-based）
+     */
+    public interface PageJumpCallback {
+        void onJumpTo(int page);
     }
 
     /**
@@ -154,39 +221,50 @@ public final class DialogHelper {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         if (total <= 0) return;
 
-        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_page_jump, null);
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle(activity.getString(R.string.jump_to_page));
-        builder.setView(dialogView);
-
-        SeekBar pageSeekBar = dialogView.findViewById(R.id.page_seek_bar);
-        TextView currentPageText = dialogView.findViewById(R.id.current_page_text);
-        TextView totalPageText = dialogView.findViewById(R.id.total_page_text);
-
-        totalPageText.setText(String.valueOf(total));
-        pageSeekBar.setMax(total - 1);
-        pageSeekBar.setProgress(current);
-        currentPageText.setText(String.valueOf(current + 1));
-
-        pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        BaseDialog dialog = new BaseDialog(activity) {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                currentPageText.setText(String.valueOf(progress + 1));
+            public int getLayoutId() {
+                return R.layout.dialog_page_jump;
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+            public void initView() {
+                setText(R.id.title, activity.getString(R.string.jump_to_page));
+                setText(R.id.current_page_text, String.valueOf(current + 1));
+                setText(R.id.total_page_text, String.valueOf(total));
+
+                SeekBar pageSeekBar = findId(R.id.page_seek_bar);
+                pageSeekBar.setMax(total - 1);
+                pageSeekBar.setProgress(current);
+
+                pageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        setText(R.id.current_page_text, String.valueOf(progress + 1));
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+                findId(R.id.btn_cancel).setOnClickListener(v -> dismiss());
+                findId(R.id.btn_confirm).setOnClickListener(v -> {
+                    if (callback != null) callback.onJumpTo(pageSeekBar.getProgress());
+                    dismiss();
+                });
             }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
+            public void setDialogSize() {
 
-        builder.setPositiveButton(R.string.btn_confirm, (dialog, which) -> {
-            if (callback != null) callback.onJumpTo(pageSeekBar.getProgress());
-        });
-        builder.setNegativeButton(R.string.btn_cancel, null);
-        builder.show();
+            }
+        };
+
+        dialog.show();
     }
 }

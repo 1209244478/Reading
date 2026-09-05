@@ -51,6 +51,10 @@ public class LogUtil {
         getLogable().w(str, th);
     }
 
+    public static void w(String str, String str2) {
+        getLogable().w(str, str2);
+    }
+
     public static void wtf(String str, String str2) {
         getLogable().wtf(str, str2);
     }

@@ -37,6 +37,7 @@ public class WheelFragment extends BaseFragment {
     private List<Option> list;
     private Wheel wheel;
     private boolean isSpinning = false;
+    private ImageView pointer;
 
     @Override
     public int getLayoutResId() {
@@ -52,10 +53,69 @@ public class WheelFragment extends BaseFragment {
         resultText = findId(R.id.resultText);
         titleText = findId(R.id.titleText);
         resultCard = findId(R.id.resultCard);
+
+
         mainCard = findId(R.id.mainCard);
         wheelContainer = findId(R.id.wheelContainer);
         btn_menu = findId(R.id.btn_menu);
+        pointer = findId(R.id.pointer);
+    }
 
+    @Override
+    public void initData() {
+        singleThread.execute(() -> {
+            Wheel w = MyApplication.wheelRepository.getLastWheel();
+            if (w == null) return;
+            // 复用 BaseFragment 的 activity 字段与 runOnUiIfAlive，
+            // 内部已做 isAdded() 双重校验，避免回调执行时 Fragment 已 detach
+            runOnUiIfAlive(() -> {
+                wheel = w;
+                list = wheel.getList();
+                configViews();
+            });
+        });
+    }
+
+    @Override
+    public void configViews() {
+        setUpWheelView();
+
+        setUpButtonClick();
+
+        if (wheel != null) {
+            wheelView.setItems(wheel);
+
+            if (wheel.getEmoji() != null && !wheel.getEmoji().isBlank()) {
+                titleText.setText(wheel.getEmoji() + " " + wheel.getTitle());
+            } else {
+                titleText.setText(wheel.getTitle());
+            }
+        }
+    }
+
+    private void setUpButtonClick() {
+        startBtn.setOnClickListener(v -> startSpinning());
+        editBtn.setOnClickListener(v -> showEditPage());
+        mainCard.setOnClickListener(v -> {
+            if (isSpinning) return;
+            resetWheel();
+        });
+
+        resultCard.setOnClickListener(v -> {
+            if (isSpinning) return;
+            if (getString(R.string.hint_wheel).equals(resultText.getText().toString())) {
+                startSpinning();
+            } else {
+                resetWheel();
+            }
+        });
+
+        btn_menu.setOnClickListener(v -> showList());
+
+        pointer.setOnClickListener(v -> startSpinning());
+    }
+
+    private void setUpWheelView() {
         wheelView.setOnItemSelectedListener(new WheelView.OnItemListener() {
             @Override
             public void onTempSelected(String item) {
@@ -80,55 +140,6 @@ public class WheelFragment extends BaseFragment {
                         + getString(R.string.click_to_reset));
             }
         });
-
-        startBtn.setOnClickListener(v -> startSpinning());
-        editBtn.setOnClickListener(v -> showEditPage());
-        mainCard.setOnClickListener(v -> {
-            if (isSpinning) return;
-            resetWheel();
-        });
-
-        resultCard.setOnClickListener(v -> {
-            if (isSpinning) return;
-            if (getString(R.string.hint_wheel).equals(resultText.getText().toString())) {
-                startSpinning();
-            } else {
-                resetWheel();
-            }
-        });
-
-        btn_menu.setOnClickListener(v -> showListDialog());
-
-        ImageView pointer = findId(R.id.pointer);
-        pointer.setOnClickListener(v -> startSpinning());
-    }
-
-    @Override
-    public void initData() {
-        singleThread.execute(() -> {
-            Wheel w = MyApplication.wheelRepository.getLastWheel();
-            if (w == null) return;
-            // 复用 BaseFragment 的 activity 字段与 runOnUiIfAlive，
-            // 内部已做 isAdded() 双重校验，避免回调执行时 Fragment 已 detach
-            runOnUiIfAlive(() -> {
-                wheel = w;
-                list = wheel.getList();
-                configViews();
-            });
-        });
-    }
-
-    @Override
-    public void configViews() {
-        if (wheel != null) {
-            wheelView.setItems(wheel);
-
-            if (wheel.getEmoji() != null && !wheel.getEmoji().isBlank()) {
-                titleText.setText(wheel.getEmoji() + " " + wheel.getTitle());
-            } else {
-                titleText.setText(wheel.getTitle());
-            }
-        }
     }
 
     @Override
@@ -189,7 +200,7 @@ public class WheelFragment extends BaseFragment {
         CreateEditActivity.start(activity, wheel.getId(), -1, Request.Edit_Wheel);
     }
 
-    private void showListDialog() {
+    private void showList() {
         WheelListActivity.start(activity);
     }
 

@@ -12,7 +12,7 @@ android {
         applicationId "com.wrz.reading"
         minSdk 27
         targetSdk 36
-        versionCode 2026080423
+        versionCode 2026083104
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

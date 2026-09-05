@@ -21,6 +21,7 @@ import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.activity.EpubReaderActivity;
+import com.wrz.reading.ui.read.model.SubProgress;
 import com.wrz.reading.ui.read.view.epubview.ObservableWebView;
 import com.wrz.reading.ui.read.view.epubview.VerticalSeekbar;
 
@@ -191,7 +192,7 @@ public class EPubReaderFragment extends BaseFragment {
 
         mWebview.setScrollListener(percent -> {
             if (comic != null) {
-                comic.getPercentMap().put(mPosition, percent);
+                SubProgress.updateSubProgress(String.valueOf(mPosition), (long) percent, comic.getSubProgress());
             }
             if (mWebview.getScrollY() != 0) {
                 mScrollY = mWebview.getScrollY();

@@ -93,13 +93,27 @@ public class PrefManager {
     }
 
 
-
     /**
      * 获取上次导入漫画的目录地址
      */
     public String getCastName() {
-        return preferences.getString(Prefs.KEY_CAST_NAME, "随便什么名字");
+        return preferences.getString(Prefs.KEY_CAST_NAME, "");
     }
 
 
+
+    /**
+     * 保存是否自动清除缓存
+     */
+    public void saveClearCache(boolean clear) {
+        preferences.edit().putBoolean(Prefs.KEY_CLEAR_CACHE, clear).apply();
+    }
+
+
+    /**
+     * 获取是否自动清除缓存
+     */
+    public boolean getClearCache() {
+        return preferences.getBoolean(Prefs.KEY_CLEAR_CACHE, false);
+    }
 }

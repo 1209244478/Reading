@@ -24,7 +24,7 @@ import com.github.chrisbanes.photoview.PhotoView;
 public class ReaderPhotoView extends PhotoView {
 
     public interface OnTapListener {
-        void onTap(float xPercent);
+        void onTap(float xPercent, float yPercent);
     }
 
     public interface OnMoveListener {
@@ -57,7 +57,8 @@ public class ReaderPhotoView extends PhotoView {
             public boolean onSingleTapUp(MotionEvent e) {
                 if (tapListener != null && getWidth() > 0) {
                     float xPercent = e.getX() / (float) getWidth();
-                    tapListener.onTap(xPercent);
+                    float yPercent = e.getY() / (float) getHeight();
+                    tapListener.onTap(xPercent, yPercent);
                 }
                 return true;
             }

@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.ui.main.Log.LogUtil;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -30,7 +31,7 @@ public class CompressionUtil {
      */
     public static String compressImagesToZip(Context context, List<File> imageFiles, String comicTitle) {
         if (imageFiles == null || imageFiles.isEmpty()) {
-            Log.e(TAG, "No images to compress");
+            LogUtil.e(TAG, "No images to compress");
             return null;
         }
 
@@ -40,7 +41,7 @@ public class CompressionUtil {
         // File comicsDir = getComicsDirectory();
 
         if (!comicsDir.exists() && !comicsDir.mkdirs()) {
-            Log.e(TAG, "Failed to create comics directory");
+            LogUtil.e(TAG, "Failed to create comics directory");
             return null;
         }
 
@@ -77,7 +78,7 @@ public class CompressionUtil {
             Log.i(TAG, "Successfully compressed images to: " + zipFile.getPath());
             return zipFile.getPath();
         } catch (IOException e) {
-            Log.e(TAG, "Error compressing images", e);
+            LogUtil.e(TAG, "Error compressing images", e);
             if (zipFile.exists()) {
                 zipFile.delete();
             }
@@ -94,7 +95,7 @@ public class CompressionUtil {
         // 使用应用私有外部存储目录，无需申请存储权限，卸载自动清理
         File comicsDir = new File(MyApplication.app.getExternalFilesDir(null), "漫画");
         if (!comicsDir.exists() && !comicsDir.mkdirs()) {
-            Log.e(TAG, "Failed to create comics directory");
+            LogUtil.e(TAG, "Failed to create comics directory");
             return null;
         }
         return comicsDir;

@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.wrz.reading.R;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.view.pdfview.PDFPagerAdapter;
@@ -61,7 +62,7 @@ public class PdfReaderActivity extends BaseReaderActivity {
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "PDF open failed: " + e.getMessage());
+            LogUtil.e(TAG, "PDF open failed: " + e.getMessage());
             showToastAndFinish("PDF 文件打开失败或已损坏");
             return;
         }
@@ -76,15 +77,7 @@ public class PdfReaderActivity extends BaseReaderActivity {
 
             @Override
             public void onPageSelected(int position) {
-
-                if (comic != null) {
-                    comic.setReadProgress(position);
-
-                    if (comic.getTotal() != pdfViewPager.getCount()) {
-                        comic.setTotal(pdfViewPager.getCount());
-                    }
-                }
-                pageCounterText.setText((position + 1) + "/" + (pdfViewPager.getCount()));
+                updateReadProgress();
             }
 
             @Override
@@ -93,6 +86,21 @@ public class PdfReaderActivity extends BaseReaderActivity {
             }
         });
         pdfViewPager.setCurrentItem((int) comic.getReadProgress(), false);
+    }
+
+    @Override
+    public void updateReadProgress() {
+        if (pdfViewPager != null) {
+            int position = pdfViewPager.getCurrentItem();
+            if (comic != null) {
+                comic.setReadProgress(position);
+
+                if (comic.getTotal() != pdfViewPager.getCount()) {
+                    comic.setTotal(pdfViewPager.getCount());
+                }
+            }
+            pageCounterText.setText((position + 1) + "/" + (pdfViewPager.getCount()));
+        }
     }
 
     private void showPageJumpDialog() {

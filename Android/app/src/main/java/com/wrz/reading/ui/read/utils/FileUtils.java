@@ -258,6 +258,16 @@ public class FileUtils {
         return false;
     }
 
+    public static String isWhatFile(String fileName) {
+        if (isVideoFile(fileName)) {
+            return "v";
+        } else if (isMusicFile(fileName)) {
+            return "m";
+        } else /*if (isImageFile(fileName))*/ {
+            return "i";
+        }
+    }
+
     public static String isSupportedExtFormat(String fileName) {
         String lowerFileName = fileName.toLowerCase();
         for (String extension : SUPPORTED_EXT_FORMAT) {
@@ -271,6 +281,23 @@ public class FileUtils {
     public static File getFirstImageFile(File directory) {
         List<File> imageFiles = getImageFiles(directory, true);
         return imageFiles.isEmpty() ? null : imageFiles.get(0);
+    }
+
+    /** 递归获取目录下所有视频文件 */
+    public static List<File> getVideoFiles(File dir) {
+        List<File> result = new ArrayList<>();
+        File[] files = dir.listFiles();
+        if (files == null) return result;
+        for (File f : files) {
+            if (f.isFile() && FileUtils.isVideoFile(f.getName())) {
+                result.add(f);
+            } else if (f.isDirectory()) {
+                result.addAll(getVideoFiles(f));
+            }
+        }
+        // 按文件名排序
+        result.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        return result;
     }
 
     public static boolean copyFile(File sourceFile, File destFile) {
@@ -297,7 +324,7 @@ public class FileUtils {
             }
             return true;
         } catch (IOException e) {
-            Log.e("FileUtils", "copyFile: ", e);
+            LogUtil.e("FileUtils", "copyFile: ", e);
             return false;
         }
     }
@@ -502,7 +529,7 @@ public class FileUtils {
             fin.read(buffer);
             return buffer;
         } catch (Exception e) {
-            Log.e(TAG, "readAssets: ", e);
+            LogUtil.e(TAG, "readAssets: ", e);
             return null;
         }
     }
@@ -644,7 +671,7 @@ public class FileUtils {
             }
             return out.toByteArray();
         } catch (IOException e) {
-            Log.e(TAG, "getBytesFromFile: ", e);
+            LogUtil.e(TAG, "getBytesFromFile: ", e);
             return null;
         }
     }

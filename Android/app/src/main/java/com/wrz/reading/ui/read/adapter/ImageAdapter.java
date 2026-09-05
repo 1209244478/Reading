@@ -70,18 +70,24 @@ public class ImageAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
             photoView.setOnMatrixChangeListener(rect -> listener.onScroll());
         } else {
             photoView.setZoomable(false);
-            photoView.setOnTapListener(xPercent -> {
+            photoView.setOnTapListener((xPercent, yPercent) -> {
                 if (isVideo || isMusic) {
-                    listener.onVideoClick(imageFile);
-                } else if (xPercent < 0.33f) {
-                    listener.onSwipe(false);
-                } else if (xPercent > 0.67f) {
-                    listener.onSwipe(true);
+                    if (yPercent < 0.3f || yPercent > 0.7f) {
+                        listener.onComicClick();
+                    } else {
+                        listener.onVideoClick(imageFile);
+                    }
                 } else {
-                    listener.onComicClick();
+                    if (xPercent < 0.33f) {
+                        listener.onSwipe(false);
+                    } else if (xPercent > 0.67f) {
+                        listener.onSwipe(true);
+                    } else {
+                        listener.onComicClick();
+                    }
                 }
             });
-            photoView.setOnMoveListener(() -> listener.onScroll());
+            photoView.setOnMoveListener(listener::onScroll);
         }
     }
 }

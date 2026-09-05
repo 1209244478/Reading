@@ -64,17 +64,30 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />-->
 
-    <!-- 底部控制甲：圆角浮层，承载页码 -->
+    <!-- 预览卡片：拖动 SeekBar 时浮动显示在滑块正上方 -->
+    <include
+        android:id="@+id/preview_card"
+        layout="@layout/preview_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_action_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 底部控制栏：页码 + 进度条 -->
     <LinearLayout
         android:id="@+id/bottom_action_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="44dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/reader_control_deck_bg"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:orientation="horizontal"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -87,9 +100,12 @@
             android:clickable="true"
             android:focusable="true"
             android:fontFamily="sans-serif-medium"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:minWidth="52dp"
             android:text="1/10"
             android:textColor="@color/white"
-            android:textSize="15sp" />
+            android:textSize="13sp" />
 
     </LinearLayout>
 

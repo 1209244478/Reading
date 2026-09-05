@@ -1,26 +1,21 @@
 package com.wrz.reading.ui.read.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -29,9 +24,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.ui.read.model.Collection;
-import com.wrz.reading.ui.read.model.Comic;
-import com.wrz.reading.ui.read.model.FileType;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.activity.EpubReaderActivity;
 import com.wrz.reading.ui.read.activity.FolderPickerActivity;
 import com.wrz.reading.ui.read.activity.PdfReaderActivity;
@@ -39,16 +32,19 @@ import com.wrz.reading.ui.read.activity.ReaderActivity;
 import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 import com.wrz.reading.ui.read.adapter.ComicAdapter;
 import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
-import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.model.Collection;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.FileType;
+import com.wrz.reading.ui.read.utils.DiffCallBack;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.VideoUtils;
+import com.wrz.reading.ui.read.view.dialog.MoveDialog;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 集合详情页：展示某个集合（或未分组）内的漫画列表。
@@ -71,7 +67,6 @@ public class CollectionDetailFragment extends BaseFragment {
     private static final int SORT_PROGRESS = 3;
 
     private long collectionId;
-    private String collectionName;
 
     private final List<Comic> allComics = new ArrayList<>();
     public static final List<Comic> displayComics = new ArrayList<>();
@@ -98,19 +93,16 @@ public class CollectionDetailFragment extends BaseFragment {
      */
     private final ActivityResultLauncher<Intent> folderPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    new ActivityResultCallback<ActivityResult>() {
-                        @Override
-                        public void onActivityResult(ActivityResult result) {
-                            if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
-                                return;
-                            }
-                            ArrayList<String> folders = result.getData()
-                                    .getStringArrayListExtra(FolderPickerActivity.EXTRA_SELECTED_FOLDERS);
-                            if (folders == null || folders.isEmpty()) {
-                                return;
-                            }
-                            importComicsFromFolders(folders);
+                    result -> {
+                        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
+                            return;
                         }
+                        ArrayList<String> folders = result.getData()
+                                .getStringArrayListExtra(FolderPickerActivity.EXTRA_SELECTED_FOLDERS);
+                        if (folders == null || folders.isEmpty()) {
+                            return;
+                        }
+                        importComicsFromFolders(folders);
                     });
 
     @Override
@@ -136,12 +128,12 @@ public class CollectionDetailFragment extends BaseFragment {
     @Override
     public void initData() {
         Bundle args = getArguments();
+        String collectionName = "";
         if (args != null) {
             collectionId = args.getLong(CollectionFragment.ARG_COLLECTION_ID, CollectionFragment.UNCATEGORIZED_ID);
             collectionName = args.getString(CollectionFragment.ARG_COLLECTION_NAME, "");
         } else {
             collectionId = CollectionFragment.UNCATEGORIZED_ID;
-            collectionName = "";
         }
 
         navController = NavHostFragment.findNavController(this);
@@ -184,7 +176,9 @@ public class CollectionDetailFragment extends BaseFragment {
                     Comics.add(comic);
                 }
             }
-            showRenameDialog(Comics);
+            if (!Comics.isEmpty()) {
+                showRenameDialog(Comics);
+            }
         });
 
         searchEditText.addTextChangedListener(new TextWatcher() {
@@ -260,6 +254,8 @@ public class CollectionDetailFragment extends BaseFragment {
             // 在后台线程构建临时列表，避免与主线程遍历 allComics 竞态
             List<Comic> tempList = new ArrayList<>(comics);
 
+            comics.forEach(c -> c.setSelected(false));
+
             runOnUiIfAlive(() -> {
                 if (useDiff) {
                     applyComicsDiff(tempList);
@@ -288,11 +284,12 @@ public class CollectionDetailFragment extends BaseFragment {
         rebuildDisplayList();
         // 计算差量并分发到 adapter，保留滚动位置
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(
-                new ComicDiffCallback(oldList, displayComics), false);
+                new DiffCallBack.ComicDiffCallback(oldList, displayComics), false);
         diff.dispatchUpdatesTo(comicAdapter);
         updateEmptyState();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void applySortAndFilter() {
         rebuildDisplayList();
         comicAdapter.notifyDataSetChanged();
@@ -311,18 +308,25 @@ public class CollectionDetailFragment extends BaseFragment {
             }
         }
 
+        // 目录始终排在最前面的比较器
+        Comparator<Comic> dirFirst = (a, b) -> {
+            boolean aDir = new java.io.File(a.getPath()).isDirectory();
+            boolean bDir = new java.io.File(b.getPath()).isDirectory();
+            return Boolean.compare(!aDir, !bDir); // false(目录) 排在 true(文件) 前面
+        };
+
         switch (currentSort) {
             case SORT_NAME:
-                Collections.sort(displayComics, Comparator.comparing(Comic::getTitle, String.CASE_INSENSITIVE_ORDER));
+                displayComics.sort(dirFirst.thenComparing(Comic::getTitle, String.CASE_INSENSITIVE_ORDER));
                 break;
             case SORT_LAST_READ:
-                Collections.sort(displayComics, (a, b) -> Long.compare(b.getLastRead(), a.getLastRead()));
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getLastRead(), a.getLastRead())));
                 break;
             case SORT_ADDED:
-                Collections.sort(displayComics, (a, b) -> Long.compare(b.getId(), a.getId()));
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getId(), a.getId())));
                 break;
             case SORT_PROGRESS:
-                Collections.sort(displayComics, (a, b) -> Integer.compare((int) b.getReadProgress(), (int) a.getReadProgress()));
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Integer.compare(b.getReadProgress(), a.getReadProgress())));
                 break;
         }
     }
@@ -361,11 +365,21 @@ public class CollectionDetailFragment extends BaseFragment {
             Toast.makeText(activity, "视频文件不存在", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent intent = new Intent(activity, VideoPlayerActivity.class);
-        intent.putExtra(VideoPlayerActivity.EXTRA_VIDEO_PATH, comic.getPath());
-        intent.putExtra(VideoPlayerActivity.EXTRA_TITLE, comic.getTitle());
-        intent.putExtra(VideoPlayerActivity.EXTRA_COMIC_ID, comic.getId());
-        startActivity(intent);
+
+        // 如果 path 是目录（压缩包场景），从中查找第一个视频文件
+        String videoPath = comic.getPath();
+        if (file.isDirectory()) {
+            List<File> videos = FileUtils.getVideoFiles(file);
+            if (videos.isEmpty()) {
+                Toast.makeText(activity, "目录中没有视频文件", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            videoPath = videos.get(0).getAbsolutePath();
+        }
+
+        VideoPlayerActivity.start(activity, comic.getId(),
+                videoPath, comic.getTitle(),
+                false, 1000);
     }
 
     // ==================== 搜索 ====================
@@ -384,6 +398,7 @@ public class CollectionDetailFragment extends BaseFragment {
 
     // ==================== 选择模式 ====================
 
+    @SuppressLint("NotifyDataSetChanged")
     private void toggleSelectMode() {
         comicAdapter.toggleSelectMode();
         if (comicAdapter.isSelectMode()) {
@@ -438,7 +453,7 @@ public class CollectionDetailFragment extends BaseFragment {
             Toast.makeText(activity, "请先选择漫画", Toast.LENGTH_SHORT).show();
             return;
         }
-        DialogHelper.showDeleteConfirm(activity,
+        DialogHelper.showConfirmDialog(activity,
                 "删除漫画",
                 "确定删除选中的 " + selected.size() + " 本漫画？此操作不可撤销。",
                 () -> deleteComics(selected));
@@ -468,10 +483,10 @@ public class CollectionDetailFragment extends BaseFragment {
             Toast.makeText(activity, "请先选择漫画", Toast.LENGTH_SHORT).show();
             return;
         }
-        showMoveToCollectionDialog(selected);
+        showMoveDialog(selected);
     }
 
-    private void showMoveToCollectionDialog(List<Comic> comics) {
+    private void showMoveDialog(List<Comic> comics) {
         singleThread.execute(() -> {
             List<Collection> collections = MyApplication.comicDatabase.collectionDao().getAllCollections();
             // 在后台线程构建目标列表（含数量查询），避免主线程访问数据库
@@ -490,40 +505,24 @@ public class CollectionDetailFragment extends BaseFragment {
                     Toast.makeText(activity, "没有可移动的目标集合", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                showMoveTargetDialog(comics, targets);
+
+                MoveDialog dialog = new MoveDialog(activity, targets);
+                dialog.setListener(new MoveDialog.onClickListener() {
+                    @Override
+                    public void onItemClick(MoveTargetAdapter.MoveTarget target) {
+                        moveComics(comics, target.id);
+                    }
+
+                    @Override
+                    public void onCreate() {
+                        showCreateCollectionDialog(name -> createCollectionAndResumeMove(comics, name));
+                    }
+                });
+                dialog.show();
+                dialog.setMoveTitle("移动 " + comics.size() + " 本到");
+                /*showMoveTargetDialog(comics, targets);*/
             });
         });
-    }
-
-    private void showMoveTargetDialog(List<Comic> comics, List<MoveTargetAdapter.MoveTarget> targets) {
-        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_move_to_collection, null);
-        TextView titleView = dialogView.findViewById(R.id.move_dialog_title);
-        TextView subtitleView = dialogView.findViewById(R.id.move_dialog_subtitle);
-        RecyclerView listView = dialogView.findViewById(R.id.move_target_list);
-
-        titleView.setText("移动 " + comics.size() + " 本到");
-        subtitleView.setText("选择目标集合");
-        listView.setLayoutManager(new LinearLayoutManager(activity));
-        MoveTargetAdapter adapter = new MoveTargetAdapter(targets);
-        listView.setAdapter(adapter);
-
-        AlertDialog dialog = new AlertDialog.Builder(activity)
-                .setView(dialogView)
-                .create();
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-
-        adapter.setOnItemClickListener((target -> {
-            moveComics(comics, target.id);
-            dialog.dismiss();
-        }));
-        dialogView.findViewById(R.id.move_btn_cancel).setOnClickListener(v -> dialog.dismiss());
-        // 创建新集合：创建后刷新目标列表
-        dialogView.findViewById(R.id.move_btn_create).setOnClickListener(v -> {
-            dialog.dismiss();
-            showCreateCollectionDialog(name -> createCollectionAndResumeMove(comics, name));
-        });
-
-        dialog.show();
     }
 
     /**
@@ -661,31 +660,19 @@ public class CollectionDetailFragment extends BaseFragment {
     // ==================== 重命名漫画 ====================
 
     private void showRenameDialog(List<Comic> list) {
-        DialogHelper.showListInputDialog(activity,
+        DialogHelper.showRenameComicsDialog(activity,
                 "重命名", "输入新的名称", "保存", list,
-                this::renameCollections);
+                this::renameComics);
     }
 
-    private void renameCollection(long comicId, String newName) {
+    private void renameComics(List<Comic> list) {
         singleThread.execute(() -> {
-            Comic comic = MyApplication.comicDatabase.comicDao().getComicById(comicId);
-            if (comic != null) {
-                comic.setTitle(newName);
-                MyApplication.comicDatabase.comicDao().updateComic(comic);
-            }
-            runOnUiIfAlive(() -> Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show());
-        });
-    }
+            ComicDatabase.updateList(list);
 
-    private void renameCollections(List<Comic> list) {
-        singleThread.execute(() -> {
-            for (Comic comic : list) {
-                if (comic != null) {
-                    MyApplication.comicDatabase.comicDao().updateComic(comic);
-                }
-            }
-
-            runOnUiIfAlive(() -> Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show());
+            runOnUiIfAlive(() -> {
+                loadComics(true);
+                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+            });
         });
     }
 
@@ -706,48 +693,4 @@ public class CollectionDetailFragment extends BaseFragment {
         }
     }
 
-    /**
-     * DiffUtil 回调：按 id 判定同一项，按可视字段判定内容是否变化。
-     * Comic 未重写 equals，不能依赖 List.indexOf/contains。
-     */
-    private static class ComicDiffCallback extends DiffUtil.Callback {
-        private final List<Comic> oldList;
-        private final List<Comic> newList;
-
-        ComicDiffCallback(List<Comic> oldList, List<Comic> newList) {
-            this.oldList = oldList;
-            this.newList = newList;
-        }
-
-        @Override
-        public int getOldListSize() {
-            return oldList.size();
-        }
-
-        @Override
-        public int getNewListSize() {
-            return newList.size();
-        }
-
-        @Override
-        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            return oldList.get(oldItemPosition).getId() == newList.get(newItemPosition).getId();
-        }
-
-        @Override
-        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            Comic a = oldList.get(oldItemPosition);
-            Comic b = newList.get(newItemPosition);
-            return a.getId() == b.getId()
-                    && Objects.equals(a.getTitle(), b.getTitle())
-                    && Objects.equals(a.getCoverPath(), b.getCoverPath())
-                    && Objects.equals(a.getFileType(), b.getFileType())
-                    && a.getReadProgress() == b.getReadProgress()
-                    && a.getVideoPosition() == b.getVideoPosition()
-                    && a.getTotal() == b.getTotal()
-                    && a.getLastRead() == b.getLastRead()
-                    && a.isSelected() == b.isSelected()
-                    && a.isHorizontal() == b.isHorizontal();
-        }
-    }
 }

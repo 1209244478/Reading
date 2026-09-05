@@ -14,19 +14,25 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
-import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.Collection;
+import com.wrz.reading.ui.read.model.CollectionItem;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class RenameAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
-    public RenameAdapter(@Nullable List<Comic> data) {
-        super(R.layout.item_list_input, data);
+public class RenameCollectionItemAdapter extends BaseQuickAdapter<CollectionItem, BaseViewHolder> {
+
+    /** 深拷贝后的编辑数据，取消操作不会影响原始数据 */
+    private final List<CollectionItem> edited = new ArrayList<>();
+
+    public RenameCollectionItemAdapter(@Nullable List<CollectionItem> data) {
+        super(R.layout.item_list_input, CollectionItem.deepCopy(data));
     }
 
     @Override
-    protected void convert(@NonNull BaseViewHolder holder, Comic comic) {
-        holder.setText(R.id.et_collection_name, comic.getTitle());
+    protected void convert(@NonNull BaseViewHolder holder, CollectionItem collectionItem) {
+        holder.setText(R.id.et_collection_name, collectionItem.getCollection().getName());
 
         TextInputEditText nameEdit = holder.getView(R.id.et_collection_name);
         TextInputLayout nameLayout = holder.getView(R.id.collection_name_layout);
@@ -36,13 +42,20 @@ public class RenameAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
                 requestIme(v);
             }
         });
-        nameEdit.setOnClickListener(RenameAdapter::requestIme);
+        nameEdit.setOnClickListener(RenameCollectionItemAdapter::requestIme);
 
         nameEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable editable) {
-                if (nameEdit.getText() != null && !nameEdit.getText().toString().isEmpty()) {
-                    comic.setTitle(Objects.requireNonNull(nameEdit.getText()).toString());
+                // 从现有列表中移除同一 Collection 的旧记录
+                edited.removeIf(e -> e.getCollection().getId() == collectionItem.getCollection().getId());
+
+                String newName = nameEdit.getText() != null ? nameEdit.getText().toString() : "";
+                if (!newName.isEmpty() && !Objects.equals(newName, collectionItem.getCollection().getName())) {
+                    Collection c = Collection.deepCopy(collectionItem);
+                    c.setName(newName);
+
+                    edited.add(new CollectionItem(c, collectionItem.getComicCount()));
                 }
             }
 
@@ -56,10 +69,16 @@ public class RenameAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
                 String text = charSequence.toString();
                 if (text.isEmpty()) {
                     nameLayout.setError(holder.itemView.getContext().getString(R.string.name_should_not_empty));
+                } else {
+                    nameLayout.setErrorEnabled(false);
                 }
             }
         });
 
+    }
+
+    public List<CollectionItem> getEdited() {
+        return edited;
     }
 
     private static void requestIme(View view) {

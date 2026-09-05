@@ -1,5 +1,6 @@
 package com.wrz.reading.ui.read.dlna;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 
 import org.fourthline.cling.android.AndroidUpnpService;
@@ -26,6 +28,7 @@ import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
 import org.fourthline.cling.model.types.UnsignedIntegerFourBytes;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -66,12 +69,16 @@ public class DlnaRendererManager {
     private volatile String currentUri;
     private volatile String currentTitle;
     /** 发送端设备名（从 SetAVTransportURI 的 URL query 参数 caster 解析） */
-    private volatile String currentCasterName;
+    private volatile String currentCasterName = "";
     private volatile String transportState = "NO_MEDIA_PRESENT";
     private volatile PlayerBridge bridge;
     private volatile boolean activityLaunched = false;
     /** onSeek 在 Activity/bridge 就绪前到达时缓存的 seek 位置，registerBridge 时执行。 */
     private volatile long pendingSeekMs = 0;
+
+    public void setCurrentCasterName(String currentCasterName) {
+        this.currentCasterName = currentCasterName;
+    }
 
     /** 由接收模式 VideoPlayerActivity 实现，桥接 ExoPlayer 控制。 */
     public interface PlayerBridge {
@@ -83,7 +90,7 @@ public class DlnaRendererManager {
 
         void seekTo(long ms);
 
-        void setUri(String uri, String title);
+        void setUri(String uri, String title, boolean isNewDevice, String casterName);
 
         long getPositionMs();
 
@@ -101,7 +108,7 @@ public class DlnaRendererManager {
             }
             acquireLocks();
             registerRendererDevice();
-            Log.d(TAG, "Cling 服务已连接");
+            LogUtil.d(TAG, "Cling 服务已连接");
         }
 
         @Override
@@ -159,6 +166,8 @@ public class DlnaRendererManager {
         }
         appContext = context.getApplicationContext();
         started = true;
+        // 必须在 bindService 之前获取 MulticastLock，否则 Cling 初始化时发送 SSDP 会因 EPERM 失败
+        acquireLocks();
         Intent intent = new Intent(appContext, CustomAndroidUpnpServiceImpl.class);
         // 先以前台服务启动，保证退出 Activity 后进程不被回收、设备持续可发现
         try {
@@ -210,7 +219,7 @@ public class DlnaRendererManager {
     public void reStart(Context context) {
         stop();
 
-        new Handler().postDelayed(() -> {
+        mainHandler.postDelayed(() -> {
             start(context);
         }, 4000);
     }
@@ -237,9 +246,9 @@ public class DlnaRendererManager {
                     new LocalService[]{avt, rc});
 
             upnpService.getRegistry().addDevice(rendererDevice);
-            Log.d(TAG, "MediaRenderer 设备注册成功: " + udn);
+            LogUtil.d(TAG, "MediaRenderer 设备注册成功: " + udn);
         } catch (Exception e) {
-            Log.e(TAG, "注册 MediaRenderer 设备失败", e);
+            LogUtil.e(TAG, "注册 MediaRenderer 设备失败", e);
         }
     }
 
@@ -262,7 +271,7 @@ public class DlnaRendererManager {
         if (pendingSeekMs > 0) {
             final long seek = pendingSeekMs;
             pendingSeekMs = 0;
-            Log.d(TAG, "registerBridge: 执行缓存 seek=" + seek);
+            LogUtil.d(TAG, "registerBridge: 执行缓存 seek=" + seek);
             mainHandler.post(() -> b.seekTo(seek));
         }
     }
@@ -288,7 +297,7 @@ public class DlnaRendererManager {
     public void onReceiverPlayStateChanged(boolean isPlaying) {
         String newState = isPlaying ? "PLAYING" : "PAUSED_PLAYBACK";
         transportState = newState;
-        Log.d(TAG, "onReceiverPlayStateChanged: " + newState);
+        LogUtil.d(TAG, "onReceiverPlayStateChanged: " + newState);
     }
 
     /** 当前传输状态（供 Activity 同步初始播放状态）。 */
@@ -305,22 +314,24 @@ public class DlnaRendererManager {
         String title = parseTitleFromMeta(metaData);
         currentUri = uri;
         currentTitle = title;
-        currentCasterName = parseCasterFromUri(uri);
+        String newCasterName = parseCasterFromUri(uri);
+        boolean isNewDevice = !Objects.equals(newCasterName, currentCasterName);
         transportState = "TRANSITIONING";
-        Log.d(TAG, "onSetUri: " + uri + " title=" + title);
+        LogUtil.d(TAG, "onSetUri: " + uri + " title=" + title + " newCasterName=" + newCasterName + " isNewDevice=" + isNewDevice);
 
         final PlayerBridge b = bridge;
         if (b != null) {
             // 已有播放器在运行，切换媒体源
-            mainHandler.post(() -> b.setUri(uri, title));
+            mainHandler.post(() -> b.setUri(uri, title, isNewDevice, newCasterName));
         } else {
+            currentCasterName = newCasterName;
             launchReceiverActivityIfNeeded();
         }
     }
 
     public void onPlay() {
         transportState = "PLAYING";
-        Log.d(TAG, "onPlay");
+        LogUtil.d(TAG, "onPlay");
         final PlayerBridge b = bridge;
         if (b != null) {
             mainHandler.post(b::play);
@@ -332,36 +343,42 @@ public class DlnaRendererManager {
 
     public void onPause() {
         transportState = "PAUSED_PLAYBACK";
-        Log.d(TAG, "onPause");
+        LogUtil.d(TAG, "onPause");
         final PlayerBridge b = bridge;
-        if (b != null) {
-            mainHandler.post(b::pause);
-        }
+            if (b != null) {
+                mainHandler.post(b::pause);
+            }
+
     }
 
     public void onStop() {
         transportState = "STOPPED";
-        Log.d(TAG, "onStop");
+        LogUtil.d(TAG, "onStop");
         final PlayerBridge b = bridge;
-        if (b != null) {
-            mainHandler.post(b::stop);
-        }
+        mainHandler.postDelayed(() -> {
+            LogUtil.d(TAG, "onStop:" + transportState);
+            if ("STOPPED".equals(transportState)) {
+                if (b != null) {
+                    mainHandler.post(b::stop);
+                }
+            }
+        }, 1000);
     }
 
     public void onSeek(String unit, String target) {
         // 仅支持按相对时间定位
         if (!"REL_TIME".equals(unit)) {
-            Log.d(TAG, "onSeek 忽略不支持的模式: " + unit);
+            LogUtil.d(TAG, "onSeek 忽略不支持的模式: " + unit);
             return;
         }
         final long ms = DlnaManager.parseTimeToMs(target);
-        Log.d(TAG, "onSeek: " + target + " -> " + ms + "ms");
+        LogUtil.d(TAG, "onSeek: " + target + " -> " + ms + "ms");
         final PlayerBridge b = bridge;
         if (b != null) {
             mainHandler.post(() -> b.seekTo(ms));
         } else {
             // Activity 尚未创建，缓存等 registerBridge 时执行
-            Log.d(TAG, "onSeek: bridge 未就绪，缓存 seek=" + ms);
+            LogUtil.d(TAG, "onSeek: bridge 未就绪，缓存 seek=" + ms);
             pendingSeekMs = ms;
         }
     }
@@ -374,8 +391,12 @@ public class DlnaRendererManager {
         if (appContext == null) {
             return;
         }
-        activityLaunched = true;
-        Intent intent = new Intent(appContext, VideoPlayerActivity.class);
+        /*activityLaunched = true;*/
+
+        activityLaunched = VideoPlayerActivity.RenderStart(appContext,
+                currentUri, currentTitle, currentCasterName, true);
+
+        /*Intent intent = new Intent(appContext, VideoPlayerActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra(VideoPlayerActivity.EXTRA_RECEIVER_MODE, true);
         intent.putExtra(VideoPlayerActivity.EXTRA_CAST_URI, currentUri);
@@ -386,7 +407,7 @@ public class DlnaRendererManager {
         } catch (Exception e) {
             Log.w(TAG, "启动接收 Activity 失败", e);
             activityLaunched = false;
-        }
+        }*/
     }
 
     // ===== 状态查询（返回响应 Bean） =====
@@ -399,7 +420,7 @@ public class DlnaRendererManager {
             pos = b.getPositionMs();
             dur = b.getDurationMs();
         }
-        Log.d(TAG, "getPositionInfo 被调用: bridge=" + (b != null)
+        LogUtil.d(TAG, "getPositionInfo 被调用: bridge=" + (b != null)
                 + " pos=" + pos + " dur=" + dur);
         String uri = currentUri;
         return new RendererAVTransportService.PositionInfoResponse(
@@ -414,7 +435,7 @@ public class DlnaRendererManager {
     }
 
     public RendererAVTransportService.TransportInfoResponse getTransportInfo() {
-        Log.d(TAG, "getTransportInfo 被调用: state=" + transportState);
+        LogUtil.d(TAG, "getTransportInfo 被调用: state=" + transportState);
         return new RendererAVTransportService.TransportInfoResponse(
                 transportState, "OK", "1");
     }
@@ -478,6 +499,7 @@ public class DlnaRendererManager {
 
     // ===== 锁（参考 DlnaManager 的实现，保持接收期间网络/CPU 唤醒） =====
 
+    @SuppressLint("InvalidWakeLockTag")
     private void acquireLocks() {
         // 组播锁：接收 SSDP M-SEARCH
         if (multicastLock == null) {

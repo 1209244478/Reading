@@ -359,6 +359,8 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
                 }
             }
 
+            tempList.removeIf(FolderBean::isExist);
+
             runOnUiThread(() -> {
                 currentList.clear();
                 currentList.addAll(tempList);

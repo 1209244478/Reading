@@ -9,10 +9,14 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
 
-@Database(entities = {Comic.class, Collection.class}, version = 3)
+import java.util.ArrayList;
+import java.util.List;
+
+@Database(entities = {Comic.class, Collection.class}, version = 2)
 public abstract class ComicDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "comic_database";
     private static ComicDatabase instance;
@@ -22,26 +26,12 @@ public abstract class ComicDatabase extends RoomDatabase {
     public abstract CollectionDao collectionDao();
 
     /**
-     * v1 -> v2：创建 collections 表，并为 comics 表添加 collectionId 列
+     * v1 -> v2：comics 表新增 isClean 列
      */
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("CREATE TABLE IF NOT EXISTS `collections` (" +
-                    "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
-                    "`name` TEXT, " +
-                    "`createdAt` INTEGER NOT NULL)");
-            database.execSQL("ALTER TABLE comics ADD COLUMN collectionId INTEGER");
-        }
-    };
-
-    /**
-     * v2 -> v3：comics 表新增 videoPosition 列，用于保存视频播放进度（毫秒）
-     */
-    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
-        @Override
-        public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE comics ADD COLUMN videoPosition INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE comics ADD COLUMN isClean INTEGER NOT NULL DEFAULT 0");
         }
     };
 
@@ -49,10 +39,36 @@ public abstract class ComicDatabase extends RoomDatabase {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                             ComicDatabase.class, DATABASE_NAME)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build();
         }
         return instance;
+    }
+
+    public static long lastUpdate = 0;
+    public static long UPDATE_LIMIT = 2000;
+
+    public static void update(Comic comic) {
+        long current = System.currentTimeMillis();
+        if (current - lastUpdate > UPDATE_LIMIT) {
+            MyApplication.comicDatabase.comicDao().updateComic(comic);
+            lastUpdate = current;
+        }
+    }
+    public static void updateList(ArrayList<Comic> list) {
+        for (Comic comic : list) {
+            if (comic != null) {
+                MyApplication.comicDatabase.comicDao().updateComic(comic);
+            }
+        }
+    }
+
+    public static void updateList(List<Comic> list) {
+        for (Comic comic : list) {
+            if (comic != null) {
+                MyApplication.comicDatabase.comicDao().updateComic(comic);
+            }
+        }
     }
 }

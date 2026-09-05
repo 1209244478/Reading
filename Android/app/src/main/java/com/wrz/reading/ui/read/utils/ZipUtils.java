@@ -2,6 +2,8 @@ package com.wrz.reading.ui.read.utils;
 
 import android.util.Log;
 
+import com.wrz.reading.ui.main.Log.LogUtil;
+
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 
@@ -29,7 +31,7 @@ public class ZipUtils {
         List<File> imageFiles = new ArrayList<>();
 
         if (!extractDir.exists() && !extractDir.mkdirs()) {
-            Log.e(TAG, "Failed to create extract directory: " + extractDir.getPath());
+            LogUtil.e(TAG, "Failed to create extract directory: " + extractDir.getPath());
             return imageFiles;
         }
 
@@ -72,7 +74,7 @@ public class ZipUtils {
                     }
                     imageFiles.add(outputFile);
                 } catch (IOException e) {
-                    Log.e(TAG, "Error extracting entry: " + entryName, e);
+                    LogUtil.e(TAG, "Error extracting entry: " + entryName, e);
                     if (outputFile.exists()) {
                         outputFile.delete();
                     }
@@ -84,7 +86,7 @@ public class ZipUtils {
             return imageFiles;
 
         } catch (IOException e) {
-            Log.e(TAG, "Error extracting zip file: " + zipFilePath, e);
+            LogUtil.e(TAG, "Error extracting zip file: " + zipFilePath, e);
             return imageFiles;
         }
     }
@@ -100,7 +102,7 @@ public class ZipUtils {
         List<File> imageFiles = new ArrayList<>();
 
         if (!extractDir.exists() && !extractDir.mkdirs()) {
-            Log.e(TAG, "Failed to create extract directory: " + extractDir.getPath());
+            LogUtil.e(TAG, "Failed to create extract directory: " + extractDir.getPath());
             return imageFiles;
         }
 
@@ -141,7 +143,7 @@ public class ZipUtils {
                     }
                     imageFiles.add(outputFile);
                 } catch (IOException e) {
-                    Log.e(TAG, "Error extracting entry: " + entryName, e);
+                    LogUtil.e(TAG, "Error extracting entry: " + entryName, e);
                     if (outputFile.exists()) {
                         outputFile.delete();
                     }
@@ -152,7 +154,7 @@ public class ZipUtils {
             return imageFiles;
 
         } catch (IOException e) {
-            Log.e(TAG, "Error extracting zip file: " + zipFilePath, e);
+            LogUtil.e(TAG, "Error extracting zip file: " + zipFilePath, e);
             return imageFiles;
         }
     }
@@ -209,7 +211,7 @@ public class ZipUtils {
         if (!tempDir.delete()) {
             Log.w(TAG, "Failed to delete directory: " + tempDir.getPath());
         } else {
-            Log.d(TAG, "Cleaned up temp directory: " + tempDir.getPath());
+            LogUtil.d(TAG, "Cleaned up temp directory: " + tempDir.getPath());
         }
     }
 }

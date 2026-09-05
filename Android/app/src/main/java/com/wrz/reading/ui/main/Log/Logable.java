@@ -21,6 +21,8 @@ public interface Logable {
 
     void w(String str, Throwable th);
 
+    void w(String str, String str2);
+
     void wtf(String str, String str2);
 
     void wtf(String str, String str2, Throwable th);

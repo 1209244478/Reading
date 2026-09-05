@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
+import com.wrz.reading.ui.read.data.ComicDatabase;
 import com.wrz.reading.ui.read.model.Comic;
 
 /**
@@ -16,7 +17,7 @@ import com.wrz.reading.ui.read.model.Comic;
  * - 统一 start() 启动协议（comicId + title）
  * - 统一从 Intent 解析 comicId 并加载 Comic
  * - 统一在 onPause 持久化进度
- * 子类只需实现 {@link #onComicLoaded(Comic)} 与 {@link #persistOnPause(Comic)}。
+ * 子类只需实现 {@link #onComicLoaded(Comic)}
  */
 public abstract class BaseReaderActivity extends BaseActivity {
 
@@ -28,7 +29,7 @@ public abstract class BaseReaderActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
-    protected Comic comic;
+    protected static Comic comic;
     protected long comicId;
 
     @Override
@@ -81,16 +82,36 @@ public abstract class BaseReaderActivity extends BaseActivity {
     /** Comic 加载完成后的 UI 初始化钩子 */
     protected abstract void onComicLoaded(Comic comic);
 
-    /** onPause 时持久化 Comic 进度，子类可覆盖以追加自定义保存 */
-    protected void persistOnPause(Comic comic) {
-        MyApplication.comicDatabase.comicDao().updateComic(comic);
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (comicId != -1) {
+
+            singleThread.execute(() -> {
+                comic = MyApplication.comicDatabase.comicDao().getComicById(comicId);
+                runOnUiThread(this::updateReadProgress);
+            });
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    public abstract void updateReadProgress();
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         if (comic != null) {
-            singleThread.execute(() -> persistOnPause(comic));
+            singleThread.execute(() ->
+                    ComicDatabase.update(comic));
         }
     }
 

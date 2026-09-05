@@ -45,6 +45,7 @@ import androidx.core.view.accessibility.AccessibilityRecordCompat;
 import androidx.core.widget.EdgeEffectCompat;
 
 import com.wrz.reading.R;
+import com.wrz.reading.ui.main.Log.LogUtil;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -729,13 +730,13 @@ public class DirectionalViewpager extends ViewGroup {
                     mSetChildrenDrawingOrderEnabled = ViewGroup.class.getDeclaredMethod(
                             "setChildrenDrawingOrderEnabled", new Class[]{Boolean.TYPE});
                 } catch (NoSuchMethodException e) {
-                    Log.e(TAG, "Can't find setChildrenDrawingOrderEnabled", e);
+                    LogUtil.e(TAG, "Can't find setChildrenDrawingOrderEnabled", e);
                 }
             }
             try {
                 mSetChildrenDrawingOrderEnabled.invoke(this, enable);
             } catch (Exception e) {
-                Log.e(TAG, "Error changing children drawing order", e);
+                LogUtil.e(TAG, "Error changing children drawing order", e);
             }
         }
     }
@@ -3565,7 +3566,7 @@ public class DirectionalViewpager extends ViewGroup {
                      parent = parent.getParent()) {
                     sb.append(" => ").append(parent.getClass().getSimpleName());
                 }
-                Log.e(TAG, "arrowScroll tried to find focus based on non-child " +
+                LogUtil.e(TAG, "arrowScroll tried to find focus based on non-child " +
                         "current focused view " + sb.toString());
                 currentFocused = null;
             }

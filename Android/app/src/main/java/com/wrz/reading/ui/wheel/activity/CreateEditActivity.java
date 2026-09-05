@@ -8,10 +8,11 @@ import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,14 +23,16 @@ import com.lxj.xpopup.XPopup;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.ui.wheel.model.Option;
-import com.wrz.reading.ui.wheel.model.Wheel;
-import com.wrz.reading.ui.wheel.adapter.OptionAdapter;
-import com.wrz.reading.ui.wheel.model.Request;
-import com.wrz.reading.ui.wheel.view.dialog.ColorPickerDialog;
-import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.main.popupView.EmojiPopup;
 import com.wrz.reading.ui.main.popupView.WeightChangePopup;
+import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.wheel.adapter.OptionAdapter;
+import com.wrz.reading.ui.wheel.adapter.TagAdapter;
+import com.wrz.reading.ui.wheel.model.Option;
+import com.wrz.reading.ui.wheel.model.Request;
+import com.wrz.reading.ui.wheel.model.Tag;
+import com.wrz.reading.ui.wheel.model.Wheel;
+import com.wrz.reading.ui.wheel.view.dialog.ColorPickerDialog;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,9 +48,9 @@ public class CreateEditActivity extends BaseActivity {
     public static final int REQUEST_COE_BATCH_ADD = 10001;
 
 
-    private Switch switch_allow_duplicates;
-    private Switch switch_use_weight;
-    private Switch switch_hide_weight;
+    private SwitchCompat switch_allow_duplicates;
+    private SwitchCompat switch_use_weight;
+    private SwitchCompat switch_hide_weight;
 
     private LinearLayout ll_hide_weight;
     private TextView tv_title;
@@ -57,6 +60,9 @@ public class CreateEditActivity extends BaseActivity {
     private NestedScrollView sv_content;
     private TextView tv_time;
     private String requestId;
+    private RecyclerView rv_tags;
+    private TagAdapter tagAdapter;
+    private ImageView iv_add_tag;
 
 
     public static void start(Activity context, int requestCode, Request requestId) {
@@ -144,9 +150,7 @@ public class CreateEditActivity extends BaseActivity {
         });
 
         tv_time = findViewById(R.id.tv_time);
-        tv_time.setOnClickListener(view -> {
-            showChangeTime();
-        });
+        tv_time.setOnClickListener(view -> showChangeTime());
 
         switch_allow_duplicates = findViewById(R.id.switch_allow_duplicates);
         switch_allow_duplicates.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -171,6 +175,42 @@ public class CreateEditActivity extends BaseActivity {
             ll_hide_weight.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         });
 
+        iv_add_tag = findViewById(R.id.iv_add_tag);
+        iv_add_tag.setOnClickListener(v -> {
+            showAddTag();
+        });
+
+        rv_tags = findViewById(R.id.rv_tags);
+
+        tagAdapter = new TagAdapter(R.layout.item_tag);
+
+        rv_tags.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rv_tags.setAdapter(tagAdapter);
+
+        tagAdapter.addChildClickViewIds(R.id.iv_delete);
+        tagAdapter.setOnItemChildClickListener((adapter, view, position) -> {
+            delTag(position);
+        });
+    }
+
+    private void showAddTag() {
+        DialogHelper.showTextInputDialog(this, "添加标签",
+                "", "添加", "",
+                text -> {
+                    wheel.getTags().add(new Tag(text));
+                    tagAdapter.notifyDataSetChanged();
+                });
+    }
+
+    private void delTag(int position) {
+        String tag = wheel.getTags().get(position).getTag();
+        DialogHelper.showConfirmDialog(this,
+                getString(R.string.confirm_deletion),
+                getString(R.string.message_delete_confirm, tag),
+                () -> {
+                    wheel.getTags().remove(position);
+                    tagAdapter.notifyDataSetChanged();
+                });
     }
 
     private void batchAdd() {
@@ -475,11 +515,14 @@ public class CreateEditActivity extends BaseActivity {
         adapter.setNewInstance(list);
 
         tv_time.setText(String.valueOf(wheel.getTime()));
+
+        tagAdapter.setNewInstance(wheel.getTags());
     }
 
     /**
      * 最大余数法计算百分比，确保总和正好为 100
      */
+    @SuppressLint("NotifyDataSetChanged")
     public void calculatePercent(boolean notify) {
         int totalWeight = 0;
         for (Option option : list) {
@@ -548,7 +591,7 @@ public class CreateEditActivity extends BaseActivity {
     @SuppressLint("NotifyDataSetChanged")
     private void delOption(int position) {
         String option = list.get(position).getOption();
-        DialogHelper.showDeleteConfirm(this,
+        DialogHelper.showConfirmDialog(this,
                 getString(R.string.confirm_deletion),
                 getString(R.string.message_delete_confirm, option),
                 () -> {

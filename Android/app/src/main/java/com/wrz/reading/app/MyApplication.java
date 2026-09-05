@@ -32,6 +32,10 @@ public class MyApplication extends Application {
 
         manager = PrefManager.getInstance(this);
 
+        if (MyApplication.manager.getCastName().isEmpty()) {
+            MyApplication.manager.saveCastName(String.valueOf(System.currentTimeMillis()));
+        }
+
         template = new Template();
 
         // 初始化emoji数据（懒加载，首次使用时初始化）

@@ -3,6 +3,7 @@ package com.wrz.reading.common;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,9 @@ import android.widget.TextView;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.StyleRes;
 
+import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
 
 public abstract class BaseDialog extends Dialog {
@@ -23,6 +26,10 @@ public abstract class BaseDialog extends Dialog {
 
     public BaseDialog(@NonNull Context context) {
         super(context, R.style.CustomDialogTheme);
+    }
+
+    public BaseDialog(@NonNull Context context, @StyleRes int themeResId) {
+        super(context, themeResId);
     }
 
     @Override
@@ -39,6 +46,13 @@ public abstract class BaseDialog extends Dialog {
         parentView = LayoutInflater.from(getContext()).inflate(getLayoutId(), null);
         setContentView(parentView);
 
+        if (this.getWindow() != null) {
+            this.getWindow().setLayout(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+
         // 设置对话框大小
         setDialogSize();
 
@@ -49,6 +63,7 @@ public abstract class BaseDialog extends Dialog {
     public abstract void initView();
 
     public abstract void setDialogSize();
+
 
     @Override
     public void show() {
@@ -74,11 +89,19 @@ public abstract class BaseDialog extends Dialog {
         if (view != null && text != null) {
             if (view instanceof TextView) {
                 ((TextView) view).setText(text);
-            } else if (view instanceof EditText) {
-                ((EditText) view).setText(text);
             }
         }
     }
+
+    public void setText(@IdRes int id, String text) {
+        View view = findId(id);
+        if (view != null && text != null) {
+            if (view instanceof TextView) {
+                ((TextView) view).setText(text);
+            }
+        }
+    }
+
 
     public interface ShowOrDismissListener {
         void show();

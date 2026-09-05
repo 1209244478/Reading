@@ -7,6 +7,8 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.util.Log;
 
+import com.wrz.reading.ui.main.Log.LogUtil;
+
 import org.fourthline.cling.android.AndroidUpnpServiceConfiguration;
 import org.fourthline.cling.android.AndroidUpnpServiceImpl;
 
@@ -30,7 +32,7 @@ public class CustomAndroidUpnpServiceImpl extends AndroidUpnpServiceImpl {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate: 提升为前台服务");
+        LogUtil.d(TAG, "onCreate: 提升为前台服务");
         Notification notification = buildNotification();
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

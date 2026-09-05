@@ -11,12 +11,26 @@
         android:id="@+id/top"
         layout="@layout/layout_topbar" />
 
+    <!-- tag区域 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_tags"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_below="@+id/top"
+        android:clipToPadding="false"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:scrollbars="none"
+        tools:itemCount="1"
+        tools:listitem="@layout/item_list_tag" />
+
     <!-- 列表区域 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/top"
+        android:layout_below="@+id/rv_tags"
         android:background="@color/ios_background"
         android:clipToPadding="false"
         android:paddingTop="8dp"

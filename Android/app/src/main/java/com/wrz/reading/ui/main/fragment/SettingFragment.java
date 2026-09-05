@@ -1,9 +1,11 @@
 package com.wrz.reading.ui.main.fragment;
 
 import android.content.Context;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 
 import com.wrz.reading.R;
@@ -19,6 +21,7 @@ public class SettingFragment extends BaseFragment {
     private TextView tv_name;
 
     private String cast_name;
+    private SwitchCompat switchClearCache;
 
     @Override
     public int getLayoutResId() {
@@ -27,10 +30,13 @@ public class SettingFragment extends BaseFragment {
 
     @Override
     public void initView() {
-        switchReceiveCast = parentView.findViewById(R.id.switch_receive_cast);
+        switchReceiveCast = findId(R.id.switch_receive_cast);
 
-        ll_name = parentView.findViewById(R.id.ll_name);
-        tv_name = parentView.findViewById(R.id.tv_name);
+        ll_name = findId(R.id.ll_name);
+        tv_name = findId(R.id.tv_name);
+
+
+        switchClearCache = findId(R.id.switch_clear_cache);
     }
 
     @Override
@@ -69,6 +75,11 @@ public class SettingFragment extends BaseFragment {
         });
 
         tv_name.setText(cast_name);
+
+
+        switchClearCache.setChecked(MyApplication.manager.getClearCache());
+        switchClearCache.setOnCheckedChangeListener((buttonView, isChecked) ->
+                MyApplication.manager.saveClearCache(isChecked));
     }
 
     @Override

@@ -17,7 +17,7 @@ public class LogImpl implements Logable {
 //    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(DatePattern.NORM_DATETIME_PATTERN, Locale.getDefault());
 
     public LogImpl() {
-        createNewLogFile();
+        /*createNewLogFile();*/
     }
 
     private void createNewLogFile() {
@@ -84,6 +84,11 @@ public class LogImpl implements Logable {
     @Override
     public void w(String str, Throwable th) {
         Log.w(str, th);
+    }
+
+    @Override
+    public void w(String str, String str2) {
+        Log.w(str, str2);
     }
 
     @Override

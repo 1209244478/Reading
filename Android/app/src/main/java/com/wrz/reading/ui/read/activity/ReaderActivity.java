@@ -5,26 +5,33 @@ import static com.wrz.reading.common.Constant.EXTRA_COMIC_NAME;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.ui.read.model.Comic;
-import com.wrz.reading.ui.read.adapter.ImageAdapter;
-import com.wrz.reading.ui.read.utils.AutoPlayController;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.adapter.ImageAdapter;
+import com.wrz.reading.ui.read.adapter.PreviewAdapter;
+import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.SubProgress;
+import com.wrz.reading.ui.read.utils.AutoPlayController;
 import com.wrz.reading.ui.read.utils.FileSorter;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.ZipUtils;
@@ -43,10 +50,24 @@ public class ReaderActivity extends BaseReaderActivity {
     private TextView pageCounterText;
     private Spinner folderSpinner;
     private ImageAdapter imageAdapter;
-    private List<File> imageFiles;
+    public static List<File> imageFiles;
+    /**
+     * 完整未过滤的文件列表，用于排序和过滤的基准
+     */
+    private List<File> allImageFiles;
+    /**
+     * 显示过滤位掩码：bit0=视频(1) bit1=图片(2) bit2=音乐(4)，默认7=全部显示
+     */
+    private static final int FILTER_VIDEO = 1, FILTER_IMAGE = 2, FILTER_MUSIC = 4;
+    private int showFilter = FILTER_VIDEO | FILTER_IMAGE | FILTER_MUSIC;
 
-    // 当前排序方式：0=名称升序(默认), 1=名称降序, 2=修改时间
-    private int currentSortType = 0;
+    // 预览卡片
+    private LinearLayout previewCard;
+    private boolean previewIsShowing = true;
+    private RecyclerView previewRecycler;
+    private TextView previewPageLabel;
+    private PreviewAdapter previewAdapter;
+
 
     // 文件夹选择相关
     private List<File> subdirectories;
@@ -76,11 +97,36 @@ public class ReaderActivity extends BaseReaderActivity {
         // 初始化文件夹选择Spinner
         folderSpinner = findViewById(R.id.folder_spinner);
 
+        // 初始化进度条与预览卡片
+        previewCard = findViewById(R.id.preview_card);
+        previewRecycler = previewCard.findViewById(R.id.preview_recycler);
+        previewPageLabel = previewCard.findViewById(R.id.preview_page_label);
+        previewCard.setOnClickListener(v -> {
+            if (previewIsShowing) {
+                showPageJumpDialog();
+            } else {
+                toggleToolBarVisibleOrGone();
+            }
+        });
+
+        previewRecycler.setLayoutManager(new LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL, false));
+        previewAdapter = new PreviewAdapter();
+        previewRecycler.setAdapter(previewAdapter);
+
+        previewAdapter.setOnItemClickListener((adapter, view, position) -> {
+            if (previewIsShowing) {
+                comicViewPager.setCurrentItem(position, false);
+            } else {
+                toggleToolBarVisibleOrGone();
+            }
+        });
+
         comicViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 updatePageCounter(position);
-                updateReadProgress(position);
+                updateReadProgress();
             }
         });
     }
@@ -100,7 +146,8 @@ public class ReaderActivity extends BaseReaderActivity {
             }
 
             // 排序
-            imageFiles = FileSorter.sort(imageFiles);
+            imageFiles = sortFiles(imageFiles);
+            allImageFiles = new ArrayList<>(imageFiles); // 保存完整列表用于过滤
 
             // 更新封面和总数
             updateComicMetadata(comic, imageFiles);
@@ -111,6 +158,7 @@ public class ReaderActivity extends BaseReaderActivity {
             });
         });
     }
+
 
     /**
      * 加载图片文件列表
@@ -179,7 +227,7 @@ public class ReaderActivity extends BaseReaderActivity {
         if (subdirectories.size() > 1) {
             runOnUiThread(() -> setupFolderSpinner(subdirectories));
         } else {
-            runOnUiThread(() -> hideFolderSpinner());
+            runOnUiThread(this::hideFolderSpinner);
         }
     }
 
@@ -232,7 +280,7 @@ public class ReaderActivity extends BaseReaderActivity {
         subdirectories = null;
     }
 
-    public int subPosition = 0;
+    public int subPosition = -1;
 
     /**
      * 文件夹选择事件处理
@@ -266,7 +314,11 @@ public class ReaderActivity extends BaseReaderActivity {
         }
 
         // 排序并更新
-        imageFiles = FileSorter.sort(newImageFiles);
+        imageFiles = sortFiles(newImageFiles);
+        allImageFiles = new ArrayList<>(imageFiles);
+        showFilter = FILTER_VIDEO | FILTER_IMAGE | FILTER_MUSIC; // 切换文件夹后重置为全部显示
+        setShowButton();
+
         updateViewPager();
     }
 
@@ -274,15 +326,20 @@ public class ReaderActivity extends BaseReaderActivity {
      * 更新漫画元数据
      */
     private void updateComicMetadata(Comic comic, List<File> imageFiles) {
+        boolean update = false;
         if (comic.getCoverPath().isEmpty() && !imageFiles.isEmpty()) {
             comic.setCoverPath(FileUtils.getAndSetCoverImagePath(imageFiles.get(0), comic.getTitle()));
+            update = true;
         }
 
         if (comic.getTotal() == 0) {
             comic.setTotal(imageFiles.size());
+            update = true;
         }
 
-        MyApplication.comicDatabase.comicDao().updateComic(comic);
+        if (update) {
+            ComicDatabase.update(comic);
+        }
     }
 
     /**
@@ -314,12 +371,40 @@ public class ReaderActivity extends BaseReaderActivity {
         comicViewPager.setAdapter(imageAdapter);
 
         // 恢复上次阅读进度
+        if (comic == null) {
+            mSetProgress.postDelayed(mSetProgressRunnable, 2000);
+        } else {
+            setUpProgress();
+        }
+    }
+
+    public final Handler mSetProgress = new Handler();
+
+    public final Runnable mSetProgressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            LogUtil.e(TAG, "mSetProgressRunnable: (comic == null)=" + (comic == null));
+            if (comic == null) {
+                mSetProgress.postDelayed(mSetProgressRunnable, 2000);
+            } else {
+                setUpProgress();
+            }
+        }
+    };
+
+
+    private void setUpProgress() {
         setScrollOrientation(comic.isHorizontal(), false);
+        LogUtil.e(TAG, "setupViewPager: comic.getReadProgress()=" + comic.getReadProgress());
         if (comic.getReadProgress() > 0 && comic.getReadProgress() < imageFiles.size()) {
-            Log.e(TAG, "setupViewPager: comic.getReadProgress():" + comic.getReadProgress());
-            comicViewPager.setCurrentItem((int) comic.getReadProgress(), false);
+
+            comicViewPager.setCurrentItem(comic.getReadProgress(), false);
+            showPreviewAtThumb(comic.getReadProgress());
+            previewRecycler.scrollToPosition(comic.getReadProgress());
         } else {
             updatePageCounter(0);
+            showPreviewAtThumb(0);
+            previewRecycler.scrollToPosition(0);
         }
     }
 
@@ -330,16 +415,64 @@ public class ReaderActivity extends BaseReaderActivity {
         if (imageAdapter != null && imageFiles != null) {
             // 使用 setList 更新 Adapter 内部数据
             imageAdapter.setList(imageFiles);
-            if (comic.getPercentMap() != null && comic.getPercentMap().get(subPosition) != null
-                    && comic.getPercentMap().get(subPosition) != -1) {
-                Log.e(TAG, "updateViewPager: comic.getPercentMap().get(subPosition):" + comic.getPercentMap().get(subPosition));
-                comicViewPager.setCurrentItem(comic.getPercentMap().get(subPosition), false);
-                updatePageCounter(comic.getPercentMap().get(subPosition));
+
+            int progress = (int) SubProgress.getSubProgress(String.valueOf(subPosition), comic.getSubProgress());
+
+            if (progress != -1) {
+
+                comicViewPager.setCurrentItem(progress, false);
+                showPreviewAtThumb(progress);
+                updatePageCounter(progress);
             } else {
                 comicViewPager.setCurrentItem(0, false);
+                showPreviewAtThumb(0);
                 updatePageCounter(0);
             }
         }
+    }
+
+    // ==================== 显示过滤 ====================
+
+    /**
+     * 切换显示过滤的某一位（视频/图片/音乐），然后刷新列表。
+     * showFilter 为 0 时等同于全部显示。
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    private void applyShowFilter() {
+        if (allImageFiles == null || allImageFiles.isEmpty()) return;
+
+        imageFiles = new ArrayList<>();
+        for (File f : allImageFiles) {
+            boolean isVideo = FileUtils.isVideoFile(f.getName());
+            boolean isMusic = FileUtils.isMusicFile(f.getName());
+            // isImage = 非视频且非音乐
+            if (isVideo && (showFilter & FILTER_VIDEO) != 0) {
+                imageFiles.add(f);
+            } else if (isMusic && (showFilter & FILTER_MUSIC) != 0) {
+                imageFiles.add(f);
+            } else if (!isVideo && !isMusic && (showFilter & FILTER_IMAGE) != 0) {
+                imageFiles.add(f);
+            }
+        }
+
+        // showFilter 为 0 时显示全部（而非空列表）
+        if (showFilter == 0) {
+            imageFiles = new ArrayList<>(allImageFiles);
+        }
+
+        if (imageAdapter != null) {
+            imageAdapter.setList(imageFiles);
+        }
+        comicViewPager.setCurrentItem(0, false);
+        updatePageCounter(0);
+        previewAdapter.setData(imageFiles, 0);
+
+        StringBuilder sb = new StringBuilder("显示：");
+        if ((showFilter & FILTER_VIDEO) != 0) sb.append("视频 ");
+        if ((showFilter & FILTER_IMAGE) != 0) sb.append("图片 ");
+        if ((showFilter & FILTER_MUSIC) != 0) sb.append("音乐 ");
+        if (showFilter == 0) sb.append("全部");
+        Toast.makeText(this, sb.toString().trim(), Toast.LENGTH_SHORT).show();
     }
 
     // ==================== 页面操作 ====================
@@ -347,19 +480,50 @@ public class ReaderActivity extends BaseReaderActivity {
     @SuppressLint("SetTextI18n")
     private void updatePageCounter(int position) {
         if (imageFiles != null && !imageFiles.isEmpty()) {
-            Log.e(TAG, "updatePageCounter: position:" + position);
             pageCounterText.setText((position + 1) + "/" + imageFiles.size());
         }
     }
 
-    private void updateReadProgress(int position) {
-        if (comic != null && imageFiles != null && !imageFiles.isEmpty()) {
-            Log.e(TAG, "updateReadProgress: position:" + position);
-            Log.e(TAG, "updateReadProgress: subPosition:" + subPosition);
-            comic.getPercentMap().put(subPosition, position);
-            comic.setReadProgress(position);
-            comic.setLastRead(System.currentTimeMillis());
+
+    @Override
+    public void updateReadProgress() {
+        if (comicViewPager != null) {
+            int position = comicViewPager.getCurrentItem();
+            LogUtil.e(TAG, "updateReadProgress: position=" + position);
+            if (comic != null && imageFiles != null && !imageFiles.isEmpty()) {
+                if (subPosition != -1) {
+                    SubProgress.updateSubProgress(String.valueOf(subPosition), position, comic.getSubProgress());
+                }
+                comic.setReadProgress(position);
+                comic.setLastRead(System.currentTimeMillis());
+                comic.setTotal(imageFiles.size());
+                previewAdapter.setCenterPage(position);
+
+                previewPageLabel.setText(+(position + 1) + "/" + imageFiles.size());
+
+                if (previewCard != null) {
+                    previewRecycler.scrollToPosition(position);
+                }
+            }
         }
+    }
+
+
+    // ==================== 进度 & 预览卡片 ====================
+
+    /**
+     * 更新预览卡片数据并定位到 SeekBar 滑块正上方
+     */
+    @SuppressLint("SetTextI18n")
+    private void showPreviewAtThumb(int centerIndex) {
+        if (imageFiles == null || centerIndex < 0 || centerIndex >= imageFiles.size()) return;
+
+        // 更新页码标签
+        previewPageLabel.setText(+(centerIndex + 1) + "/" + imageFiles.size());
+
+        /*previewPageLabel.setText((centerIndex + 1) + "/" + imageFiles.size());*/
+
+        previewAdapter.setData(imageFiles, centerIndex);
     }
 
     /**
@@ -370,10 +534,16 @@ public class ReaderActivity extends BaseReaderActivity {
             Toast.makeText(this, "视频文件不存在", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent intent = new Intent(this, VideoPlayerActivity.class);
+
+        VideoPlayerActivity.start(this, comicId, videoFile.getAbsolutePath(),
+                videoFile.getName(), true, 1000);
+
+        /*Intent intent = new Intent(this, VideoPlayerActivity.class);
+        intent.putExtra(VideoPlayerActivity.EXTRA_FROM_READ, true);
+        intent.putExtra(VideoPlayerActivity.EXTRA_COMIC_ID, comicId);
         intent.putExtra(VideoPlayerActivity.EXTRA_VIDEO_PATH, videoFile.getAbsolutePath());
         intent.putExtra(VideoPlayerActivity.EXTRA_TITLE, videoFile.getName());
-        startActivity(intent);
+        startActivityForResult(intent, 1000);*/
     }
 
     public void onSwipe(boolean next) {
@@ -395,25 +565,40 @@ public class ReaderActivity extends BaseReaderActivity {
 
     // ==================== 排序功能 ====================
 
-    @SuppressLint("NotifyDataSetChanged")
-    private void sortImagesByName(boolean ascending) {
-        if (imageFiles == null || imageFiles.isEmpty()) {
-            return;
+    List<File> sortFiles(List<File> files) {
+        if (comic.getSort() == Comic.SORT_BY_NAME) {
+            return FileSorter.sort(files);
+        } else if (comic.getSort() == Comic.SORT_BY_NAME_REVERSE) {
+            return FileSorter.sortReverse(files);
+        } else if (comic.getSort() == Comic.SORT_BY_MODIFY_TIME) {
+            files.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+
+            return files;
         }
 
-        imageFiles = ascending ? FileSorter.sort(imageFiles) : FileSorter.sortReverse(imageFiles);
-        currentSortType = ascending ? 0 : 1;
+        return FileSorter.sort(files);
+    }
+
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void sortImagesByName(boolean ascending) {
+        if (allImageFiles == null || allImageFiles.isEmpty()) return;
+        comic.setSort(ascending ? Comic.SORT_BY_NAME : Comic.SORT_BY_NAME_REVERSE);
+
+        allImageFiles = sortFiles(allImageFiles);
+        applyShowFilter();
+        showPreviewAtThumb(comicViewPager.getCurrentItem());
         refreshViewPager("已按名称" + (ascending ? "升序" : "降序") + "排序");
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private void sortImagesByModifiedTime() {
-        if (imageFiles == null || imageFiles.isEmpty()) {
-            return;
-        }
+        if (allImageFiles == null || allImageFiles.isEmpty()) return;
+        comic.setSort(Comic.SORT_BY_MODIFY_TIME);
 
-        imageFiles.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
-        currentSortType = 2;
+        allImageFiles = sortFiles(allImageFiles);
+        applyShowFilter();
+        showPreviewAtThumb(comicViewPager.getCurrentItem());
         refreshViewPager("已按修改时间排序");
     }
 
@@ -462,6 +647,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
     private void startAutoPlay() {
         autoPlay.start();
+        autoPlay.setDelay(comic.getAutoPlay());
         startItem.setChecked(true);
     }
 
@@ -483,18 +669,45 @@ public class ReaderActivity extends BaseReaderActivity {
     // ==================== 菜单 ====================
 
     private MenuItem startItem;
+    private MenuItem showVideo;
+    private MenuItem showImage;
+    private MenuItem showMusic;
+
+    private void setShowButton() {
+        if (showVideo != null) showVideo.setChecked((showFilter & FILTER_VIDEO) != 0);
+        if (showImage != null) showImage.setChecked((showFilter & FILTER_IMAGE) != 0);
+        if (showMusic != null) showMusic.setChecked((showFilter & FILTER_MUSIC) != 0);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.reader_menu, menu);
 
+        // 设置显示过滤选中状态（位掩码）
+        showVideo = menu.findItem(R.id.action_show_video);
+        showImage = menu.findItem(R.id.action_show_image);
+        showMusic = menu.findItem(R.id.action_show_music);
+        setShowButton();
+
         // 设置排序选中状态
         MenuItem sortAsc = menu.findItem(R.id.action_sort_name_asc);
         MenuItem sortDesc = menu.findItem(R.id.action_sort_name_desc);
         MenuItem sortModified = menu.findItem(R.id.action_sort_by_modified_time);
-        if (sortAsc != null) sortAsc.setChecked(currentSortType == 0);
-        if (sortDesc != null) sortDesc.setChecked(currentSortType == 1);
-        if (sortModified != null) sortModified.setChecked(currentSortType == 2);
+
+        switch (comic.getSort()) {
+            case Comic.SORT_BY_NAME:
+                sortAsc.setChecked(true);
+                break;
+            case Comic.SORT_BY_NAME_REVERSE:
+                sortDesc.setChecked(true);
+                break;
+            case Comic.SORT_BY_MODIFY_TIME:
+                sortModified.setChecked(true);
+                break;
+        }
+        /*if (sortAsc != null) sortAsc.setChecked(comic.getSort() == Comic.SORT_BY_NAME);
+        if (sortDesc != null) sortDesc.setChecked(comic.getSort() == Comic.SORT_BY_NAME_REVERSE);
+        if (sortModified != null) sortModified.setChecked(comic.getSort() == Comic.SORT_BY_MODIFY_TIME);*/
 
         // 设置翻页方向标题：当前是水平则提示切换为垂直，反之亦然
         MenuItem toggleItem = menu.findItem(R.id.action_toggle_scroll_orientation);
@@ -509,16 +722,37 @@ public class ReaderActivity extends BaseReaderActivity {
             zoomItem.setChecked(imageAdapter.isZoomMode());
         }
 
+        MenuItem cleanItem = menu.findItem(R.id.action_toggle_clean);
+        if (cleanItem != null && comic != null) {
+            cleanItem.setChecked(comic.isClean());
+        }
+
         // 设置自动播放间隔选中状态
         MenuItem interval1s = menu.findItem(R.id.action_interval_1s);
         MenuItem interval3s = menu.findItem(R.id.action_interval_3s);
         MenuItem interval5s = menu.findItem(R.id.action_interval_5s);
         MenuItem interval10s = menu.findItem(R.id.action_interval_10s);
-        long delay = autoPlay.getDelay();
+        switch ((int) comic.getAutoPlay()) {
+            case 1000:
+                interval1s.setChecked(true);
+                break;
+            case 3000:
+                interval3s.setChecked(true);
+                break;
+            case 5000:
+                interval5s.setChecked(true);
+                break;
+            case 10000:
+                interval10s.setChecked(true);
+                break;
+        }
+
+
+        /*long delay = comic.getAutoPlay();
         if (interval1s != null) interval1s.setChecked(delay == 1000);
         if (interval3s != null) interval3s.setChecked(delay == 3000);
         if (interval5s != null) interval5s.setChecked(delay == 5000);
-        if (interval10s != null) interval10s.setChecked(delay == 10000);
+        if (interval10s != null) interval10s.setChecked(delay == 10000);*/
 
         // 设置自动播放开启/关闭选中状态
         startItem = menu.findItem(R.id.action_auto_play_start);
@@ -566,11 +800,26 @@ public class ReaderActivity extends BaseReaderActivity {
         } else if (itemId == R.id.action_sort_by_modified_time) {
             sortImagesByModifiedTime();
             item.setChecked(true);
+
+        } else if (itemId == R.id.action_show_video) {
+            showFilter ^= FILTER_VIDEO;
+            item.setChecked((showFilter & FILTER_VIDEO) != 0);
+            applyShowFilter();
+        } else if (itemId == R.id.action_show_image) {
+            showFilter ^= FILTER_IMAGE;
+            item.setChecked((showFilter & FILTER_IMAGE) != 0);
+            applyShowFilter();
+        } else if (itemId == R.id.action_show_music) {
+            showFilter ^= FILTER_MUSIC;
+            item.setChecked((showFilter & FILTER_MUSIC) != 0);
+            applyShowFilter();
+
         } else if (itemId == R.id.action_toggle_scroll_orientation) {
             // 切换翻页方向：当前水平则切为垂直，反之亦然
             boolean currentHorizontal = comic != null && comic.isHorizontal();
             setScrollOrientation(!currentHorizontal, true);
             item.setTitle(currentHorizontal ? "切换为左右滑动翻页" : "切换为上下滑动翻页");
+
         } else if (itemId == R.id.action_toggle_zoom) {
             // 切换缩放模式：开启后可双指/双击缩放，关闭后恢复单击翻页
             boolean newMode = !imageAdapter.isZoomMode();
@@ -578,7 +827,14 @@ public class ReaderActivity extends BaseReaderActivity {
             item.setChecked(newMode);
             // 关闭缩放模式时若自动播放仍在进行不受影响
             Toast.makeText(this, newMode ? "已开启缩放模式" : "已关闭缩放模式", Toast.LENGTH_SHORT).show();
-        } else if (itemId == R.id.set_cover_image) {
+        } else if (itemId == R.id.action_toggle_clean) {
+            boolean clean = !comic.isClean();
+            comic.setClean(clean);
+            item.setChecked(clean);
+            Toast.makeText(this, clean ? "已开启清理" : "已关闭清理", Toast.LENGTH_SHORT).show();
+        }
+
+        else if (itemId == R.id.set_cover_image) {
             setCover();
         } else if (itemId == R.id.action_auto_play_start) {
             if (!autoPlay.isPlaying()) {
@@ -624,9 +880,37 @@ public class ReaderActivity extends BaseReaderActivity {
      * 切换自动播放间隔：若正在播放则重启定时器使新间隔立即生效
      */
     private void changeAutoPlayInterval(long newDelay, MenuItem item) {
+        comic.setAutoPlay(newDelay);
         autoPlay.setDelay(newDelay);
         item.setChecked(true);
         Toast.makeText(this, "间隔已设为 " + (newDelay / 1000) + " 秒", Toast.LENGTH_SHORT).show();
+    }
+
+    // ==================== 底部栏显隐同步 ====================
+
+    private void animateBottomBar(boolean show) {
+        float targetY = show ? 0f : findViewById(R.id.bottom_action_bar).getHeight() + 60f;
+        findViewById(R.id.bottom_action_bar).animate()
+                .translationY(targetY)
+                .setDuration(180)
+                .start();
+        // 预览卡片跟随隐藏
+        if (previewCard != null) {
+            previewIsShowing = show;
+            previewCard.animate().alpha(show ? 1f : 0f).setDuration(180).start();
+        }
+    }
+
+    @Override
+    public void toggleToolBarVisibleOrGone() {
+        super.toggleToolBarVisibleOrGone();
+        animateBottomBar(mIsToolBarVisible);
+    }
+
+    @Override
+    public void hideToolBarIfVisible() {
+        super.hideToolBarIfVisible();
+        animateBottomBar(false);
     }
 
     // ==================== 生命周期 ====================
@@ -634,6 +918,13 @@ public class ReaderActivity extends BaseReaderActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (comic != null && comic.isClean()) {
+            if (new File(comic.getPath()).getName().endsWith(FileUtils.SPECIAL_FORMATS)) {
+                File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
+                ZipUtils.cleanupTempDir(tempExtractDir);
+            }
+        }
+        mSetProgress.removeCallbacks(mSetProgressRunnable);
         autoPlay.destroy();
     }
 

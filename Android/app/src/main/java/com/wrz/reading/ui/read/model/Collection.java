@@ -28,6 +28,17 @@ public class Collection {
         return c;
     }
 
+    public static Collection deepCopy(CollectionItem collectionItem) {
+        if (collectionItem == null) return null;
+
+        Collection c = new Collection();
+        c.setId(collectionItem.getCollection().getId());
+
+        c.setCreatedAt(collectionItem.getCollection().getCreatedAt());
+
+        return c;
+    }
+
     public long getId() {
         return id;
     }

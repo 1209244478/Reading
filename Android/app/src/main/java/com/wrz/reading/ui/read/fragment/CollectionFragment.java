@@ -1,5 +1,6 @@
 package com.wrz.reading.ui.read.fragment;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
@@ -8,17 +9,19 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.common.BaseFragment;
+import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.read.adapter.CollectionAdapter;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
-import com.wrz.reading.ui.read.adapter.CollectionAdapter;
+import com.wrz.reading.ui.read.utils.DiffCallBack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +32,9 @@ import java.util.List;
  */
 public class CollectionFragment extends BaseFragment {
 
-    /** 未分组集合的特殊 ID */
+    /**
+     * 未分组集合的特殊 ID
+     */
     public static final long UNCATEGORIZED_ID = -1L;
     public static final String ARG_COLLECTION_ID = "collectionId";
     public static final String ARG_COLLECTION_NAME = "collectionName";
@@ -62,7 +67,8 @@ public class CollectionFragment extends BaseFragment {
     @Override
     public void initData() {
         navController = NavHostFragment.findNavController(this);
-        loadCollections();
+        loadCollections(false);
+        hideEmptyState();
     }
 
     @Override
@@ -71,19 +77,32 @@ public class CollectionFragment extends BaseFragment {
         collectionAdapter = new CollectionAdapter(collectionItems);
         collectionRecyclerView.setAdapter(collectionAdapter);
 
-        btnSplash.setOnClickListener(v -> loadCollections());
+        btnSplash.setOnClickListener(v -> loadCollections(true));
 
         addFab.setOnClickListener(v -> showCreateCollectionDialog());
 
         btnSelectMode.setOnClickListener(v -> toggleSelectMode());
 
         btnEditName.setOnClickListener(v -> {
-            for (CollectionItem item : collectionItems) {
+            List<CollectionItem> collections = new ArrayList<>();
+            for (CollectionItem collection : collectionItems) {
+                if (collection.getCollection().isSelected() && collection.getCollection().getId() != UNCATEGORIZED_ID) {
+                    collections.add(collection);
+                }
+            }
+
+            if (!collections.isEmpty()) {
+                DialogHelper.showRenameCollectionsDialog(activity,
+                        "重命名合集", "输入新的合集名称", "保存", collections,
+                        this::renameCollections);
+            }
+
+            /*for (CollectionItem item : collectionItems) {
                 if (item.getCollection().isSelected() && item.getCollection().getId() != UNCATEGORIZED_ID) {
                     showRenameDialog(item.getCollection().getId(), item.getCollection().getName());
                     break;
                 }
-            }
+            }*/
         });
 
         collectionAdapter.setOnItemClickListener((adapter, view, position) -> {
@@ -107,6 +126,21 @@ public class CollectionFragment extends BaseFragment {
         });
     }
 
+    private void renameCollections(List<CollectionItem> collections) {
+        singleThread.execute(() -> {
+            for (CollectionItem collectionItem : collections) {
+                if (collectionItem != null) {
+                    MyApplication.comicDatabase.collectionDao().updateCollection(collectionItem.getCollection());
+                }
+            }
+
+            runOnUiIfAlive(() -> {
+                loadCollections(true);
+                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+            });
+        });
+    }
+
     @Override
     public void goBack() {
         if (collectionAdapter.isSelectMode()) {
@@ -123,7 +157,8 @@ public class CollectionFragment extends BaseFragment {
         navController.navigate(R.id.action_main_to_collectionDetail, args);
     }
 
-    private void loadCollections() {
+    @SuppressLint("NotifyDataSetChanged")
+    private void loadCollections(boolean useDiff) {
         singleThread.execute(() -> {
             List<Collection> collections = MyApplication.comicDatabase.collectionDao().getAllCollections();
             int uncategorizedCount = MyApplication.comicDatabase.comicDao().getUncategorizedComics().size();
@@ -141,23 +176,31 @@ public class CollectionFragment extends BaseFragment {
                 tempList.add(new CollectionItem(c, count));
             }
 
-            boolean empty = collections.isEmpty() && uncategorizedCount == 0;
+            /*boolean empty = collections.isEmpty() && uncategorizedCount == 0;*/
             runOnUiIfAlive(() -> {
-                /*if (empty) {
-                    showEmptyState();
-                } else {*/
-                    hideEmptyState();
-                /*}*/
-                collectionItems.clear();
-                collectionItems.addAll(tempList);
-                collectionAdapter.notifyDataSetChanged();
+                if (useDiff) {
+                    List<CollectionItem> oldList = new ArrayList<>(collectionItems);
+
+                    collectionItems.clear();
+                    collectionItems.addAll(tempList);
+
+                    // 计算差量并分发到 adapter，保留滚动位置
+                    DiffUtil.DiffResult diff = DiffUtil.calculateDiff(
+                            new DiffCallBack.CollectionItemDiffCallback(oldList, tempList), false);
+                    diff.dispatchUpdatesTo(collectionAdapter);
+
+                } else {
+                    collectionItems.clear();
+                    collectionItems.addAll(tempList);
+                    collectionAdapter.notifyDataSetChanged();
+                }
             });
         });
     }
 
     private void showCreateCollectionDialog() {
         DialogHelper.showTextInputDialog(activity, null, null, null, null,
-                name -> createCollection(name));
+                this::createCollection);
     }
 
     private void createCollection(String name) {
@@ -165,11 +208,12 @@ public class CollectionFragment extends BaseFragment {
             MyApplication.comicDatabase.collectionDao().insertCollection(Collection.create(name));
             runOnUiIfAlive(() -> {
                 Toast.makeText(activity, "已创建集合「" + name + "」", Toast.LENGTH_SHORT).show();
-                loadCollections();
+                loadCollections(true);
             });
         });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void toggleSelectMode() {
         collectionAdapter.toggleSelectMode();
         if (collectionAdapter.isSelectMode()) {
@@ -227,7 +271,7 @@ public class CollectionFragment extends BaseFragment {
             runOnUiIfAlive(() -> {
                 Toast.makeText(activity, "已删除 " + collections.size() + " 个集合", Toast.LENGTH_SHORT).show();
                 toggleSelectMode();
-                loadCollections();
+                loadCollections(true);
             });
         });
     }
@@ -246,11 +290,11 @@ public class CollectionFragment extends BaseFragment {
 
     // ==================== 重命名合集 ====================
 
-    private void showRenameDialog(long collectionId, String collectionName) {
+    /*private void showRenameDialog(long collectionId, String collectionName) {
         DialogHelper.showTextInputDialog(activity,
                 "重命名合集", "输入新的合集名称", "保存", collectionName,
                 newName -> renameCollection(collectionId, newName));
-    }
+    }*/
 
     private void renameCollection(long collectionId, String newName) {
         singleThread.execute(() -> {
@@ -259,7 +303,12 @@ public class CollectionFragment extends BaseFragment {
                 c.setName(newName);
                 MyApplication.comicDatabase.collectionDao().updateCollection(c);
             }
-            runOnUiIfAlive(() -> Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show());
+            runOnUiIfAlive(() -> {
+                loadCollections(true);
+                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+            });
         });
     }
+
+
 }

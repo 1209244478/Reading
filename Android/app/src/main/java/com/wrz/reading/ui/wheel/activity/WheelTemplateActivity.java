@@ -18,10 +18,10 @@ import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.ui.wheel.model.Wheel;
+import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.wheel.adapter.WheelTemplateListAdapter;
 import com.wrz.reading.ui.wheel.model.Request;
-import com.wrz.reading.ui.main.utils.DialogHelper;
+import com.wrz.reading.ui.wheel.model.Wheel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -165,7 +165,7 @@ public class WheelTemplateActivity extends BaseActivity {
         Wheel item = list.get(position);
         // 标题项不应被删除（安全防护）
         if (item.getType() == TYPE_TITLE) return;
-        DialogHelper.showDeleteConfirm(this,
+        DialogHelper.showConfirmDialog(this,
                 getString(R.string.confirm_deletion),
                 getString(R.string.message_delete_confirm, item.getTitle()),
                 () -> singleThread.execute(() -> {

@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.ui.main.Log.LogUtil;
+import com.wrz.reading.ui.read.data.ComicDatabase;
 import com.wrz.reading.ui.read.model.BookMixAToc;
 import com.wrz.reading.common.BaseDialog;
 import com.wrz.reading.common.Constant;
@@ -71,6 +73,7 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
         loadBook(comic);
     }
 
+
     @Override
     public void initToolBar() {
         if (mCommonToolbar != null) {
@@ -105,11 +108,11 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
                     comic.setTotal(mSpineReferences.size());
                 }
 
-                MyApplication.comicDatabase.comicDao().updateComic(comic);
+                ComicDatabase.update(comic);
 
                 FileUtils.unzipFile(mFilePath, Constant.getPathEpub() + "/" + comic.getTitle());
             } catch (Exception e) {
-                Log.e("EPUB_READ", "loadBook: ", e);
+                LogUtil.e("EPUB_READ", "loadBook: ", e);
                 runOnUiThread(() -> {
                     Toast.makeText(this, "加载失败", Toast.LENGTH_SHORT).show();
                     finish();
@@ -159,13 +162,7 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
 
             @Override
             public void onPageSelected(int position) {
-                if (comic != null) {
-                    comic.setReadProgress(position);
-                    currentChapter = position + 1;
-                    if (comic.getTotal() != mChapterList.size()) {
-                        comic.setTotal(mChapterList.size());
-                    }
-                }
+                updateReadProgress();
             }
 
             @Override
@@ -174,6 +171,21 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
         });
 
         viewPager.setCurrentItem((int) comic.getReadProgress());
+    }
+
+
+    @Override
+    public void updateReadProgress() {
+        if (viewPager != null) {
+            int position = viewPager.getCurrentItem();
+            if (comic != null) {
+                comic.setReadProgress(position);
+                currentChapter = position + 1;
+                if (comic.getTotal() != mChapterList.size()) {
+                    comic.setTotal(mChapterList.size());
+                }
+            }
+        }
     }
 
     private int currentChapter;

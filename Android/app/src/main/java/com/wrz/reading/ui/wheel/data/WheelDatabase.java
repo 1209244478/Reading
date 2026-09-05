@@ -12,7 +12,7 @@ import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.wheel.model.Wheel;
 
-@Database(entities = {Wheel.class}, version = 3, exportSchema = false)
+@Database(entities = {Wheel.class}, version = 1, exportSchema = false)
 public abstract class WheelDatabase extends RoomDatabase {
 
     private static final String DATABASE_NAME = "wheel_database";

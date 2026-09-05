@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
 
@@ -20,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wrz.reading.R;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.ExecutorManager;
 
 import java.util.concurrent.ExecutorService;
@@ -46,8 +48,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         executorManager.addReference();
 
         setContentView(getLayoutId());
+        LogUtil.e(TAG, "setContentView.");
 
         getIntentData();
+        LogUtil.e(TAG, "getIntentData.");
+
 
         /*initBackCallback();*/
 
@@ -60,11 +65,15 @@ public abstract class BaseActivity extends AppCompatActivity {
             mCommonToolbar.setNavigationOnClickListener(view -> goBack());
         }
 
+        LogUtil.e(TAG, "setSupportActionBar.");
+
         initView();
 
         if (checkPermissions()) {
             initData();
+            LogUtil.e(TAG, "initData.");
             configView();
+            LogUtil.e(TAG, "configView.");
         } else {
             requestPermissions();
         }

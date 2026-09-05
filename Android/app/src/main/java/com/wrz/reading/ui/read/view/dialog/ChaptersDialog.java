@@ -17,7 +17,7 @@ import java.util.List;
 
 public class ChaptersDialog extends BaseDialog {
 
-    private List<BookMixAToc.mixToc.Chapters> list;
+    private final List<BookMixAToc.mixToc.Chapters> list;
 
     public TocListAdapter mTocListAdapter;
 
@@ -34,7 +34,7 @@ public class ChaptersDialog extends BaseDialog {
     @Override
     public void initView() {
         // 初始化 RecyclerView
-        RecyclerView recyclerView = parentView.findViewById(R.id.recyclerView);
+        RecyclerView recyclerView = findId(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // 创建适配器

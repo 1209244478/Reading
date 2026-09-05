@@ -6,6 +6,12 @@ public class Tag {
 
     private int open;
 
+    private boolean isSelected = false;
+
+    public Tag(String tag) {
+        this.tag = tag;
+    }
+
     public Tag(String tag, int open) {
         this.tag = tag;
         this.open = open;
@@ -25,5 +31,13 @@ public class Tag {
 
     public void setOpen(int open) {
         this.open = open;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
     }
 }

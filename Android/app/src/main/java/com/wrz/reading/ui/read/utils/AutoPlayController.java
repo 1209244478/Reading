@@ -12,10 +12,10 @@ import android.os.Looper;
 public class AutoPlayController {
 
     /** 默认播放间隔（毫秒） */
-    public static final long DEFAULT_DELAY_MS = 3000;
+
 
     private boolean isPlaying = false;
-    private long delay = DEFAULT_DELAY_MS;
+    private long delay;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable tickAction;

@@ -11,8 +11,8 @@
 
     <!-- 排序子菜单：使用 group 实现单选选中状态 -->
     <item
-        android:id="@+id/action_sort_by_name"
-        android:title="按名称排序"
+        android:id="@+id/action_sort"
+        android:title="排序"
         app:showAsAction="never">
         <menu>
             <group android:checkableBehavior="single">
@@ -24,13 +24,35 @@
                     android:id="@+id/action_sort_name_desc"
                     android:title="降序"
                     app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_by_modified_time"
+                    android:title="按修改时间排序"
+                    app:showAsAction="never" />
             </group>
         </menu>
     </item>
     <item
-        android:id="@+id/action_sort_by_modified_time"
-        android:title="按修改时间排序"
-        app:showAsAction="never" />
+        android:id="@+id/action_show"
+        android:title="显示"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="all">
+                <item
+                    android:id="@+id/action_show_video"
+                    android:title="显示视频"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_image"
+                    android:title="显示图片"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_show_music"
+                    android:title="显示音乐"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+
 
     <!-- 翻页方向：合并为一个切换项，标题动态显示当前方向 -->
     <item
@@ -42,6 +64,11 @@
     <item
         android:id="@+id/action_toggle_zoom"
         android:title="缩放模式"
+        android:checkable="true"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_toggle_clean"
+        android:title="退出清理"
         android:checkable="true"
         app:showAsAction="never" />
 

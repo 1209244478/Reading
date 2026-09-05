@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
+import com.wrz.reading.ui.main.Log.LogUtil;
+
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.controlpoint.ActionCallback;
 import org.fourthline.cling.controlpoint.ControlPoint;
@@ -46,7 +48,7 @@ import java.util.List;
  * DLNA 投屏管理器（单例）。
  * 负责：绑定 Cling 的 AndroidUpnpService、搜索局域网内的 MediaRenderer 设备、
  * 启动本地 HTTP 服务器提供视频、调用电视的 AVTransport 进行投屏与停止。
- *
+ * <p>
  * 说明：Cling 的 Device/Service/ActionInvocation 均为泛型类型，
  * 此处为简化使用使用原始类型（raw type），相关 unchecked 警告可忽略。
  */
@@ -55,7 +57,9 @@ public class DlnaManager {
 
     private static final String TAG = "DlnaManager";
     private static final int DEFAULT_PORT = 8989;
-    /** AVTransport 服务类型，MediaRenderer 设备必须提供该服务才能投屏 */
+    /**
+     * AVTransport 服务类型，MediaRenderer 设备必须提供该服务才能投屏
+     */
     private static final UDAServiceType AV_TRANSPORT = new UDAServiceType("AVTransport", 1);
 
     private static volatile DlnaManager instance;
@@ -67,28 +71,40 @@ public class DlnaManager {
     private LocalVideoServer videoServer;
     private int serverPort = DEFAULT_PORT;
     private Device castingDevice;
-    /** 组播锁：Android 默认丢弃组播包，必须持有该锁才能收到 SSDP NOTIFY 设备宣告 */
+    /**
+     * 组播锁：Android 默认丢弃组播包，必须持有该锁才能收到 SSDP NOTIFY 设备宣告
+     */
     private WifiManager.MulticastLock multicastLock;
-    /** WiFi 锁：投屏期间保持 WiFi 高性能，防止息屏后 WiFi 低功耗导致拉流中断 */
+    /**
+     * WiFi 锁：投屏期间保持 WiFi 高性能，防止息屏后 WiFi 低功耗导致拉流中断
+     */
     private WifiManager.WifiLock wifiLock;
-    /** 唤醒锁：投屏期间保持 CPU 唤醒，让 LocalVideoServer 持续响应电视拉流请求 */
+    /**
+     * 唤醒锁：投屏期间保持 CPU 唤醒，让 LocalVideoServer 持续响应电视拉流请求
+     */
     private PowerManager.WakeLock wakeLock;
 
     private DeviceListener deviceListener;
 
-    /** 设备列表变化回调（在 Cling 后台线程触发，调用方需自行切回主线程） */
+    /**
+     * 设备列表变化回调（在 Cling 后台线程触发，调用方需自行切回主线程）
+     */
     public interface DeviceListener {
         void onDeviceChanged();
     }
 
-    /** 投屏结果回调 */
+    /**
+     * 投屏结果回调
+     */
     public interface CastListener {
         void onSuccess();
 
         void onFailure(String message);
     }
 
-    /** 播放进度查询回调（在 Cling 后台线程触发） */
+    /**
+     * 播放进度查询回调（在 Cling 后台线程触发）
+     */
     public interface PlaybackInfoListener {
         /**
          * @param positionMs     当前播放位置（毫秒），不支持时为 0
@@ -101,7 +117,9 @@ public class DlnaManager {
         void onFailure(String message);
     }
 
-    /** 简单的成功/失败回调，用于 pause/resume/seek 等 */
+    /**
+     * 简单的成功/失败回调，用于 pause/resume/seek 等
+     */
     public interface SimpleCallback {
         void onSuccess();
 
@@ -115,17 +133,17 @@ public class DlnaManager {
             upnpService.getRegistry().addListener(registryListener);
             // 显式获取组播锁，确保能收到 SSDP NOTIFY 设备宣告
             acquireMulticastLock();
-            Log.d(TAG, "Cling 服务已连接，multicastLock held=" + (multicastLock != null && multicastLock.isHeld()));
+            LogUtil.d(TAG, "Cling 服务已连接，multicastLock held=" + (multicastLock != null && multicastLock.isHeld()));
             // 服务就绪后立即搜索一次
             upnpService.getControlPoint().search();
-            Log.d(TAG, "search() 已调用");
+            LogUtil.d(TAG, "search() 已调用");
             // 8 秒后打印 registry 状态，用于诊断是否收到任何设备
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (upnpService != null) {
                     java.util.Collection<Device> all = upnpService.getRegistry().getDevices();
-                    Log.d(TAG, "8s 后 registry 设备总数=" + all.size());
+                    LogUtil.d(TAG, "8s 后 registry 设备总数=" + all.size());
                     for (Device d : all) {
-                        Log.d(TAG, "  设备: " + d.getDisplayString()
+                        LogUtil.d(TAG, "  设备: " + d.getDisplayString()
                                 + " type=" + d.getType()
                                 + " services=" + d.getServices().length);
                     }
@@ -143,7 +161,7 @@ public class DlnaManager {
     private final RegistryListener registryListener = new DefaultRegistryListener() {
         @Override
         public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
-            Log.d(TAG, "discovery started: " + device.getDisplayString());
+            LogUtil.d(TAG, "discovery started: " + device.getDisplayString());
         }
 
         @Override
@@ -153,15 +171,15 @@ public class DlnaManager {
 
         @Override
         public void deviceAdded(Registry registry, Device device) {
-            Log.d(TAG, "deviceAdded: " + device.getDisplayString()
+            LogUtil.d(TAG, "deviceAdded: " + device.getDisplayString()
                     + " type=" + device.getType()
                     + " services=" + device.getServices().length);
             // 仅关心带 AVTransport 服务的设备（即 MediaRenderer）
             if (device.findService(AV_TRANSPORT) != null) {
-                Log.d(TAG, "  含 AVTransport，通知刷新");
+                LogUtil.d(TAG, "  含 AVTransport，通知刷新");
                 notifyDeviceChanged();
             } else {
-                Log.d(TAG, "  无 AVTransport 服务");
+                LogUtil.d(TAG, "  无 AVTransport 服务");
             }
         }
 
@@ -199,17 +217,23 @@ public class DlnaManager {
         this.deviceListener = listener;
     }
 
-    /** 绑定 Cling 的 AndroidUpnpService */
+    /**
+     * 绑定 Cling 的 AndroidUpnpService
+     */
     public void bind(Context context) {
         if (bound) {
             return;
         }
         appContext = context.getApplicationContext();
+        // 必须在 bindService 之前获取 MulticastLock，否则 Cling 初始化时发送 SSDP 会因 EPERM 失败
+        acquireMulticastLock();
         Intent intent = new Intent(appContext, CustomAndroidUpnpServiceImpl.class);
         bound = appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    /** 解绑服务 */
+    /**
+     * 解绑服务
+     */
     public void unbind() {
         if (!bound) {
             return;
@@ -227,7 +251,9 @@ public class DlnaManager {
         releaseMulticastLock();
     }
 
-    /** 获取组播锁，确保能接收 SSDP NOTIFY 组播包 */
+    /**
+     * 获取组播锁，确保能接收 SSDP NOTIFY 组播包
+     */
     private void acquireMulticastLock() {
         if (multicastLock != null) {
             return;
@@ -272,7 +298,7 @@ public class DlnaManager {
                             WifiManager.WIFI_MODE_FULL_HIGH_PERF, "dlna-cast-wifi");
                     wifiLock.setReferenceCounted(false);
                     wifiLock.acquire();
-                    Log.d(TAG, "WifiLock 已获取（WIFI_MODE_FULL_HIGH_PERF）");
+                    LogUtil.d(TAG, "WifiLock 已获取（WIFI_MODE_FULL_HIGH_PERF）");
                 } catch (Exception e) {
                     Log.w(TAG, "获取 WifiLock 失败", e);
                     wifiLock = null;
@@ -287,7 +313,7 @@ public class DlnaManager {
                     wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "dlna-cast-cpu");
                     wakeLock.setReferenceCounted(false);
                     wakeLock.acquire();
-                    Log.d(TAG, "WakeLock 已获取（PARTIAL_WAKE_LOCK）");
+                    LogUtil.d(TAG, "WakeLock 已获取（PARTIAL_WAKE_LOCK）");
                 } catch (Exception e) {
                     Log.w(TAG, "获取 WakeLock 失败", e);
                     wakeLock = null;
@@ -296,12 +322,14 @@ public class DlnaManager {
         }
     }
 
-    /** 释放保活锁（投屏停止时调用） */
+    /**
+     * 释放保活锁（投屏停止时调用）
+     */
     private void releaseKeepAliveLocks() {
         if (wifiLock != null) {
             try {
                 wifiLock.release();
-                Log.d(TAG, "WifiLock 已释放");
+                LogUtil.d(TAG, "WifiLock 已释放");
             } catch (Exception ignored) {
             }
             wifiLock = null;
@@ -309,21 +337,25 @@ public class DlnaManager {
         if (wakeLock != null) {
             try {
                 wakeLock.release();
-                Log.d(TAG, "WakeLock 已释放");
+                LogUtil.d(TAG, "WakeLock 已释放");
             } catch (Exception ignored) {
             }
             wakeLock = null;
         }
     }
 
-    /** 主动触发一次设备搜索 */
+    /**
+     * 主动触发一次设备搜索
+     */
     public void startDiscovery() {
         if (upnpService != null) {
             upnpService.getControlPoint().search();
         }
     }
 
-    /** 返回当前已发现的 MediaRenderer 设备列表 */
+    /**
+     * 返回当前已发现的 MediaRenderer 设备列表
+     */
     public List<Device> getDevices() {
         List<Device> result = new ArrayList<>();
         if (upnpService == null) {
@@ -347,11 +379,11 @@ public class DlnaManager {
     /**
      * 投屏到指定设备。
      *
-     * @param device     目标 MediaRenderer 设备
-     * @param videoFile  本地视频文件
-     * @param title      视频标题（用于电视端显示）
+     * @param device          目标 MediaRenderer 设备
+     * @param videoFile       本地视频文件
+     * @param title           视频标题（用于电视端显示）
      * @param startPositionMs 投屏起始位置（毫秒），<0 或 0 表示从头播放
-     * @param listener   投屏结果回调（在 Cling 后台线程触发）
+     * @param listener        投屏结果回调（在 Cling 后台线程触发）
      */
     public void cast(Device device, File videoFile, String title, long startPositionMs, boolean isChangeCast, CastListener listener) {
         if (upnpService == null) {
@@ -359,7 +391,7 @@ public class DlnaManager {
             return;
         }
         // 先停止之前的投屏
-        if (!isChangeCast) {
+        if (isChangeCast) {
             stopCastInternal();
         }
 
@@ -425,12 +457,12 @@ public class DlnaManager {
                         // 从指定位置继续播放（投屏时带上本机当前进度）
                         if (startPositionMs > 0) {
                             String target = formatTimeForSeek(startPositionMs);
-                            Log.d(TAG, "cast: 投屏后 seek 到 " + target + " (" + startPositionMs + "ms)");
+                            LogUtil.d(TAG, "cast: 投屏后 seek 到 " + target + " (" + startPositionMs + "ms)");
                             try {
                                 cp.execute(new Seek(avTransport, target) {
                                     @Override
                                     public void success(ActionInvocation inv) {
-                                        Log.d(TAG, "cast seek 成功");
+                                        LogUtil.d(TAG, "cast seek 成功");
                                     }
 
                                     @Override
@@ -447,19 +479,129 @@ public class DlnaManager {
 
                     @Override
                     public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                        if (finalListener != null) finalListener.onFailure("播放失败: " + defaultMsg);
+                        if (finalListener != null)
+                            finalListener.onFailure("播放失败: " + defaultMsg);
                     }
                 });
             }
 
             @Override
             public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                if (finalListener != null) finalListener.onFailure("设置投屏地址失败: " + defaultMsg);
+                if (finalListener != null)
+                    finalListener.onFailure("设置投屏地址失败: " + defaultMsg);
             }
         });
     }
 
-    /** 停止投屏并关闭本地 HTTP 服务器 */
+
+    /**
+     * 投屏到指定设备。
+     *
+     * @param device          目标 MediaRenderer 设备
+     * @param uri             视频文件uri
+     * @param title           视频标题（用于电视端显示）
+     * @param startPositionMs 投屏起始位置（毫秒），<0 或 0 表示从头播放
+     * @param listener        投屏结果回调（在 Cling 后台线程触发）
+     */
+    public void cast(Device device, String uri, String title, long startPositionMs, boolean isChangeCast, CastListener listener) {
+        if (upnpService == null) {
+            if (listener != null) listener.onFailure("DLNA 服务未就绪");
+            return;
+        }
+        // 先停止之前的投屏
+        if (isChangeCast) {
+            stopCastInternal();
+        }
+
+        castingDevice = device;
+
+        // 获取保活锁，防止手机息屏后 WiFi/CPU 休眠导致电视拉流中断
+        acquireKeepAliveLocks();
+
+        String casterParam;
+        try {
+            casterParam = java.net.URLEncoder.encode(
+                    com.wrz.reading.app.MyApplication.manager.getCastName(), "UTF-8");
+        } catch (Exception e) {
+            casterParam = "unknown";
+        }
+
+        String videoUri = uri + "/?caster=" + casterParam;
+        String mimeType = LocalVideoServer.getMimeType(uri);
+        String protocolInfo = "http-get:*:" + mimeType + ":*";
+
+        // 手动构造 DIDL-Lite 元数据（不用 DIDLParser，因其内部用 seamless SAXParser
+        // 会设置 Android 不支持的 disallow-doctype-decl feature 导致异常）
+        String metadata = "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\""
+                + " xmlns:dc=\"http://purl.org/dc/elements/1.1/\""
+                + " xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\">"
+                + "<item id=\"1\" parentID=\"0\" restricted=\"1\">"
+                + "<dc:title>" + escapeXml(title) + "</dc:title>"
+                + "<upnp:class>object.item.videoItem</upnp:class>"
+                + "<res protocolInfo=\"" + escapeXml(protocolInfo) + "\" size=\""
+                + 0 + "\">" + escapeXml(videoUri) + "</res>"
+                + "</item></DIDL-Lite>";
+
+        final Service avTransport = device.findService(AV_TRANSPORT);
+        if (avTransport == null) {
+            stopServer();
+            if (listener != null) listener.onFailure("设备不支持 AVTransport");
+            return;
+        }
+
+        final ControlPoint cp = upnpService.getControlPoint();
+        final CastListener finalListener = listener;
+
+        // 设置投屏地址
+        cp.execute(new SetAVTransportURI(avTransport, videoUri, metadata) {
+            @Override
+            public void success(ActionInvocation invocation) {
+                // 地址设置成功后调用 Play
+                cp.execute(new Play(avTransport) {
+                    @Override
+                    public void success(ActionInvocation invocation) {
+                        // 从指定位置继续播放（投屏时带上本机当前进度）
+                        if (startPositionMs > 0) {
+                            String target = formatTimeForSeek(startPositionMs);
+                            LogUtil.d(TAG, "cast: 投屏后 seek 到 " + target + " (" + startPositionMs + "ms)");
+                            try {
+                                cp.execute(new Seek(avTransport, target) {
+                                    @Override
+                                    public void success(ActionInvocation inv) {
+                                        LogUtil.d(TAG, "cast seek 成功");
+                                    }
+
+                                    @Override
+                                    public void failure(ActionInvocation inv, UpnpResponse op, String msg) {
+                                        Log.w(TAG, "cast seek 失败: " + msg);
+                                    }
+                                });
+                            } catch (Exception e) {
+                                Log.w(TAG, "cast seek 异常", e);
+                            }
+                        }
+                        if (finalListener != null) finalListener.onSuccess();
+                    }
+
+                    @Override
+                    public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                        if (finalListener != null)
+                            finalListener.onFailure("播放失败: " + defaultMsg);
+                    }
+                });
+            }
+
+            @Override
+            public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                if (finalListener != null)
+                    finalListener.onFailure("设置投屏地址失败: " + defaultMsg);
+            }
+        });
+    }
+
+    /**
+     * 停止投屏并关闭本地 HTTP 服务器
+     */
     public void stopCast() {
         stopCastInternal();
     }
@@ -490,12 +632,16 @@ public class DlnaManager {
         releaseKeepAliveLocks();
     }
 
-    /** 当前是否正在投屏 */
+    /**
+     * 当前是否正在投屏
+     */
     public boolean isCasting() {
         return castingDevice != null;
     }
 
-    /** 获取当前投屏目标设备（可能为 null） */
+    /**
+     * 获取当前投屏目标设备（可能为 null）
+     */
     public Device getCastingDevice() {
         return castingDevice;
     }
@@ -512,7 +658,7 @@ public class DlnaManager {
      * 在 Cling 后台线程回调，调用方需自行切回主线程。
      */
     public void getPlaybackInfo(PlaybackInfoListener listener) {
-        Log.d(TAG, "getPlaybackInfo: upnpService=" + (upnpService != null)
+        LogUtil.d(TAG, "getPlaybackInfo: upnpService=" + (upnpService != null)
                 + " castingDevice=" + (castingDevice != null));
         if (upnpService == null || castingDevice == null) {
             if (listener != null) listener.onFailure("未在投屏");
@@ -530,7 +676,7 @@ public class DlnaManager {
             if (listener != null) listener.onFailure("设备不支持 GetPositionInfo");
             return;
         }
-        Log.d(TAG, "getPlaybackInfo: 执行 GetPositionInfo");
+        LogUtil.d(TAG, "getPlaybackInfo: 执行 GetPositionInfo");
         try {
             ActionInvocation getPositionInv = new ActionInvocation(getPositionAction);
             getPositionInv.setInput("InstanceID", new UnsignedIntegerFourBytes(0));
@@ -541,7 +687,7 @@ public class DlnaManager {
                     String trackDur = readOutput(invocation, "TrackDuration");
                     final long pos = parseTimeToMs(relTime);
                     final long dur = parseTimeToMs(trackDur);
-                    Log.d(TAG, "GetPositionInfo received: relTime=" + relTime
+                    LogUtil.d(TAG, "GetPositionInfo received: relTime=" + relTime
                             + " trackDur=" + trackDur + " -> pos=" + pos + " dur=" + dur);
                     // 进度已拿到，再查传输状态（失败时以空状态回调，不阻塞进度刷新）
                     Action getTransportAction = avTransport.getAction("GetTransportInfo");
@@ -556,7 +702,7 @@ public class DlnaManager {
                             @Override
                             public void success(ActionInvocation invocation) {
                                 String state = readOutput(invocation, "CurrentTransportState");
-                                Log.d(TAG, "GetTransportInfo received: state=" + state);
+                                LogUtil.d(TAG, "GetTransportInfo received: state=" + state);
                                 if (finalListener != null) finalListener.onResult(pos, dur, state);
                             }
 
@@ -584,7 +730,9 @@ public class DlnaManager {
         }
     }
 
-    /** 安全读取 ActionInvocation 输出参数，参数不存在或值为 null 时返回空串。 */
+    /**
+     * 安全读取 ActionInvocation 输出参数，参数不存在或值为 null 时返回空串。
+     */
     private static String readOutput(ActionInvocation invocation, String argumentName) {
         try {
             ActionArgumentValue v = invocation.getOutput(argumentName);
@@ -595,7 +743,9 @@ public class DlnaManager {
     }
 
 
-    /** 暂停电视端播放 */
+    /**
+     * 暂停电视端播放
+     */
     public void pause(SimpleCallback callback) {
         executeSimple(new PauseCallbackFactory() {
             @Override
@@ -615,7 +765,9 @@ public class DlnaManager {
         }, callback);
     }
 
-    /** 恢复电视端播放 */
+    /**
+     * 恢复电视端播放
+     */
     public void resumePlay(SimpleCallback callback) {
         executeSimple(new PauseCallbackFactory() {
             @Override
@@ -720,7 +872,9 @@ public class DlnaManager {
         return 0;
     }
 
-    /** 将毫秒格式化为 "H:MM:SS.mmm"（Seek 入参要求） */
+    /**
+     * 将毫秒格式化为 "H:MM:SS.mmm"（Seek 入参要求）
+     */
     public static String formatTimeForSeek(long ms) {
         if (ms < 0) ms = 0;
         long totalSec = ms / 1000;
@@ -731,7 +885,9 @@ public class DlnaManager {
         return String.format("%d:%02d:%02d.%03d", h, m, s, millis);
     }
 
-    /** 将毫秒格式化为用户可读时间（"M:SS" 或 "H:MM:SS"） */
+    /**
+     * 将毫秒格式化为用户可读时间（"M:SS" 或 "H:MM:SS"）
+     */
     public static String formatTimeReadable(long ms) {
         if (ms < 0) ms = 0;
         long totalSec = ms / 1000;
@@ -744,7 +900,9 @@ public class DlnaManager {
         return String.format("%d:%02d", m, s);
     }
 
-    /** 将用户输入/简写时间归一化为 "H:MM:SS.mmm" */
+    /**
+     * 将用户输入/简写时间归一化为 "H:MM:SS.mmm"
+     */
     private static String normalizeSeekTarget(String target) {
         if (target == null || target.trim().isEmpty()) {
             return "0:00:00.000";
@@ -764,13 +922,17 @@ public class DlnaManager {
         }
     }
 
-    /** 彻底释放资源（Activity 销毁时调用） */
+    /**
+     * 彻底释放资源（Activity 销毁时调用）
+     */
     public void release() {
         stopCastInternal();
         unbind();
     }
 
-    /** XML 特殊字符转义 */
+    /**
+     * XML 特殊字符转义
+     */
     private static String escapeXml(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;")
@@ -812,7 +974,9 @@ public class DlnaManager {
         }
     }
 
-    /** 获取本机局域网 IPv4 地址（优先 wlan，排除 loopback） */
+    /**
+     * 获取本机局域网 IPv4 地址（优先 wlan，排除 loopback）
+     */
     private static String getLocalIpAddress() {
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
