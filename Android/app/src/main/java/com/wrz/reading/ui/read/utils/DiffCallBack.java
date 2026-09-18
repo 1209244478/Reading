@@ -40,18 +40,18 @@ public class DiffCallBack {
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            Comic a = oldList.get(oldItemPosition);
-            Comic b = newList.get(newItemPosition);
-            return a.getId() == b.getId()
-                    && Objects.equals(a.getTitle(), b.getTitle())
-                    && Objects.equals(a.getCoverPath(), b.getCoverPath())
-                    && Objects.equals(a.getFileType(), b.getFileType())
-                    && a.getReadProgress() == b.getReadProgress()
-                    && a.getVideoPosition() == b.getVideoPosition()
-                    && a.getTotal() == b.getTotal()
-                    && a.getLastRead() == b.getLastRead()
-                    && a.isSelected() == b.isSelected()
-                    && a.isHorizontal() == b.isHorizontal();
+            Comic old = oldList.get(oldItemPosition);
+            Comic newComic = newList.get(newItemPosition);
+            return old.getId() == newComic.getId()
+                    && Objects.equals(old.getTitle(), newComic.getTitle())
+                    && Objects.equals(old.getCoverPath(), newComic.getCoverPath())
+                    && Objects.equals(old.getFileType(), newComic.getFileType())
+                    && old.getReadProgress() == newComic.getReadProgress()
+                    && old.getVideoPosition() == newComic.getVideoPosition()
+                    && old.getTotal() == newComic.getTotal()
+                    && old.getLastRead() == newComic.getLastRead()
+                    && old.isSelected() == newComic.isSelected()
+                    && old.isHorizontal() == newComic.isHorizontal();
         }
     }
 

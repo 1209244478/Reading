@@ -3,6 +3,7 @@ package com.wrz.reading.ui.read.utils;
 import android.util.Log;
 
 import com.wrz.reading.ui.main.Log.LogUtil;
+import com.wrz.reading.ui.read.model.ReadItem;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -83,6 +84,76 @@ public class ZipUtils {
 
             // 按路径排序，确保目录结构下的文件顺序正确
             imageFiles = FileSorter.sortByPath(imageFiles);
+            return imageFiles;
+
+        } catch (IOException e) {
+            LogUtil.e(TAG, "Error extracting zip file: " + zipFilePath, e);
+            return imageFiles;
+        }
+    }
+    /**
+     * 从ZIP文件中提取所有图片文件，保留目录结构
+     *
+     * @param zipFilePath ZIP文件路径
+     * @param extractDir  解压目录
+     * @return 提取的图片文件列表（按路径排序）
+     */
+    public static List<ReadItem> extractReadItemsFromZip(String zipFilePath, File extractDir) {
+        List<ReadItem> imageFiles = new ArrayList<>();
+
+        if (!extractDir.exists() && !extractDir.mkdirs()) {
+            LogUtil.e(TAG, "Failed to create extract directory: " + extractDir.getPath());
+            return imageFiles;
+        }
+
+        try (FileInputStream fis = new FileInputStream(zipFilePath);
+             ZipArchiveInputStream zais = new ZipArchiveInputStream(
+                     new BufferedInputStream(fis), "UTF-8", true, true)) {
+
+            ZipArchiveEntry entry;
+            while ((entry = zais.getNextZipEntry()) != null) {
+                String entryName = entry.getName();
+
+                // 过滤掉目录和非法路径
+                if (entry.isDirectory() || containsPathTraversal(entryName)) {
+                    continue;
+                }
+
+                // 获取纯文件名
+                String fileName = new File(entryName).getName();
+                if (!FileUtils.isImageFile(fileName)) {
+                    continue;
+                }
+
+                // 保留目录结构：使用原始路径创建文件
+                File outputFile = new File(extractDir, entryName);
+
+                // 确保父目录存在
+                File parentDir = outputFile.getParentFile();
+                if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs()) {
+                    Log.w(TAG, "Failed to create parent directory: " + parentDir.getPath());
+                    continue;
+                }
+
+                // 写入文件
+                try (BufferedOutputStream bos = new BufferedOutputStream(
+                        new FileOutputStream(outputFile), BUFFER_SIZE)) {
+                    byte[] buffer = new byte[BUFFER_SIZE];
+                    int bytesRead;
+                    while ((bytesRead = zais.read(buffer)) != -1) {
+                        bos.write(buffer, 0, bytesRead);
+                    }
+                    imageFiles.add(new ReadItem(outputFile));
+                } catch (IOException e) {
+                    LogUtil.e(TAG, "Error extracting entry: " + entryName, e);
+                    if (outputFile.exists()) {
+                        outputFile.delete();
+                    }
+                }
+            }
+
+            // 按路径排序，确保目录结构下的文件顺序正确
+            imageFiles = FileSorter.sortReadItemsByPath(imageFiles);
             return imageFiles;
 
         } catch (IOException e) {
@@ -178,6 +249,9 @@ public class ZipUtils {
     public static File getTempExtractDir(String zipFilePath) {
         File zipFile = new File(zipFilePath);
         String zipFileName = zipFile.getName();
+        if (!FileUtils.isExtFile(zipFileName)) {
+            return null;
+        }
         String tempDirName = "comic_temp_" + zipFileName.substring(0, zipFileName.lastIndexOf('.'));
 
         // 使用应用缓存目录

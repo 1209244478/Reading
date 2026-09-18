@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -120,7 +121,11 @@ public class CreateEditActivity extends BaseActivity {
 
         sv_content = findViewById(R.id.sv_content);
         RecyclerView rv_list = findViewById(R.id.rv_list);
-        rv_list.setLayoutManager(new LinearLayoutManager(this));
+        if (isLand()) {
+            rv_list.setLayoutManager(new GridLayoutManager(this, 2));
+        } else {
+            rv_list.setLayoutManager(new LinearLayoutManager(this));
+        }
 
         adapter = new OptionAdapter(new OptionAdapter.ChangeListener() {
             @Override
@@ -263,26 +268,6 @@ public class CreateEditActivity extends BaseActivity {
     }
 
     private void showChangeWeight(int position) {
-        /*EditConfirmDialog dialog = new EditConfirmDialog(this, getString(R.string.adjust_weights),
-                "", String.valueOf(list.get(position).getWeight()), "1");
-        dialog.setConfirmListener(text -> {
-            int weight;
-            if (text.isEmpty() || text.equals("0")) {
-                weight = 1;
-            } else {
-                try {
-                    weight = Integer.parseInt(text);
-                    if (weight <= 0) weight = 1;
-                } catch (NumberFormatException e) {
-                    weight = 1;
-                }
-            }
-            list.get(position).setWeight(weight);
-            adapter.notifyItemChanged(position);
-            calculatePercent(true);
-        });
-        dialog.show();*/
-
         boolean isNight = this.getResources().getBoolean(R.bool.is_night);
         new XPopup.Builder(this)
                 .hasShadowBg(false)

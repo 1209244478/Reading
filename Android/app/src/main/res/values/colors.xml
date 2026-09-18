@@ -19,6 +19,8 @@
     <color name="gray_800">#424242</color>
     <color name="gray_900">#212121</color>
 
+    <color name="primary_gray">#CC1D1D1F</color>
+
     <!-- 小米风格颜色 -->
     <color name="primary_color">#FF6700</color>
     <color name="primary_dark">#E65C00</color>
@@ -222,6 +224,7 @@
 
     <!-- 半透明色（用于遮罩/叠加） -->
     <color name="apple_transparent">#00000000</color>
+    <color name="apple_white_30">#40FFFFFF</color>
     <color name="apple_white_50">#80FFFFFF</color>
     <color name="apple_black_50">#80000000</color>
     <color name="apple_black_20">#33000000</color>
@@ -242,6 +245,7 @@
     <color name="ios_card_background">#FFFFFF</color>
     <color name="ios_text_secondary">#86868B</color>
     <color name="ios_text_placeholder">#C7C7CC</color>
+    <color name="ios_rv_background">#FAFAFA</color>
 
     <color name="color_option_item_divider">#E5E5EA</color>
 

@@ -28,12 +28,11 @@ public class CollectionItem {
         List<CollectionItem> copy = new ArrayList<>();
         if (data == null) return copy;
         for (CollectionItem item : data) {
-            Collection c = new Collection();
-            c.setId(item.getCollection().getId());
-            c.setName(item.getCollection().getName());
-            c.setCreatedAt(item.getCollection().getCreatedAt());
+            Collection c = Collection.deepCopy(item);
+
             copy.add(new CollectionItem(c, item.getComicCount()));
         }
         return copy;
     }
+
 }

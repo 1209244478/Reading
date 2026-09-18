@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 排序子菜单：使用 group 实现单选选中状态 -->
+    <item
+        android:id="@+id/action_sort"
+        android:title="排序和显示"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/action_sort_name_asc"
+                    android:title="名称-升序"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_name_desc"
+                    android:title="名称-降序"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_by_size"
+                    android:title="按大小排序"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_by_progress"
+                    android:title="按阅读进度排序"
+                    app:showAsAction="never" />
+                <item
+                    android:id="@+id/action_sort_by_last_read_time"
+                    android:title="按阅读时间排序"
+                    app:showAsAction="never" />
+            </group>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_move"
+        android:title="移动"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_share"
+        android:title="分享"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_splash"
+        android:title="刷新"
+        app:showAsAction="never" />
+
+</menu>

@@ -95,7 +95,7 @@ public final class VideoUtils {
         if (dir == null) {
             return null;
         }
-        File file = new File(dir, "." + sanitize(title) + "_video.jpg");
+        File file = new File(dir, "." + title/*sanitize(title)*/ /*+ "_video.jpg"*/);
         try (FileOutputStream fos = new FileOutputStream(file)) {
             if (bmp.compress(Bitmap.CompressFormat.JPEG, 85, fos)) {
                 return file.getAbsolutePath();

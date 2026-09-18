@@ -1,9 +1,12 @@
 package com.wrz.reading.ui.random.fragment;
 
+import android.annotation.SuppressLint;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -35,37 +38,29 @@ public class RandomFragment extends BaseFragment {
         return R.layout.fragment_random;
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void initView() {
         splashOnResume = true;
-        rv_list = parentView.findViewById(R.id.rv_list);
-        rv_list.setLayoutManager(new LinearLayoutManager(parentView.getContext()));
+        rv_list = findId(R.id.rv_list);
+        if (isLand()) {
+            rv_list.setLayoutManager(new GridLayoutManager(activity, 3));
+        } else {
+            rv_list.setLayoutManager(new LinearLayoutManager(parentView.getContext()));
+        }
         adapter = new RandomAdapter(list);
 
         rv_list.setAdapter(adapter);
 
-        btn_generate = parentView.findViewById(R.id.btn_generate);
-        btn_clear = parentView.findViewById(R.id.btn_clear);
+        btn_generate = findId(R.id.btn_generate);
+        btn_clear = findId(R.id.btn_clear);
 
-        ImageButton btn_menu = parentView.findViewById(R.id.btn_menu);
+        ImageButton btn_menu = findId(R.id.btn_menu);
 
-        btn_menu.setOnClickListener(v -> {
-            RandomSettingPopup popup = new RandomSettingPopup(parentView.getContext());
-            popup.setOnSaveListener(() -> {
-                initData();
-                configViews();
-            });
-            new XPopup.Builder(parentView.getContext())
-                    .hasShadowBg(false)
-                    .isViewMode(true)
-                    .autoOpenSoftInput(false)
-                    .isDestroyOnDismiss(false)
-                    .asCustom(popup)
-                    .show();
-        });
+        tv_start = findId(R.id.tv_start);
+        tv_end = findId(R.id.tv_end);
 
-        tv_start = parentView.findViewById(R.id.tv_start);
-        tv_end = parentView.findViewById(R.id.tv_end);
+        setClick(settingPopupL, btn_menu, tv_start, tv_end);
 
         btn_generate.setOnClickListener(v -> generateUnique());
 
@@ -75,8 +70,25 @@ public class RandomFragment extends BaseFragment {
         });
     }
 
+    View.OnClickListener settingPopupL = v -> showSettingPopup();
+
+    private void showSettingPopup() {
+        RandomSettingPopup popup = new RandomSettingPopup(parentView.getContext());
+        popup.setOnSaveListener(() -> {
+            initData();
+            configViews();
+        });
+        new XPopup.Builder(parentView.getContext())
+                .hasShadowBg(false)
+                .isViewMode(true)
+                .autoOpenSoftInput(false)
+                .isDestroyOnDismiss(false)
+                .asCustom(popup)
+                .show();
+    }
 
 
+    @SuppressLint("NotifyDataSetChanged")
     private void generateUnique() {
         Random random = new Random();
 

@@ -14,7 +14,9 @@ import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FileType;
+import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.VideoUtils;
+import com.wrz.reading.ui.read.utils.ZipUtils;
 
 import java.io.File;
 import java.util.List;
@@ -103,13 +105,15 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
 
         if (fileType == FileType.VIDEO || fileType == FileType.MUSIC) {
             // 视频进度为播放位置（毫秒），格式化为时间；视频无总时长字段，隐藏进度条
-            holder.setText(R.id.comic_progress, VideoUtils.formatTime(comic.getVideoPosition()) + "\n" + VideoUtils.formatTime(comic.getTotal()) );
-            /*holder.setGone(R.id.comic_progress_bar, true);*/
+            holder.setText(R.id.comic_progress, VideoUtils.formatTime(comic.getVideoPosition()) + "-" + VideoUtils.formatTime(comic.getTotal()));
             comicProgressBar.setProgress((int) comic.getVideoPosition());
+
+            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length()));
+
         } else {
             holder.setText(R.id.comic_progress, (comic.getReadProgress() + 1) + "/" + comic.getTotal());
-            /*holder.setGone(R.id.comic_progress_bar, false);*/
 
+            holder.setText(R.id.comic_cache, "缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
 
             comicProgressBar.setProgress(comic.getReadProgress());
         }

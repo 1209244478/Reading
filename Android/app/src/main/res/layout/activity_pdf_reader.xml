@@ -22,14 +22,11 @@
     </androidx.appcompat.widget.Toolbar>
 
 
-    <LinearLayout
-        android:id="@+id/ll_pdf_root"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/pdf_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
-
-    </LinearLayout>
+        android:background="@color/white" />
 
     <!-- 底部操作栏 -->
     <LinearLayout

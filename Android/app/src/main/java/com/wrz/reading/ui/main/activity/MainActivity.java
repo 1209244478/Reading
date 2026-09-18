@@ -1,5 +1,6 @@
 package com.wrz.reading.ui.main.activity;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,7 +14,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseActivity;
 import com.wrz.reading.ui.main.Log.LogUtil;
@@ -30,7 +31,8 @@ public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity";
     private NavController navController;
-    private BottomNavigationView bottomNavigationView;
+    // 竖屏/平板为 BottomNavigationView，手机横屏（layout-land）为 NavigationRailView，统一用父类持有
+    private NavigationBarView bottomNavigationView;
 
     @Override
     public void getIntentData() {
@@ -53,14 +55,23 @@ public class MainActivity extends BaseActivity {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         // 悬浮导航栏在 edge-to-edge（targetSdk 36 在 API 35+ 强制）下需避开系统手势条：
-        // 将系统底部 inset 叠加到容器的 bottomMargin 上，保证玻璃栏完整浮在手势条之上。
+        // 竖屏/平板：将系统底部 inset 叠加到容器的 bottomMargin 上；
+        // 手机横屏（右侧玻璃栏）：将系统 right inset 叠加到容器的 rightMargin 上。
         View navContainer = findViewById(R.id.bottom_nav_container);
+        Configuration config = getResources().getConfiguration();
+        boolean railMode = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+                && config.smallestScreenWidthDp < 600;
         ViewCompat.setOnApplyWindowInsetsListener(navContainer, (v, insets) -> {
-            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
             ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-            // 16dp 为 XML 中声明的基础悬浮间距，再叠加系统 inset
+            // 8dp 为基础悬浮间距，再叠加系统 inset
             float density = v.getResources().getDisplayMetrics().density;
-            lp.bottomMargin = (int) (8 * density) + bottomInset;
+            if (railMode) {
+                int rightInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
+                lp.rightMargin = (int) (8 * density) + rightInset;
+            } else {
+                int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+                lp.bottomMargin = (int) (8 * density) + bottomInset;
+            }
             return insets;
         });
     }

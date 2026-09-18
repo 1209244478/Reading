@@ -92,6 +92,22 @@ public class CompressionUtil {
      * @return 漫画文件夹路径
      */
     public static File getComicsDirectory() {
+        File cacheDir = new File(System.getProperty("java.io.tmpdir"));
+        // 使用应用私有外部存储目录，无需申请存储权限，卸载自动清理
+        File comicsDir = new File(cacheDir, "漫画");
+        if (!comicsDir.exists() && !comicsDir.mkdirs()) {
+            LogUtil.e(TAG, "Failed to create comics directory");
+            return null;
+        }
+        return comicsDir;
+    }
+
+    /**
+     * 获取漫画文件夹路径（应用私有外部存储）
+     *
+     * @return 漫画文件夹路径
+     */
+    public static File getOldComicsDirectory() {
         // 使用应用私有外部存储目录，无需申请存储权限，卸载自动清理
         File comicsDir = new File(MyApplication.app.getExternalFilesDir(null), "漫画");
         if (!comicsDir.exists() && !comicsDir.mkdirs()) {

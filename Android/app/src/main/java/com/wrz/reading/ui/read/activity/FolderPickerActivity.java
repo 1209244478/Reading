@@ -23,9 +23,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
+import com.wrz.reading.ui.read.adapter.FolderAdapter;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FolderBean;
-import com.wrz.reading.ui.read.adapter.FolderAdapter;
 import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
@@ -34,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public class FolderPickerActivity extends BaseActivity implements View.OnClickListener {
-    private final String TAG = "FolderPickerActivity";
     public static final String EXTRA_SELECTED_FOLDERS = "selected_folders";
 
     private final List<String> selectedFolders = new ArrayList<>();

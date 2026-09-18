@@ -11,6 +11,7 @@
     <color name="ios_button_background">#0A84FF</color>
     <color name="ios_card_background">#2C2C2E</color>
     <color name="color_wheel_list">#2C2C2E</color>
+    <color name="ios_rv_background">#2C2C2E</color>
 
     <!-- 通用色板夜间覆盖 -->
     <color name="color_primary">#2C2C2E</color>

@@ -14,6 +14,37 @@ public class Collection {
     private String name;
     private long createdAt;
 
+    private long cacheSize = 0; // 缓存大小
+
+    /*-------------------------------排序相关------------------------------------*/
+
+    /**
+     * 按名称正序
+     */
+    public static final int SORT_BY_NAME = 0;
+
+    /**
+     * 按名称倒序
+     */
+    public static final int SORT_BY_NAME_REVERSE = 1;
+
+    /**
+     * 按阅读进度
+     */
+    public static final int SORT_BY_PROGRESS = 2;
+    /**
+     * 按修改时间
+     */
+    public static final int SORT_BY_LAST_READ_TIME = 3;
+
+    /**
+     * 按大小
+     */
+    public static final int SORT_BY_SIZE = 4;
+
+    public static final int SORT_DEFAULT = SORT_BY_NAME;
+
+
     // 非持久化：仅用于 UI 选择模式
     @Ignore
     private boolean isSelected = false;
@@ -35,6 +66,7 @@ public class Collection {
         c.setId(collectionItem.getCollection().getId());
 
         c.setCreatedAt(collectionItem.getCollection().getCreatedAt());
+        c.setCacheSize(collectionItem.getCollection().getCacheSize());
 
         return c;
     }
@@ -70,4 +102,13 @@ public class Collection {
     public void setSelected(boolean selected) {
         isSelected = selected;
     }
+
+    public long getCacheSize() {
+        return cacheSize;
+    }
+
+    public void setCacheSize(long cacheSize) {
+        this.cacheSize = cacheSize;
+    }
+
 }

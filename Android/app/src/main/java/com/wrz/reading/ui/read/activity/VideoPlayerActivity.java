@@ -243,7 +243,7 @@ public class VideoPlayerActivity extends BaseActivity {
                     int index = getNextSubIndex();
 
                     if (index != -1 && ReaderActivity.imageFiles.get(index) != null) {
-                        switchToSubFile(comicId, ReaderActivity.imageFiles.get(index));
+                        switchToSubFile(comicId, ReaderActivity.imageFiles.get(index).getFile());
                     }
                 }
             } else {
@@ -351,7 +351,7 @@ public class VideoPlayerActivity extends BaseActivity {
     public int getNextSubIndex() {
         int index = -1;
         for (int i = 0; i < ReaderActivity.imageFiles.size(); i++) {
-            if (Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getAbsolutePath())) {
+            if (Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getFile().getAbsolutePath())) {
                 index = i;
                 break;
             }
@@ -360,8 +360,8 @@ public class VideoPlayerActivity extends BaseActivity {
 
         if (index != -1) {
             for (int i = index; i < ReaderActivity.imageFiles.size(); i++) {
-                if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getName())
-                        && !Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getAbsolutePath())) {
+                if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getFile().getName())
+                        && !Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getFile().getAbsolutePath())) {
                     nextIndex = i;
                     break;
                 }
@@ -369,7 +369,7 @@ public class VideoPlayerActivity extends BaseActivity {
 
             if (nextIndex == -1) {
                 for (int i = index; i < ReaderActivity.imageFiles.size(); i++) {
-                    if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getName())) {
+                    if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getFile().getName())) {
                         nextIndex = i;
                         break;
                     }

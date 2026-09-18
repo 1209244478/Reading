@@ -12,7 +12,7 @@
     <!-- 排序子菜单：使用 group 实现单选选中状态 -->
     <item
         android:id="@+id/action_sort"
-        android:title="排序"
+        android:title="排序和显示"
         app:showAsAction="never">
         <menu>
             <group android:checkableBehavior="single">
@@ -29,52 +29,62 @@
                     android:title="按修改时间排序"
                     app:showAsAction="never" />
             </group>
+            <item
+                android:id="@+id/action_show"
+                android:title="显示"
+                app:showAsAction="never">
+                <menu>
+                    <group android:checkableBehavior="all">
+                        <item
+                            android:id="@+id/action_show_video"
+                            android:title="显示视频"
+                            app:showAsAction="never" />
+                        <item
+                            android:id="@+id/action_show_image"
+                            android:title="显示图片"
+                            app:showAsAction="never" />
+                        <item
+                            android:id="@+id/action_show_music"
+                            android:title="显示音乐"
+                            app:showAsAction="never" />
+                    </group>
+
+
+                </menu>
+            </item>
+            <!-- 翻页方向：合并为一个切换项，标题动态显示当前方向 -->
+            <item
+                android:id="@+id/action_toggle_scroll_orientation"
+                android:title="切换为上下滑动翻页"
+                app:showAsAction="never" />
         </menu>
     </item>
-    <item
-        android:id="@+id/action_show"
-        android:title="显示"
+
+    <item android:id="@+id/action_setting"
+        android:title="设置"
         app:showAsAction="never">
         <menu>
-            <group android:checkableBehavior="all">
-                <item
-                    android:id="@+id/action_show_video"
-                    android:title="显示视频"
-                    app:showAsAction="never" />
-                <item
-                    android:id="@+id/action_show_image"
-                    android:title="显示图片"
-                    app:showAsAction="never" />
-                <item
-                    android:id="@+id/action_show_music"
-                    android:title="显示音乐"
-                    app:showAsAction="never" />
-            </group>
+            <item
+                android:id="@+id/set_cover_image"
+                android:title="设为封面"
+                app:showAsAction="never" />
+            <!-- 缩放模式：开启后可双指/双击缩放图片，单击不再触发翻页 -->
+            <item
+                android:id="@+id/action_toggle_zoom"
+                android:title="缩放模式"
+                android:checkable="true"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_toggle_clean"
+                android:title="退出清理"
+                android:checkable="true"
+                app:showAsAction="never" />
         </menu>
     </item>
 
-
-    <!-- 翻页方向：合并为一个切换项，标题动态显示当前方向 -->
     <item
-        android:id="@+id/action_toggle_scroll_orientation"
-        android:title="切换为上下滑动翻页"
-        app:showAsAction="never" />
-
-    <!-- 缩放模式：开启后可双指/双击缩放图片，单击不再触发翻页 -->
-    <item
-        android:id="@+id/action_toggle_zoom"
-        android:title="缩放模式"
-        android:checkable="true"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_toggle_clean"
-        android:title="退出清理"
-        android:checkable="true"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/set_cover_image"
-        android:title="设为封面"
+        android:id="@+id/action_share"
+        android:title="分享"
         app:showAsAction="never" />
 
     <!-- 自动播放二级菜单 -->

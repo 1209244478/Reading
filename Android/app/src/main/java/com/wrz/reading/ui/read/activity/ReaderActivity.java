@@ -4,7 +4,6 @@ import static com.wrz.reading.common.Constant.EXTRA_COMIC_NAME;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -23,13 +22,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wrz.reading.R;
-import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.ImageAdapter;
 import com.wrz.reading.ui.read.adapter.PreviewAdapter;
 import com.wrz.reading.ui.read.data.ComicDatabase;
 import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.model.SubProgress;
 import com.wrz.reading.ui.read.utils.AutoPlayController;
 import com.wrz.reading.ui.read.utils.FileSorter;
@@ -50,11 +49,11 @@ public class ReaderActivity extends BaseReaderActivity {
     private TextView pageCounterText;
     private Spinner folderSpinner;
     private ImageAdapter imageAdapter;
-    public static List<File> imageFiles;
+    public static List<ReadItem> imageFiles;
     /**
      * 完整未过滤的文件列表，用于排序和过滤的基准
      */
-    private List<File> allImageFiles;
+    private List<ReadItem> allImageFiles;
     /**
      * 显示过滤位掩码：bit0=视频(1) bit1=图片(2) bit2=音乐(4)，默认7=全部显示
      */
@@ -101,13 +100,13 @@ public class ReaderActivity extends BaseReaderActivity {
         previewCard = findViewById(R.id.preview_card);
         previewRecycler = previewCard.findViewById(R.id.preview_recycler);
         previewPageLabel = previewCard.findViewById(R.id.preview_page_label);
-        previewCard.setOnClickListener(v -> {
+        /*previewCard.setOnClickListener(v -> {
             if (previewIsShowing) {
                 showPageJumpDialog();
             } else {
                 toggleToolBarVisibleOrGone();
             }
-        });
+        });*/
 
         previewRecycler.setLayoutManager(new LinearLayoutManager(this,
                 LinearLayoutManager.HORIZONTAL, false));
@@ -116,9 +115,8 @@ public class ReaderActivity extends BaseReaderActivity {
 
         previewAdapter.setOnItemClickListener((adapter, view, position) -> {
             if (previewIsShowing) {
+                imageAdapter.setCurrentPlayStatus(false);
                 comicViewPager.setCurrentItem(position, false);
-            } else {
-                toggleToolBarVisibleOrGone();
             }
         });
 
@@ -127,6 +125,10 @@ public class ReaderActivity extends BaseReaderActivity {
             public void onPageSelected(int position) {
                 updatePageCounter(position);
                 updateReadProgress();
+                // 同步视频页播放状态：仅当前页的视频播放，其余暂停
+                if (imageAdapter != null) {
+                    imageAdapter.setPosition(position);
+                }
             }
         });
     }
@@ -163,13 +165,13 @@ public class ReaderActivity extends BaseReaderActivity {
     /**
      * 加载图片文件列表
      */
-    private List<File> loadImageFiles(Comic comic) {
+    private List<ReadItem> loadImageFiles(Comic comic) {
         File comicFile = new File(comic.getPath());
         File originalDirectory = new File(comic.getOriginalPath());
 
         // 优先从源路径获取（节省解压时间）
         if (!comic.getOriginalPath().isEmpty() && originalDirectory.exists()) {
-            List<File> files = FileUtils.getMediaFilesRecursive(originalDirectory);
+            List<ReadItem> files = FileUtils.getMediaFilesRecursive(originalDirectory);
             if (!files.isEmpty()) {
                 // 检查是否有多个子目录
                 checkAndSetupFolderSelector(originalDirectory);
@@ -184,7 +186,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
         // 直接从路径加载
         if (comicFile.exists() && comicFile.isDirectory()) {
-            List<File> files = FileUtils.getMediaFilesRecursive(comicFile);
+            List<ReadItem> files = FileUtils.getMediaFilesRecursive(comicFile);
             if (!files.isEmpty()) {
                 checkAndSetupFolderSelector(comicFile);
             }
@@ -198,12 +200,12 @@ public class ReaderActivity extends BaseReaderActivity {
     /**
      * 从压缩文件加载图片
      */
-    private List<File> loadFromCompressedFile(String zipPath) {
+    private List<ReadItem> loadFromCompressedFile(String zipPath) {
         File tempExtractDir = ZipUtils.getTempExtractDir(zipPath);
 
         // 检查是否已经解压过
         if (tempExtractDir.exists()) {
-            List<File> files = FileUtils.getMediaFilesRecursive(tempExtractDir);
+            List<ReadItem> files = FileUtils.getMediaFilesRecursive(tempExtractDir);
             if (!files.isEmpty()) {
                 checkAndSetupFolderSelector(tempExtractDir);
             }
@@ -212,7 +214,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
         // 解压文件
         runOnUiThread(() -> Toast.makeText(this, "正在解压漫画文件...", Toast.LENGTH_SHORT).show());
-        List<File> files = ZipUtils.extractImagesFromZip(zipPath, tempExtractDir);
+        List<ReadItem> files = ZipUtils.extractReadItemsFromZip(zipPath, tempExtractDir);
         if (files != null && !files.isEmpty()) {
             checkAndSetupFolderSelector(tempExtractDir);
         }
@@ -292,7 +294,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
         subPosition = position;
 
-        List<File> newImageFiles;
+        List<ReadItem> newImageFiles;
         if (position == 0) {
             // 选择"全部文件夹"
             newImageFiles = new ArrayList<>();
@@ -325,8 +327,14 @@ public class ReaderActivity extends BaseReaderActivity {
     /**
      * 更新漫画元数据
      */
-    private void updateComicMetadata(Comic comic, List<File> imageFiles) {
+    private void updateComicMetadata(Comic comic, List<ReadItem> readItems) {
         boolean update = false;
+        List<File> imageFiles = new ArrayList<>();
+
+        for (ReadItem i : readItems) {
+            imageFiles.add(i.getFile());
+        }
+
         if (comic.getCoverPath().isEmpty() && !imageFiles.isEmpty()) {
             comic.setCoverPath(FileUtils.getAndSetCoverImagePath(imageFiles.get(0), comic.getTitle()));
             update = true;
@@ -346,7 +354,7 @@ public class ReaderActivity extends BaseReaderActivity {
      * 设置ViewPager
      */
     private void setupViewPager() {
-        imageAdapter = new ImageAdapter(R.layout.image_item, imageFiles, new ImageAdapter.OnComicClickListener() {
+        imageAdapter = new ImageAdapter(imageFiles, new ImageAdapter.OnComicClickListener() {
             @Override
             public void onComicClick() {
                 toggleToolBarVisibleOrGone();
@@ -363,12 +371,26 @@ public class ReaderActivity extends BaseReaderActivity {
             }
 
             @Override
-            public void onVideoClick(File videoFile) {
+            public void onVideoClick() {
+                hideToolBarIfVisible();
+            }
+
+            @Override
+            public void onVideoJump(File videoFile) {
                 openVideoWithExternalPlayer(videoFile);
             }
         });
 
+        imageAdapter.addChildClickViewIds(R.id.cast_button);
+        imageAdapter.setOnItemChildClickListener((adapter, view, position) -> {
+            if (view.getId() == R.id.cast_button) {
+                openVideoWithExternalPlayer(imageAdapter.getData().get(position).getFile());
+            }
+        });
+
         comicViewPager.setAdapter(imageAdapter);
+
+        imageAdapter.setSubList(comic.getSubProgress());
 
         // 恢复上次阅读进度
         if (comic == null) {
@@ -442,9 +464,9 @@ public class ReaderActivity extends BaseReaderActivity {
         if (allImageFiles == null || allImageFiles.isEmpty()) return;
 
         imageFiles = new ArrayList<>();
-        for (File f : allImageFiles) {
-            boolean isVideo = FileUtils.isVideoFile(f.getName());
-            boolean isMusic = FileUtils.isMusicFile(f.getName());
+        for (ReadItem f : allImageFiles) {
+            boolean isVideo = FileUtils.isVideoFile(f.getFile().getName());
+            boolean isMusic = FileUtils.isMusicFile(f.getFile().getName());
             // isImage = 非视频且非音乐
             if (isVideo && (showFilter & FILTER_VIDEO) != 0) {
                 imageFiles.add(f);
@@ -535,6 +557,7 @@ public class ReaderActivity extends BaseReaderActivity {
             return;
         }
 
+        imageAdapter.setCurrentPlayStatus(false);
         VideoPlayerActivity.start(this, comicId, videoFile.getAbsolutePath(),
                 videoFile.getName(), true, 1000);
 
@@ -565,18 +588,18 @@ public class ReaderActivity extends BaseReaderActivity {
 
     // ==================== 排序功能 ====================
 
-    List<File> sortFiles(List<File> files) {
+    List<ReadItem> sortFiles(List<ReadItem> files) {
         if (comic.getSort() == Comic.SORT_BY_NAME) {
-            return FileSorter.sort(files);
+            return FileSorter.sortReadItems(files, false);
         } else if (comic.getSort() == Comic.SORT_BY_NAME_REVERSE) {
-            return FileSorter.sortReverse(files);
+            return FileSorter.sortReadItems(files, true);
         } else if (comic.getSort() == Comic.SORT_BY_MODIFY_TIME) {
-            files.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+            files.sort((f1, f2) -> Long.compare(f2.getFile().lastModified(), f1.getFile().lastModified()));
 
             return files;
         }
 
-        return FileSorter.sort(files);
+        return FileSorter.sortReadItems(files, false);
     }
 
 
@@ -630,17 +653,31 @@ public class ReaderActivity extends BaseReaderActivity {
             return;
         }
 
-        // 删除旧封面
-        if (comic.getCoverPath() != null && !comic.getCoverPath().isEmpty()) {
-            new File(comic.getCoverPath()).delete();
-        }
+        File current = imageFiles.get(comicViewPager.getCurrentItem()).getFile();
+        if (!FileUtils.isMusicFile(current.getName())) {
+            deleteOldCover(comic.getCoverPath());
 
-        String coverPath = FileUtils.getAndSetCoverImagePath(
-                imageFiles.get(comicViewPager.getCurrentItem()),
-                comic.getTitle() + "_" + System.currentTimeMillis()
-        );
-        comic.setCoverPath(coverPath);
-        Toast.makeText(this, "已设置为漫画封面", Toast.LENGTH_SHORT).show();
+            String coverPath = FileUtils.getAndSetCoverImagePath(
+                    current,
+                    comic.getTitle()
+            );
+            comic.setCoverPath(coverPath);
+            Toast.makeText(this, "已设置为漫画封面", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 删除旧封面。仅删除应用自己生成的封面文件（漫画目录下 "." 开头的隐藏文件）；
+     * coverPath 指向用户原始图片时不删除（分区存储下无权删除会失败，全量权限下删除会误删原图）。
+     */
+    private void deleteOldCover(String coverPath) {
+        if (coverPath == null || coverPath.isEmpty()) {
+            return;
+        }
+        File old = new File(coverPath);
+
+        boolean delOld = old.delete();
+        LogUtil.e(TAG, "deleteOldCover: " + coverPath + " delOld=" + delOld);
     }
 
     // ==================== 自动播放 ====================
@@ -834,7 +871,9 @@ public class ReaderActivity extends BaseReaderActivity {
             Toast.makeText(this, clean ? "已开启清理" : "已关闭清理", Toast.LENGTH_SHORT).show();
         }
 
-        else if (itemId == R.id.set_cover_image) {
+        else if (itemId == R.id.action_share) {
+            shareFile();
+        } else if (itemId == R.id.set_cover_image) {
             setCover();
         } else if (itemId == R.id.action_auto_play_start) {
             if (!autoPlay.isPlaying()) {
@@ -874,6 +913,17 @@ public class ReaderActivity extends BaseReaderActivity {
             return super.onOptionsItemSelected(item);
         }
         return true;
+    }
+
+    /**
+     * 通过 FileProvider 以 content:// URI 调起系统分享面板。
+     * 单文件用 ACTION_SEND，多文件用 ACTION_SEND_MULTIPLE。
+     */
+    private void shareFile() {
+        if (!imageFiles.isEmpty() && comicViewPager != null) {
+            File file = imageFiles.get(comicViewPager.getCurrentItem()).getFile();
+            FileUtils.shareFile(this, file);
+        }
     }
 
     /**
@@ -918,6 +968,7 @@ public class ReaderActivity extends BaseReaderActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        imageAdapter.releaseAllPlayer();
         if (comic != null && comic.isClean()) {
             if (new File(comic.getPath()).getName().endsWith(FileUtils.SPECIAL_FORMATS)) {
                 File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());

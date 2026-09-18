@@ -146,7 +146,7 @@ public class EmojiData {
                 "🧚\n" + "🧛\n" + "🧜\n" + "🧝\n" + "🧞\n" + "🧟\n" + "🧌\n" + "💆\n" +
                 "💇\n" + "🚶\n" + "🧍\n" + "🧎\n" + "🏃\n" + "💃\n" + "🕺\n" + "👯\n" +
                 "🧖\n" + "🧗\n" + "🤸\n" + "⛹️\n" + "🏋️\n" + "🚴\n" + "🚵\n" + "🤸\n" +
-                "🤽\n" + "🤾\n" + "🤹\n" + "🧘\n" + "🛀\n" + "🛌\n";
+                "🤽\n" + "🏄\n" + "🤾\n" + "🤹\n" + "🧘\n" + "🛀\n" + "🛌\n";
         String[] strings = emoji.split("\n");
         return new Emoji("🧠", Arrays.asList(strings));
     }

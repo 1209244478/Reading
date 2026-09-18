@@ -13,6 +13,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.SeekBar;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -80,7 +81,7 @@ public class EPubReaderFragment extends BaseFragment {
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         mScrollSeekbar = view.findViewById(R.id.scrollSeekbar);
         mWebview = view.findViewById(R.id.contentWebView);
         super.onViewCreated(view, savedInstanceState);

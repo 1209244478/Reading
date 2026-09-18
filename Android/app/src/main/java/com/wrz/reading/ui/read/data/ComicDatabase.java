@@ -16,7 +16,7 @@ import com.wrz.reading.ui.read.model.Comic;
 import java.util.ArrayList;
 import java.util.List;
 
-@Database(entities = {Comic.class, Collection.class}, version = 2)
+@Database(entities = {Comic.class, Collection.class}, version = 3)
 public abstract class ComicDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "comic_database";
     private static ComicDatabase instance;
@@ -35,11 +35,22 @@ public abstract class ComicDatabase extends RoomDatabase {
         }
     };
 
+    /**
+     * v2 -> v3：comics 表新增 cacheSize 列，collections 表新增 cacheSize 列，
+     */
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE comics ADD COLUMN cacheSize INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE collections ADD COLUMN cacheSize INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
     public static synchronized ComicDatabase getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                             ComicDatabase.class, DATABASE_NAME)
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build();
         }
@@ -49,11 +60,15 @@ public abstract class ComicDatabase extends RoomDatabase {
     public static long lastUpdate = 0;
     public static long UPDATE_LIMIT = 2000;
 
+    public static boolean isUpdating = false;
+
     public static void update(Comic comic) {
         long current = System.currentTimeMillis();
-        if (current - lastUpdate > UPDATE_LIMIT) {
+        if (current - lastUpdate > UPDATE_LIMIT && !isUpdating) {
+            isUpdating = true;
             MyApplication.comicDatabase.comicDao().updateComic(comic);
             lastUpdate = current;
+            isUpdating = false;
         }
     }
     public static void updateList(ArrayList<Comic> list) {

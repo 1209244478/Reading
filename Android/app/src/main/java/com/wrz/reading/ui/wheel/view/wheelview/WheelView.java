@@ -2,6 +2,7 @@ package com.wrz.reading.ui.wheel.view.wheelview;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -21,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.wrz.reading.R;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.wheel.model.Option;
 import com.wrz.reading.ui.wheel.model.Wheel;
 
@@ -35,7 +37,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WheelView extends View {
 
     // ==================== 常量 ====================
-    private static final String TAG = "WheelView";
 
     /**
      * 扇形绘制起始偏移（顶部为 0 度）
@@ -45,10 +46,6 @@ public class WheelView extends View {
      * 圆周率
      */
     private static final float PI = (float) Math.PI;
-    /**
-     * 旋转动画时长
-     */
-    private static long SPIN_DURATION_MS = 4000L;
     /**
      * 最少旋转圈数 / 最多旋转圈数
      */
@@ -64,14 +61,15 @@ public class WheelView extends View {
     private static final int TEXT_LEN_MEDIUM = 10;
 
     // 文字大小缩放因子
-    private static final float TEXT_SCALE_MEDIUM = 0.8f;
+    private static final float TEXT_SCALE_LARGE = 1.2f;
+    private static final float TEXT_SCALE_MEDIUM = 0.9f;
     private static final float TEXT_SCALE_SMALL = 0.7f;
     private static final float TEXT_SCALE_NARROW = 0.5f;
     private static final float TEXT_RADIUS_RATIO = 0.7f;
     private static final float NARROW_SECTOR_DEG = 10f;
 
     // 亮度阈值（用于自动深/浅文字色）
-    private static final double LUMINANCE_THRESHOLD = 128.0;
+    private static final double LUMINANCE_THRESHOLD = 250.0;
 
     // 中心点尺寸
     private static final float CENTER_RADIUS = 10f;
@@ -182,8 +180,8 @@ public class WheelView extends View {
     // ==================== 生命周期 ====================
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
+    protected void onSizeChanged(int w, int h, int oldW, int oldH) {
+        super.onSizeChanged(w, h, oldW, oldH);
         centerX = w / 2f;
         centerY = h / 2f;
         radius = (Math.min(w, h) / 2f) - getResources().getDimension(R.dimen.margin_medium);
@@ -191,7 +189,7 @@ public class WheelView extends View {
         // 缓存资源引用，避免每帧重复查询
         borderColor = ContextCompat.getColor(getContext(), R.color.border_light);
         borderColorInner = ContextCompat.getColor(getContext(), R.color.white);
-        textColorDefault = ContextCompat.getColor(getContext(), R.color.apple_charcoal_dark);
+        textColorDefault = ContextCompat.getColor(getContext(), R.color.gray_500);
         colorDivider = borderColorInner;
         colorPointer = ContextCompat.getColor(getContext(), R.color.apple_red);
         colorPointerBorder = borderColorInner;
@@ -199,7 +197,7 @@ public class WheelView extends View {
         unselectedBgColor = 0xFF888888;
 
         isTablet = getResources().getBoolean(R.bool.is_table);
-        textSizeDefault = getResources().getDimension(R.dimen.text_size_small);
+        textSizeDefault = getResources().getDimension(R.dimen.text_size_medium);
         textSizeMedium = getResources().getDimension(R.dimen.text_size_medium);
     }
 
@@ -329,6 +327,7 @@ public class WheelView extends View {
         int bgColor = items.get(index).getColor();
         double luminance = Color.red(bgColor) * 0.299 + Color.green(bgColor) * 0.587 + Color.blue(bgColor) * 0.114;
         textPaint.setColor(luminance > LUMINANCE_THRESHOLD ? textColorDefault : Color.WHITE);
+        LogUtil.e("WheelView", "drawSectorText: luminance=" + luminance + ", text=" + text);
         textPaint.setTextSize(textSize);
 
         // 文字位置：扇形中心半径 70% 处
@@ -338,9 +337,21 @@ public class WheelView extends View {
         float textX = centerX + textRadius * (float) Math.cos(textAngleRad);
         float textY = centerY + textRadius * (float) Math.sin(textAngleRad);
 
+        // 方向统一：下半部（90°~270°）径向文字会倒立，翻转 180° 保证所有文字一律从中心向外可读
+        float rotation = textAngle;
+        float centerDeg = normalizeAngle(textAngle);
+        if (centerDeg > 90f && centerDeg < 270f) {
+            rotation += 180f;
+        }
+
+        // baseline 居中补偿：drawText 的 y 是基线而非视觉中心，
+        // 用 FontMetrics 将文字视觉中心精确对齐锚点，否则各角度文字位置忽内忽外
+        Paint.FontMetrics fm = textPaint.getFontMetrics();
+        float baselineOffset = -(fm.ascent + fm.descent) / 2f;
+
         canvas.save();
-        canvas.rotate(textAngle, textX, textY);
-        canvas.drawText(text, textX, textY, textPaint);
+        canvas.rotate(rotation, textX, textY);
+        canvas.drawText(text, textX, textY + baselineOffset, textPaint);
         canvas.restore();
     }
 
@@ -356,7 +367,7 @@ public class WheelView extends View {
         float size;
 
         if (len <= TEXT_LEN_SHORT) {
-            size = base;
+            size = base * TEXT_SCALE_LARGE * (count > 10 ? TEXT_SCALE_SMALL : 1f);
         } else if (len <= TEXT_LEN_MEDIUM) {
             size = base * TEXT_SCALE_MEDIUM * (count > 10 ? TEXT_SCALE_MEDIUM : 1f);
         } else {
@@ -389,6 +400,7 @@ public class WheelView extends View {
 
     // ==================== 触摸：点击扇形选中 ====================
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (isSpinning) return super.onTouchEvent(event);
@@ -496,7 +508,10 @@ public class WheelView extends View {
         int maxOffset = Math.max(1, (int) halfSector);
         int randomOffset = ThreadLocalRandom.current().nextInt(-maxOffset, maxOffset + 1);
 
-        SPIN_DURATION_MS = wheel.getTime() * 1000L;
+        /*
+         * 旋转动画时长
+         */
+        long SPIN_DURATION_MS = wheel.getTime() * 1000L;
 
         // 额外旋转圈数
         int extraSpins = random.nextInt(MAX_EXTRA_SPINS - MIN_EXTRA_SPINS + 1) + MIN_EXTRA_SPINS;

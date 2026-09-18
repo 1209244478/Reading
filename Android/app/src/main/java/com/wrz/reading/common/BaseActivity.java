@@ -1,27 +1,20 @@
 package com.wrz.reading.common;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.widget.Toast;
-import android.window.OnBackInvokedDispatcher;
+import android.view.View;
+import android.widget.TextView;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wrz.reading.R;
 import com.wrz.reading.ui.main.Log.LogUtil;
+import com.wrz.reading.ui.main.dialog.LoadingDialog;
 import com.wrz.reading.ui.main.utils.ExecutorManager;
 
 import java.util.concurrent.ExecutorService;
@@ -30,11 +23,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     public final String TAG = getClass().getSimpleName();
     public ExecutorService singleThread;
     public ExecutorService threadPool;
-
+    private LoadingDialog loadingDialog;
     public Toolbar mCommonToolbar;
     private ToolbarHelper toolbarHelper;
-
-    private static final int REQUEST_PERMISSION = 1;
 
 
     @Override
@@ -69,13 +60,36 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         initView();
 
-        if (checkPermissions()) {
-            initData();
-            LogUtil.e(TAG, "initData.");
-            configView();
-            LogUtil.e(TAG, "configView.");
+        initData();
+        LogUtil.e(TAG, "initData.");
+        configView();
+        LogUtil.e(TAG, "configView.");
+
+        // 横屏时隐藏状态栏（通知栏），竖屏恢复显示
+        applyLandscapeSystemBar();
+
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // 覆盖声明了 configChanges 旋转不重建的 Activity（如 VideoPlayerActivity）
+        applyLandscapeSystemBar();
+    }
+
+    /**
+     * 横屏时隐藏状态栏（通知栏），下滑可临时呼出；竖屏恢复显示。
+     * 仅隐藏 statusBars，不影响导航栏 inset（悬浮导航栏依赖底部 inset）。
+     */
+    private void applyLandscapeSystemBar() {
+        WindowInsetsControllerCompat insetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        insetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            insetsController.hide(WindowInsetsCompat.Type.statusBars());
         } else {
-            requestPermissions();
+            insetsController.show(WindowInsetsCompat.Type.statusBars());
         }
     }
 
@@ -85,32 +99,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         // 减少引用计数（不直接关闭共享线程池）
         ExecutorManager.getInstance().removeReference();
-    }
-
-    private boolean checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return Environment.isExternalStorageManager();
-        } else {
-            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-    }
-
-    private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.addCategory("android.intent.category.DEFAULT");
-                intent.putExtra("android.provider.extra.APP_PACKAGE", getPackageName());
-                startActivityForResult(intent, REQUEST_PERMISSION);
-            } catch (Exception e) {
-                Intent intent = new Intent();
-                intent.setAction(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                startActivityForResult(intent, REQUEST_PERMISSION);
-            }
-        } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
-        }
     }
 
     public abstract void getIntentData();
@@ -125,55 +113,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 
     public abstract void goBack();
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-
-    private void initBackCallback() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // 注册预测性返回回调
-            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                    OnBackInvokedDispatcher.PRIORITY_OVERLAY,
-                    this::goBack
-            );
-        } else {
-            // 兼容旧版本的返回处理
-            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-                @Override
-                public void handleOnBackPressed() {
-                    goBack();
-                }
-            });
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        handlePermissionResult(requestCode);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        handlePermissionResult(requestCode);
-    }
-
-    private void handlePermissionResult(int requestCode) {
-        if (requestCode != REQUEST_PERMISSION) {
-            return;
-        }
-        if (checkPermissions()) {
-            initData();
-            configView();
-        } else {
-            Toast.makeText(this, "需要存储权限", Toast.LENGTH_SHORT).show();
-            finish();
-        }
-    }
 
 
     public boolean mIsToolBarVisible = true;
@@ -214,6 +153,100 @@ public abstract class BaseActivity extends AppCompatActivity {
         insetsController.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         insetsController.hide(WindowInsetsCompat.Type.systemBars());
+    }
+
+    protected void setClick(View v, View.OnClickListener l) {
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    protected void setClick(View.OnClickListener l, final View...views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setOnClickListener(l);
+                }
+            }
+        }
+    }
+
+    protected void setText(String text, final View...views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    ((TextView) view).setText(text);
+                }
+            }
+        }
+    }
+
+    protected void setText(String text, final int...views) {
+        if (views != null) {
+            for (Integer viewId : views) {
+                View view = findViewById(viewId);
+                if (view != null) {
+                    ((TextView) view).setText(text);
+                }
+            }
+        }
+    }
+
+    protected void gone(final View... views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
+    protected void visible(final View... views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+    }
+
+    /**
+     * 安全地在主线程执行 UI 更新： Activity 未销毁时才执行。
+     */
+    protected void runOnUiIfAlive(Runnable action) {
+        if (!this.isDestroyed() && !this.isFinishing()) {
+            this.runOnUiThread(action);
+        }
+    }
+
+    public LoadingDialog getLoadingDialog() {
+        if (loadingDialog == null) {
+            loadingDialog = LoadingDialog.instance(this);
+            loadingDialog.setCancelable(false);
+        }
+        return loadingDialog;
+    }
+
+    public void hideLoading() {
+        if (loadingDialog != null)
+            loadingDialog.hide();
+    }
+
+    public void showLoading() {
+        getLoadingDialog().show();
+    }
+
+    public void dismissLoading() {
+        if (loadingDialog != null) {
+            loadingDialog.dismiss();
+            loadingDialog = null;
+        }
+    }
+
+    public boolean isLand() {
+        return (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
     }
 
 }

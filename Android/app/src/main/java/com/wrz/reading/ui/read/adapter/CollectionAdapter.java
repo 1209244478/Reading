@@ -10,6 +10,7 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
+import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.util.List;
 
@@ -41,6 +42,8 @@ public class CollectionAdapter extends BaseQuickAdapter<CollectionItem, BaseView
         Collection collection = item.getCollection();
         holder.setText(R.id.collection_name, collection.getName());
         holder.setText(R.id.collection_count, item.getComicCount() + " 本");
+
+        holder.setText(R.id.comic_cache, "缓存大小 " + FileUtils.formatFileSizeToString(item.getCollection().getCacheSize()));
 
         ImageView icon = holder.getView(R.id.collection_icon);
 

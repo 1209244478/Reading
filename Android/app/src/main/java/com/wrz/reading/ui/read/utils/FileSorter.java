@@ -1,5 +1,8 @@
 package com.wrz.reading.ui.read.utils;
 
+import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.ReadItem;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,6 +34,32 @@ public class FileSorter {
     }
 
     /**
+     * 按文件名自然排序（升序）
+     * 支持格式：001.jpg, page1.jpg, chapter_1.jpg, 1.jpg 等
+     */
+    public static List<ReadItem> sortReadItems(List<ReadItem> imageFiles, boolean reverse) {
+        if (imageFiles == null || imageFiles.isEmpty()) {
+            return imageFiles;
+        }
+
+        List<ReadItem> sorted = new ArrayList<>(imageFiles);
+        sorted.sort(createNaturalReadComparator(reverse));
+        return sorted;
+    }
+
+    /**
+     * 按文件名自然排序（升序）
+     * 支持格式：001.jpg, page1.jpg, chapter_1.jpg, 1.jpg 等
+     */
+    public static void sortComics(Comparator<Comic> dirFirst, List<Comic> list, boolean reverse) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        list.sort(dirFirst.thenComparing(createNaturalComicComparator(reverse)));
+    }
+
+    /**
      * 按文件名自然排序（降序）
      */
     public static List<File> sortReverse(List<File> imageFiles) {
@@ -57,12 +86,47 @@ public class FileSorter {
     }
 
     /**
+     * 按完整路径自然排序（用于包含子目录的情况）
+     */
+    public static List<ReadItem> sortReadItemsByPath(List<ReadItem> imageFiles) {
+        if (imageFiles == null || imageFiles.isEmpty()) {
+            return imageFiles;
+        }
+
+        List<ReadItem> sorted = new ArrayList<>(imageFiles);
+        sorted.sort(createReadItemPathComparator());
+        return sorted;
+    }
+
+    /**
      * 创建自然排序比较器
      * 自然排序：1, 2, 10, 20 而不是 1, 10, 2, 20
      */
     private static Comparator<File> createNaturalComparator(boolean reverse) {
         return (f1, f2) -> {
             int result = naturalCompare(f1.getName(), f2.getName());
+            return reverse ? -result : result;
+        };
+    }
+
+    /**
+     * 创建自然排序比较器
+     * 自然排序：1, 2, 10, 20 而不是 1, 10, 2, 20
+     */
+    private static Comparator<ReadItem> createNaturalReadComparator(boolean reverse) {
+        return (f1, f2) -> {
+            int result = naturalCompare(f1.getFile().getName(), f2.getFile().getName());
+            return reverse ? -result : result;
+        };
+    }
+
+    /**
+     * 创建自然排序比较器
+     * 自然排序：1, 2, 10, 20 而不是 1, 10, 2, 20
+     */
+    private static Comparator<Comic> createNaturalComicComparator(boolean reverse) {
+        return (f1, f2) -> {
+            int result = naturalCompare(f1.getTitle(), f2.getTitle());
             return reverse ? -result : result;
         };
     }
@@ -87,6 +151,29 @@ public class FileSorter {
 
             // 同一目录下按文件名自然排序
             return naturalCompare(f1.getName(), f2.getName());
+        };
+    }
+
+    /**
+     * 创建路径比较器（先按目录分组，再按文件名排序）
+     */
+    private static Comparator<ReadItem> createReadItemPathComparator() {
+        return (f1, f2) -> {
+            String path1 = f1.getFile().getAbsolutePath();
+            String path2 = f2.getFile().getAbsolutePath();
+
+            // 获取父目录路径
+            String parent1 = f1.getFile().getParent() != null ? f1.getFile().getParent() : "";
+            String parent2 = f2.getFile().getParent() != null ? f2.getFile().getParent() : "";
+
+            // 先比较父目录
+            int dirCompare = parent1.compareToIgnoreCase(parent2);
+            if (dirCompare != 0) {
+                return dirCompare;
+            }
+
+            // 同一目录下按文件名自然排序
+            return naturalCompare(f1.getFile().getName(), f2.getFile().getName());
         };
     }
 

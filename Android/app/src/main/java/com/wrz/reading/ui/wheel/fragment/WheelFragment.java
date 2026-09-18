@@ -1,7 +1,6 @@
 package com.wrz.reading.ui.wheel.fragment;
 
 import android.annotation.SuppressLint;
-import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -15,11 +14,11 @@ import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
-import com.wrz.reading.ui.wheel.model.Option;
-import com.wrz.reading.ui.wheel.model.Wheel;
 import com.wrz.reading.ui.wheel.activity.CreateEditActivity;
 import com.wrz.reading.ui.wheel.activity.WheelListActivity;
+import com.wrz.reading.ui.wheel.model.Option;
 import com.wrz.reading.ui.wheel.model.Request;
+import com.wrz.reading.ui.wheel.model.Wheel;
 import com.wrz.reading.ui.wheel.view.wheelview.WheelView;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class WheelFragment extends BaseFragment {
     ImageButton btn_menu;
     TextView resultText;
     TextView titleText;
-    CardView resultCard;
+
     CardView mainCard;
     FrameLayout wheelContainer;
     private List<Option> list;
@@ -52,7 +51,7 @@ public class WheelFragment extends BaseFragment {
         editBtn = findId(R.id.editBtn);
         resultText = findId(R.id.resultText);
         titleText = findId(R.id.titleText);
-        resultCard = findId(R.id.resultCard);
+        /*resultCard = findId(R.id.resultCard);*/
 
 
         mainCard = findId(R.id.mainCard);
@@ -76,6 +75,7 @@ public class WheelFragment extends BaseFragment {
         });
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void configViews() {
         setUpWheelView();
@@ -99,15 +99,6 @@ public class WheelFragment extends BaseFragment {
         mainCard.setOnClickListener(v -> {
             if (isSpinning) return;
             resetWheel();
-        });
-
-        resultCard.setOnClickListener(v -> {
-            if (isSpinning) return;
-            if (getString(R.string.hint_wheel).equals(resultText.getText().toString())) {
-                startSpinning();
-            } else {
-                resetWheel();
-            }
         });
 
         btn_menu.setOnClickListener(v -> showList());
@@ -136,8 +127,7 @@ public class WheelFragment extends BaseFragment {
 
                 Toast.makeText(parentView.getContext(), R.string.notification_all_selected, Toast.LENGTH_SHORT).show();
 
-                resultText.setText(getString(R.string.notification_all_selected) + "\n"
-                        + getString(R.string.click_to_reset));
+                resultText.setText(getString(R.string.notification_all_selected));
             }
         });
     }
@@ -182,9 +172,6 @@ public class WheelFragment extends BaseFragment {
         resultText.setText(MyApplication.app.getString(R.string.message_result, option));
         resultText.setTextColor(ContextCompat.getColor(parentView.getContext(), R.color.apple_red));
 
-        android.view.animation.Animation highlightAnimation = AnimationUtils.loadAnimation(parentView.getContext(), R.anim.result_highlight);
-        resultCard.startAnimation(highlightAnimation);
-
         Toast.makeText(parentView.getContext(), "选择了 " + option, Toast.LENGTH_SHORT).show();
     }
 
@@ -192,8 +179,7 @@ public class WheelFragment extends BaseFragment {
         isSpinning = false;
         startBtn.setEnabled(true);
         wheelView.reset();
-        resultText.setText(R.string.hint_wheel);
-        resultText.setTextColor(ContextCompat.getColor(parentView.getContext(), R.color.ios_text_primary));
+        resultText.setText(null);
     }
 
     private void showEditPage() {

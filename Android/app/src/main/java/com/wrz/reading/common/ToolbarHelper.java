@@ -70,7 +70,7 @@ public class ToolbarHelper {
             return;
         }
         toolbar.animate()
-                .translationY(-toolbar.getHeight())
+                .translationY(-toolbar.getHeight() - 8f)
                 .setInterpolator(new LinearInterpolator())
                 .setDuration(ANIM_DURATION)
                 .setListener(new AnimatorListenerAdapter() {

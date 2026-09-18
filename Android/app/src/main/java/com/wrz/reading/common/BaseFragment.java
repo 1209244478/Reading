@@ -17,16 +17,19 @@ package com.wrz.reading.common;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -46,7 +49,7 @@ public abstract class BaseFragment extends Fragment {
     public ExecutorService threadPool;
     protected Context mContext;
 
-    private LoadingDialog LoadingDialog;
+    private LoadingDialog loadingDialog;
 
     public Toolbar mCommonToolbar;
     private ToolbarHelper toolbarHelper;
@@ -79,7 +82,7 @@ public abstract class BaseFragment extends Fragment {
 
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         initView();
@@ -108,7 +111,7 @@ public abstract class BaseFragment extends Fragment {
     public abstract void configViews();
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
         this.activity = (FragmentActivity) activity;
     }
@@ -160,16 +163,16 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public LoadingDialog getLoadingDialog() {
-        if (LoadingDialog == null) {
-            LoadingDialog = com.wrz.reading.ui.main.dialog.LoadingDialog.instance(getActivity());
-            LoadingDialog.setCancelable(false);
+        if (loadingDialog == null) {
+            loadingDialog = LoadingDialog.instance(getActivity());
+            loadingDialog.setCancelable(false);
         }
-        return LoadingDialog;
+        return loadingDialog;
     }
 
     public void hideLoading() {
-        if (LoadingDialog != null)
-            LoadingDialog.hide();
+        if (loadingDialog != null)
+            loadingDialog.hide();
     }
 
     public void showLoading() {
@@ -177,14 +180,51 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public void dismissLoading() {
-        if (LoadingDialog != null) {
-            LoadingDialog.dismiss();
-            LoadingDialog = null;
+        if (loadingDialog != null) {
+            loadingDialog.dismiss();
+            loadingDialog = null;
+        }
+    }
+
+    protected void setClick(View v, View.OnClickListener l) {
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    protected void setClick(View.OnClickListener l, final View...views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setOnClickListener(l);
+                }
+            }
+        }
+    }
+    
+    protected void setText(String text, final View...views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    ((TextView) view).setText(text);
+                }
+            }
+        }
+    }
+
+    protected void setText(String text, final int...views) {
+        if (views != null) {
+            for (Integer viewId : views) {
+                View view = findId(viewId);
+                if (view != null) {
+                    ((TextView) view).setText(text);
+                }
+            }
         }
     }
 
     protected void gone(final View... views) {
-        if (views != null && views.length > 0) {
+        if (views != null) {
             for (View view : views) {
                 if (view != null) {
                     view.setVisibility(View.GONE);
@@ -194,7 +234,7 @@ public abstract class BaseFragment extends Fragment {
     }
 
     protected void visible(final View... views) {
-        if (views != null && views.length > 0) {
+        if (views != null) {
             for (View view : views) {
                 if (view != null) {
                     view.setVisibility(View.VISIBLE);
@@ -255,6 +295,10 @@ public abstract class BaseFragment extends Fragment {
                 }
             });
         }
+    }
+
+    public boolean isLand() {
+        return (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
     }
 
     public abstract void goBack();

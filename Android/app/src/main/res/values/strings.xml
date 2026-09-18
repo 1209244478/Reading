@@ -500,4 +500,6 @@
     <string name="make_a_copy">复制一份</string>
     <string name="close">关闭</string>
     <string name="wheel_time">转盘旋转时间</string>
+    <string name="share">分享</string>
+    <string name="empty"> </string>
 </resources>

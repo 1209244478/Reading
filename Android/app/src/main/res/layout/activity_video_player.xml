@@ -38,7 +38,6 @@
             tools:text="@string/about_us" />
 
 
-
         <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
         <ImageButton
             android:id="@+id/cast_button"

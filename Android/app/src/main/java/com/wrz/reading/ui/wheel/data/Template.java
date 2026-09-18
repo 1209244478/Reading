@@ -636,39 +636,39 @@ public class Template {
         List<Wheel> list = new ArrayList<>();
 
         // 热门
-        list.add(createDefaultTemplate("default_hot_cities", R.string.hot, "\u2708\uFE0F", R.string.hot_cities, 0, getHotCityList()));
-        list.add(createDefaultTemplate("default_self_care", R.string.hot, "\uD83E\uDE77", R.string.self_care_ways, 0, getLoveMyselfList()));
-        list.add(createDefaultTemplate("default_today_food", R.string.hot, "\uD83C\uDF72", R.string.today_food, 0, getDefaultList()));
+        list.add(createDefaultTemplate("default_hot_cities", R.string.hot, "✈️", R.string.hot_cities, 0, getHotCityList()));
+        list.add(createDefaultTemplate("default_self_care", R.string.hot, "🩷", R.string.self_care_ways, 0, getLoveMyselfList()));
+        list.add(createDefaultTemplate("default_today_food", R.string.hot, "🍲", R.string.today_food, 0, getDefaultList()));
 
         // 美食
-        list.add(createDefaultTemplate("default_breakfast", R.string.food, "\uD83C\uDF73", R.string.breakfast, 0, getWhatToEatBreakfast()));
-        list.add(createDefaultTemplate("default_lunch", R.string.food, "\uD83C\uDF5A", R.string.lunch, 0, getWhatToEatLunch()));
-        list.add(createDefaultTemplate("default_dinner", R.string.food, "\uD83C\uDF5C", R.string.dinner, 0, getWhatToEatDinner()));
+        list.add(createDefaultTemplate("default_breakfast", R.string.food, "🍳", R.string.breakfast, 0, getWhatToEatBreakfast()));
+        list.add(createDefaultTemplate("default_lunch", R.string.food, "🍚", R.string.lunch, 0, getWhatToEatLunch()));
+        list.add(createDefaultTemplate("default_dinner", R.string.food, "🍜", R.string.dinner, 0, getWhatToEatDinner()));
 
         // 各地美食
-        list.add(createDefaultTemplate("default_cantonese", R.string.regional_cuisine, "\uD83E\uDD43", R.string.cantonese_cuisine, 0, getCantoneseMorningTea()));
-        list.add(createDefaultTemplate("default_beijing", R.string.regional_cuisine, "\uD83E\uDD5B", R.string.beijing_cuisine, 0, getBeijingMorningFood()));
-        list.add(createDefaultTemplate("default_shanghai", R.string.regional_cuisine, "\uD83C\uDF77", R.string.shanghai_cuisine, 0, getShanghaiMorningFood()));
-        list.add(createDefaultTemplate("default_hangzhou", R.string.regional_cuisine, "\uD83E\uDDCB", R.string.hangzhou_cuisine, 0, getHangZhouMorningFood()));
+        list.add(createDefaultTemplate("default_cantonese", R.string.regional_cuisine, "🥃", R.string.cantonese_cuisine, 0, getCantoneseMorningTea()));
+        list.add(createDefaultTemplate("default_beijing", R.string.regional_cuisine, "🥛", R.string.beijing_cuisine, 0, getBeijingMorningFood()));
+        list.add(createDefaultTemplate("default_shanghai", R.string.regional_cuisine, "🍷", R.string.shanghai_cuisine, 0, getShanghaiMorningFood()));
+        list.add(createDefaultTemplate("default_hangzhou", R.string.regional_cuisine, "🧋", R.string.hangzhou_cuisine, 0, getHangZhouMorningFood()));
 
         // 恋爱
-        list.add(createDefaultTemplate("default_date_ideas", R.string.love_title, "\u2764", R.string.date_ideas, 0, getDating()));
-        list.add(createDefaultTemplate("default_gift_girlfriend", R.string.love_title, "\uD83D\uDC8C", R.string.gift_for_girlfriend, 0, getGiftToGirl()));
-        list.add(createDefaultTemplate("default_gift_boyfriend", R.string.love_title, "\uD83D\uDC8C", R.string.gift_for_boyfriend, 0, getGiftToBoy()));
+        list.add(createDefaultTemplate("default_date_ideas", R.string.love_title, "💖", R.string.date_ideas, 0, getDating()));
+        list.add(createDefaultTemplate("default_gift_girlfriend", R.string.love_title, "💌", R.string.gift_for_girlfriend, 0, getGiftToGirl()));
+        list.add(createDefaultTemplate("default_gift_boyfriend", R.string.love_title, "💌", R.string.gift_for_boyfriend, 0, getGiftToBoy()));
 
         // 旅游
-        list.add(createDefaultTemplate("default_travel_china", R.string.travel_title, "\uD83C\uDFC4", R.string.holiday_destinations, R.string.china_version, getTravelCity()));
-        list.add(createDefaultTemplate("default_travel_asia", R.string.travel_title, "\u2708\uFE0F", R.string.holiday_destinations, R.string.asia_version, getAsiaTravelCity()));
-        list.add(createDefaultTemplate("default_travel_global", R.string.travel_title, "\u2708\uFE0F", R.string.holiday_destinations, R.string.global_version, getWorldTravelCity()));
+        list.add(createDefaultTemplate("default_travel_china", R.string.travel_title, "🚄", R.string.holiday_destinations, R.string.china_version, getTravelCity()));
+        list.add(createDefaultTemplate("default_travel_asia", R.string.travel_title, "🚢", R.string.holiday_destinations, R.string.asia_version, getAsiaTravelCity()));
+        list.add(createDefaultTemplate("default_travel_global", R.string.travel_title, "✈️", R.string.holiday_destinations, R.string.global_version, getWorldTravelCity()));
 
         // 游戏
-        list.add(createDefaultTemplate("default_truth_or_dare", R.string.game, "\uD83C\uDF7B", R.string.truth_or_dare, 0, getTrueWordOrAdventure()));
-        list.add(createDefaultTemplate("default_truth", R.string.game, "\uD83C\uDF7A", R.string.truth, 0, getTrueWord()));
-        list.add(createDefaultTemplate("default_dare", R.string.game, "\uD83E\uDED7", R.string.dare, 0, getAdventure()));
+        list.add(createDefaultTemplate("default_truth_or_dare", R.string.game, "🍻", R.string.truth_or_dare, 0, getTrueWordOrAdventure()));
+        list.add(createDefaultTemplate("default_truth", R.string.game, "💛", R.string.truth, 0, getTrueWord()));
+        list.add(createDefaultTemplate("default_dare", R.string.game, "🫗", R.string.dare, 0, getAdventure()));
 
         // 运动
-        list.add(createDefaultTemplate("default_workout", R.string.sports_title, "\uD83C\uDFC3", R.string.workout_today, 0, getSport()));
-        list.add(createDefaultTemplate("default_fitness", R.string.sports_title, "\uD83C\uDFCB\uFE0F", R.string.fitness_equipment, 0, getSportEquipment()));
+        list.add(createDefaultTemplate("default_workout", R.string.sports_title, "🏃", R.string.workout_today, 0, getSport()));
+        list.add(createDefaultTemplate("default_fitness", R.string.sports_title, "🏋️", R.string.fitness_equipment, 0, getSportEquipment()));
 
         return list;
     }

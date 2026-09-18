@@ -3,10 +3,10 @@ package com.wrz.reading.ui.main.popupView;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.lxj.xpopup.core.BottomPopupView;
@@ -20,9 +20,9 @@ public class RandomSettingPopup extends BottomPopupView {
     TextView tv_save;
     TextView tv_quantity;
 
-    private Switch switchAllowDuplicates;
-
-    /** 保存成功后的回调，用于通知调用方刷新数据 */
+    /**
+     * 保存成功后的回调，用于通知调用方刷新数据
+     */
     public interface OnSaveListener {
         void onSaved();
     }
@@ -52,7 +52,7 @@ public class RandomSettingPopup extends BottomPopupView {
         tv_cancel = findViewById(R.id.tv_cancel);
         tv_save = findViewById(R.id.tv_save);
 
-        switchAllowDuplicates = findViewById(R.id.switch_allow_duplicates);
+        SwitchCompat switchAllowDuplicates = findViewById(R.id.switch_allow_duplicates);
 
         tv_start.addTextChangedListener(new TextWatcher() {
             @Override

@@ -1,7 +1,18 @@
 package com.wrz.reading.app;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Environment;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.wrz.reading.R;
 import com.wrz.reading.ui.read.data.ComicDatabase;
 import com.wrz.reading.ui.wheel.data.EmojiData;
 import com.wrz.reading.ui.wheel.data.Template;
@@ -19,6 +30,7 @@ public class MyApplication extends Application {
     public static MyApplication app;
     public static Template template;
     public static PrefManager manager;
+    public static boolean isTablet = false;
 
     @Override
     public void onCreate() {
@@ -29,6 +41,8 @@ public class MyApplication extends Application {
         comicDatabase = ComicDatabase.getInstance(this);
         wheelDatabase = WheelDatabase.getInstance(this);
         wheelRepository = WheelRepository.getInstance();
+
+        isTablet = getResources().getBoolean(R.bool.is_table);
 
         manager = PrefManager.getInstance(this);
 
@@ -46,4 +60,33 @@ public class MyApplication extends Application {
             DlnaRendererManager.getInstance().start(app);
         }
     }
+
+    private static final int REQUEST_PERMISSION = 1;
+
+    public static boolean checkPermissions(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        } else {
+            return ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    public static void requestPermissions(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.addCategory("android.intent.category.DEFAULT");
+                intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+                activity.startActivityForResult(intent, REQUEST_PERMISSION);
+            } catch (Exception e) {
+                Intent intent = new Intent();
+                intent.setAction(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                activity.startActivityForResult(intent, REQUEST_PERMISSION);
+            }
+        } else {
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
+        }
+    }
+
 }

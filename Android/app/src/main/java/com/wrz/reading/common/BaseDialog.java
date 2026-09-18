@@ -3,19 +3,16 @@ package com.wrz.reading.common;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StyleRes;
 
-import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
 
 public abstract class BaseDialog extends Dialog {
@@ -102,6 +99,28 @@ public abstract class BaseDialog extends Dialog {
         }
     }
 
+    public void setClick(View v, View.OnClickListener l) {
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    public void setClick(@IdRes int id, View.OnClickListener l) {
+        View v = findId(id);
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    public void setClick(View.OnClickListener l, final View...views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setOnClickListener(l);
+                }
+            }
+        }
+    }
 
     public interface ShowOrDismissListener {
         void show();

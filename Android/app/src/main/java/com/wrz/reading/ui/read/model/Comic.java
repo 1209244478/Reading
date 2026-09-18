@@ -31,6 +31,8 @@ public class Comic {
     private long lastRead; // 上次阅读时间
     private String fileType = "image"; // 文件类型：image, pdf, epub, mobi
 
+    private long cacheSize = 0; // 缓存大小
+
     /*-------------------------------进度相关------------------------------------*/
     private long total; // 总时长
     private int readProgress; // 阅读进度
@@ -67,7 +69,11 @@ public class Comic {
      */
     public static final int SORT_BY_MODIFY_TIME = 2;
 
-    private int sort = SORT_BY_NAME;
+
+    public static final int SORT_DEFAULT = SORT_BY_NAME;
+
+
+    private int sort = SORT_DEFAULT;
 
 
     /*-------------------------------自动播放------------------------------------*/
@@ -269,26 +275,20 @@ public class Comic {
         isClean = clean;
     }
 
+    public long getCacheSize() {
+        return cacheSize;
+    }
+
+    public void setCacheSize(long cacheSize) {
+        this.cacheSize = cacheSize;
+    }
+
     /** 深拷贝：仅复制标题相关字段，取消时不影响原始数据 */
     public static List<Comic> deepCopy(List<Comic> data) {
         if (data == null) return null;
         java.util.ArrayList<Comic> copy = new java.util.ArrayList<>();
         for (Comic src : data) {
-            Comic c = new Comic();
-            c.setId(src.getId());
-            c.setTitle(src.getTitle());
-            c.setPath(src.getPath());
-            c.setOriginalPath(src.getOriginalPath());
-            c.setCoverPath(src.getCoverPath());
-            c.setTotal(src.getTotal());
-            c.setFileType(src.getFileType());
-            c.setHorizontal(src.isHorizontal());
-            c.setReadProgress(src.getReadProgress());
-            c.setVideoPosition(src.getVideoPosition());
-            c.setSubProgress(deepCopySubProgress(src.getSubProgress()));
-            c.setCollectionId(src.getCollectionId());
-            c.setSort(src.getSort());
-            c.setAutoPlay(src.getAutoPlay());
+            Comic c = deepCopy(src);
             copy.add(c);
         }
         return copy;
@@ -312,7 +312,7 @@ public class Comic {
         copy.setCollectionId(comic.getCollectionId());
         copy.setSort(comic.getSort());
         copy.setAutoPlay(comic.getAutoPlay());
-
+        copy.setCacheSize(comic.getCacheSize());
         return copy;
     }
 

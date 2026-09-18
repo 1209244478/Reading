@@ -23,9 +23,9 @@
             android:textColor="@color/apple_cyan"
             android:textSize="18sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:padding="20dp"
@@ -47,7 +47,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_round"
+        android:background="@drawable/bg_round_popup"
         android:orientation="vertical"
         android:padding="15dp">
 
@@ -62,10 +62,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="#fff"
                 android:padding="10dp"
                 android:text="@string/scope"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
             <com.google.android.material.textfield.TextInputEditText
@@ -79,18 +78,17 @@
                 android:inputType="number"
                 android:padding="10dp"
                 android:text="1"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#fff"
                 android:gravity="end"
                 android:padding="10dp"
                 android:text="~"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
             <com.google.android.material.textfield.TextInputEditText
@@ -103,12 +101,10 @@
                 android:inputType="number"
                 android:padding="10dp"
                 android:text="100"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
-
         </LinearLayout>
-
 
         <View
             android:layout_width="match_parent"
@@ -118,7 +114,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginVertical="8dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -126,10 +122,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="#fff"
                 android:padding="10dp"
                 android:text="@string/quantity"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
             <TextView
@@ -147,7 +142,6 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#fff"
                 android:gravity="end"
                 android:padding="10dp"
                 android:text="~"
@@ -165,13 +159,10 @@
                 android:inputType="number"
                 android:padding="10dp"
                 android:text="100"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
-
         </LinearLayout>
-
-
 
         <View
             android:layout_width="match_parent"
@@ -189,13 +180,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="3"
-                android:background="#fff"
                 android:padding="10dp"
                 android:text="@string/allow_duplicates"
-                android:textColor="#333"
+                android:textColor="@color/ios_text_primary"
                 android:textSize="18sp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_allow_duplicates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

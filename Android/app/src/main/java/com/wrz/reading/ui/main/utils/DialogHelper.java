@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.widget.SeekBar;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -46,6 +47,51 @@ public final class DialogHelper {
                 })
                 .setNegativeButton(R.string.btn_cancel, null)
                 .show();
+    }
+
+    /**
+     * 通用的删除确认对话框（2 按钮：确认 / 取消）。
+     *
+     * @param activity  宿主 Activity
+     * @param title     对话框标题
+     * @param message   对话框正文
+     * @param onDelConfirm 点击确认后回调
+     */
+    public static void showDeleteConfirmDialog(Activity activity, String title, String message,
+                                               onDelConfirm onDelConfirm) {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+
+        BaseDialog delDialog = new BaseDialog(activity) {
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_comfirm;
+            }
+
+            @Override
+            public void initView() {
+                this.setText(R.id.dialog_title, title);
+                this.setText(R.id.dialog_subtitle, message);
+                this.setText(R.id.btn_confirm, "确认");
+
+                SwitchCompat switch_confirm = this.findId(R.id.switch_confirm);
+
+                this.setClick(R.id.btn_cancel, v -> this.dismiss());
+
+                this.setClick(R.id.btn_confirm, v -> {this.dismiss();
+                            if (onDelConfirm != null) onDelConfirm.onDelFile(switch_confirm.isChecked());});
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+        };
+        delDialog.show();
+    }
+
+    public interface onDelConfirm {
+
+        void onDelFile(boolean del);
     }
 
     /**

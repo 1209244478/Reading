@@ -9,17 +9,18 @@ import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
+import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
 import java.util.List;
 
-public class PreviewAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
+public class PreviewAdapter extends BaseQuickAdapter<ReadItem, BaseViewHolder> {
 
     private int centerPage = -1;
 
     @SuppressLint("NotifyDataSetChanged")
-    public void setData(List<File> pages, int center) {
+    public void setData(List<ReadItem> pages, int center) {
         this.setNewInstance(pages);
         this.centerPage = center;
         notifyDataSetChanged();
@@ -38,7 +39,8 @@ public class PreviewAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
     }
 
     @Override
-    protected void convert(@NonNull BaseViewHolder holder, File file) {
+    protected void convert(@NonNull BaseViewHolder holder, ReadItem item) {
+        File file = item.getFile();
         boolean isCurrent = (holder.getAbsoluteAdapterPosition() == centerPage);
 
         android.widget.ImageView thumbImage = holder.getView(R.id.thumb_image);

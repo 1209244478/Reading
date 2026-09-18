@@ -1,13 +1,20 @@
 package com.wrz.reading.ui.read.utils;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
+import androidx.core.content.FileProvider;
+
+import com.wrz.reading.R;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.Constant;
+import com.wrz.reading.ui.read.model.ReadItem;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -122,8 +129,8 @@ public class FileUtils {
      * 递归获取目录下所有媒体文件（图片+视频），包括子目录。
      * 用于文件夹漫画中混合图片与视频的场景。
      */
-    public static List<File> getMediaFilesRecursive(File directory) {
-        List<File> mediaFiles = new ArrayList<>();
+    public static List<ReadItem> getMediaFilesRecursive(File directory) {
+        List<ReadItem> mediaFiles = new ArrayList<>();
         if (directory == null || !directory.exists()) {
             return mediaFiles;
         }
@@ -131,7 +138,7 @@ public class FileUtils {
         return mediaFiles;
     }
 
-    private static void collectMediaFilesRecursive(File directory, List<File> mediaFiles) {
+    private static void collectMediaFilesRecursive(File directory, List<ReadItem> mediaFiles) {
         File[] files = directory.listFiles();
         if (files == null) {
             return;
@@ -140,7 +147,7 @@ public class FileUtils {
             if (file.isDirectory()) {
                 collectMediaFilesRecursive(file, mediaFiles);
             } else if (file.isFile() && (isImageFile(file.getName()) || isVideoFile(file.getName())|| isMusicFile(file.getName()))) {
-                mediaFiles.add(file);
+                mediaFiles.add(new ReadItem(file));
             }
         }
     }
@@ -257,6 +264,16 @@ public class FileUtils {
         }
         return false;
     }
+    /** 判断是否为支持的音乐文件 */
+    public static boolean isExtFile(String fileName) {
+        String lowerFileName = fileName.toLowerCase();
+        for (String extension : SUPPORTED_EXT_FORMAT) {
+            if (lowerFileName.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static String isWhatFile(String fileName) {
         if (isVideoFile(fileName)) {
@@ -300,6 +317,26 @@ public class FileUtils {
         return result;
     }
 
+    public static long getFolderSize(File file) {
+        long size = 0;
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory()) {
+                        size += getFolderSize(f); // 递归子文件夹
+                    } else {
+                        size += f.length();
+                    }
+                }
+            }
+        } else {
+            size = file.length();
+        }
+        return size;
+    }
+
+
     public static boolean copyFile(File sourceFile, File destFile) {
         if (!sourceFile.exists()) {
             return false;
@@ -331,6 +368,10 @@ public class FileUtils {
 
     public static String getAndSetCoverImagePath(File coverImage, String title) {
         File newCoverFile = new File(CompressionUtil.getComicsDirectory(), "." + title);
+
+        if (coverImage.isFile() && FileUtils.isVideoFile(coverImage.getName())) {
+            return VideoUtils.generateThumbnailFile(coverImage, title);
+        }
 
         if (FileUtils.copyFile(coverImage, newCoverFile)) {
             return newCoverFile.getAbsolutePath();
@@ -760,12 +801,13 @@ public class FileUtils {
     /**
      * 获取文件夹大小
      *
-     * @return
-     * @throws Exception
      */
-    public static long getFolderSize(String dir) throws Exception {
+    public static long getFolderSize(String dir) {
         File file = new File(dir);
         long size = 0;
+        if (!file.isDirectory()) {
+            return size;
+        }
         try {
             File[] fileList = file.listFiles();
             for (int i = 0; i < fileList.length; i++) {
@@ -947,6 +989,78 @@ public class FileUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 分享多个文件 或 单个文件
+     * 通过 FileProvider 以 content:// URI 调起系统分享面板。
+     * 单文件用 ACTION_SEND，多文件用 ACTION_SEND_MULTIPLE。
+     */
+    public static void shareFiles(Activity activity, List<File> files) {
+        if (activity == null || files == null) return;
+        ArrayList<Uri> uris = new ArrayList<>();
+        for (File file : files) {
+            uris.add(FileProvider.getUriForFile(activity,
+                    activity.getPackageName() + ".fileprovider", file));
+        }
+
+        String mime = getMimeType(files.get(0).getName());
+        Intent intent;
+        if (uris.size() == 1) {
+            intent = new Intent(Intent.ACTION_SEND);
+            intent.setType(mime);
+            intent.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+        } else {
+            // 混合类型时统一用 */*，避免类型不匹配导致目标应用收不到
+            boolean allSame = true;
+            for (File file : files) {
+                if (!getMimeType(file.getName()).equals(mime)) {
+                    allSame = false;
+                    break;
+                }
+            }
+            intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+            intent.setType(allSame ? mime : "*/*");
+            intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        }
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+    }
+
+    /**
+     * 分享 单个文件
+     * 通过 FileProvider 以 content:// URI 调起系统分享面板。
+     * 单文件用 ACTION_SEND
+     */
+    public static void shareFile(Activity activity, File file) {
+        if (activity == null || file == null) return;
+        Uri uri = FileProvider.getUriForFile(activity,
+                activity.getPackageName() + ".fileprovider", file);
+
+        String mime = getMimeType(file.getName());
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType(mime);
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+    }
+
+    /**
+     * 根据文件扩展名推断 MIME 类型，未知类型回退为通用二进制流。
+     */
+    private static String getMimeType(String fileName) {
+        MimeTypeMap map = MimeTypeMap.getSingleton();
+        String lower = fileName.toLowerCase();
+        if (lower.endsWith(".wrz")) {
+            return "application/zip";
+        }
+        if (lower.endsWith(".epub")) {
+            return "application/epub+zip";
+        }
+        String ext = MimeTypeMap.getFileExtensionFromUrl(lower);
+        String mime = ext != null ? map.getMimeTypeFromExtension(ext) : null;
+        return mime != null ? mime : "application/octet-stream";
     }
 
 }

@@ -40,37 +40,6 @@
                     app:tint="@color/ios_text_primary" />
 
                 <ImageButton
-                    android:id="@+id/btn_splash"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/refresh"
-                    android:src="@drawable/ic_refresh"
-                    app:tint="@color/ios_text_primary" />
-
-                <ImageButton
-                    android:id="@+id/btn_change_sort"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/change_sort"
-                    android:src="@drawable/ic_sort"
-                    app:tint="@color/ios_text_primary" />
-
-                <ImageButton
-                    android:id="@+id/btn_move"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="移动到集合"
-                    android:src="@drawable/ic_move_folder"
-                    android:visibility="gone"
-                    app:tint="@color/ios_blue" />
-
-                <ImageButton
                     android:id="@+id/btn_edit_name"
                     android:layout_width="40dp"
                     android:layout_height="40dp"

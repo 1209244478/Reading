@@ -4,8 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -36,9 +39,12 @@ import com.wrz.reading.ui.read.data.ComicDatabase;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FileType;
+import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.utils.DiffCallBack;
+import com.wrz.reading.ui.read.utils.FileSorter;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.VideoUtils;
+import com.wrz.reading.ui.read.utils.ZipUtils;
 import com.wrz.reading.ui.read.view.dialog.MoveDialog;
 
 import java.io.File;
@@ -61,11 +67,6 @@ import java.util.List;
  */
 public class CollectionDetailFragment extends BaseFragment {
 
-    private static final int SORT_NAME = 0;
-    private static final int SORT_LAST_READ = 1;
-    private static final int SORT_ADDED = 2;
-    private static final int SORT_PROGRESS = 3;
-
     private long collectionId;
 
     private final List<Comic> allComics = new ArrayList<>();
@@ -76,15 +77,13 @@ public class CollectionDetailFragment extends BaseFragment {
     private View emptyStateText;
     private FloatingActionButton addFab;
     private ImageButton btnSearch;
-    private ImageButton btnSplash;
-    private ImageButton btnChangeSort;
+
     private ImageButton btnSelectMode;
-    private ImageButton btnMove;
     private ImageButton btnEditName;
     private TextInputLayout searchLayout;
     private TextInputEditText searchEditText;
 
-    private int currentSort = SORT_NAME;
+    private int currentSort = Collection.SORT_DEFAULT;
     private String searchKeyword = "";
     private NavController navController;
 
@@ -116,10 +115,10 @@ public class CollectionDetailFragment extends BaseFragment {
         emptyStateText = findId(R.id.empty_state_text);
         addFab = findId(R.id.add_comic_fab);
         btnSearch = findId(R.id.btn_search);
-        btnSplash = findId(R.id.btn_splash);
-        btnChangeSort = findId(R.id.btn_change_sort);
+
+
         btnSelectMode = findId(R.id.btn_select_mode);
-        btnMove = findId(R.id.btn_move);
+
         btnEditName = findId(R.id.btn_edit_name);
         searchLayout = findId(R.id.search_layout);
         searchEditText = findId(R.id.search_edit_text);
@@ -142,6 +141,45 @@ public class CollectionDetailFragment extends BaseFragment {
         if (mCommonToolbar != null) {
             mCommonToolbar.setTitle(collectionName.isEmpty() ? "未分组" : collectionName);
             mCommonToolbar.setNavigationOnClickListener(v -> navController.navigateUp());
+            // 挂载溢出菜单并处理点击
+            mCommonToolbar.inflateMenu(R.menu.collection_detail_menu);
+            mCommonToolbar.setOnMenuItemClickListener(item -> {
+                int itemId = item.getItemId();
+                if (itemId == R.id.action_sort_name_asc) {
+                    currentSort = Collection.SORT_BY_NAME;
+                    applySortAndFilter();
+                    syncSortMenuCheckState();
+                } else if (itemId == R.id.action_sort_name_desc) {
+                    currentSort = Collection.SORT_BY_NAME_REVERSE;
+                    applySortAndFilter();
+                    syncSortMenuCheckState();
+                } else if (itemId == R.id.action_sort_by_size) {
+                    currentSort = Collection.SORT_BY_SIZE;
+                    applySortAndFilter();
+                    syncSortMenuCheckState();
+                } else if (itemId == R.id.action_sort_by_progress) {
+                    currentSort = Collection.SORT_BY_PROGRESS;
+                    applySortAndFilter();
+                    syncSortMenuCheckState();
+                } else if (itemId == R.id.action_sort_by_last_read_time) {
+                    currentSort = Collection.SORT_BY_LAST_READ_TIME;
+                    applySortAndFilter();
+                    syncSortMenuCheckState();
+
+                } else if (itemId == R.id.action_move) {
+                    onMoveClick();
+
+                } else if (itemId == R.id.action_splash) {
+                    loadComics();
+
+                } else if (itemId == R.id.action_share) {
+                    onShareClick();
+
+                }
+                return true;
+            });
+            // 菜单勾选状态与当前排序同步
+            syncSortMenuCheckState();
         }
 
         // 重命名按钮只在编辑模式下显示，默认隐藏
@@ -152,7 +190,7 @@ public class CollectionDetailFragment extends BaseFragment {
 
     @Override
     public void configViews() {
-        comicRecyclerView.setLayoutManager(new GridLayoutManager(activity, 3));
+        comicRecyclerView.setLayoutManager(new GridLayoutManager(activity, (MyApplication.isTablet || isLand()) ? 4 : 3));
         comicAdapter = new ComicAdapter(R.layout.item_comic, displayComics);
         comicRecyclerView.setAdapter(comicAdapter);
 
@@ -160,15 +198,9 @@ public class CollectionDetailFragment extends BaseFragment {
         addFab.setOnClickListener(v -> launchFolderPicker());
 
         btnSearch.setOnClickListener(v -> toggleSearch());
-        btnSplash.setOnClickListener(v -> loadComics());
 
-        btnChangeSort.setOnClickListener(v -> {
-            currentSort = (currentSort + 1) % 4;
-            applySortAndFilter();
-            Toast.makeText(activity, sortName(currentSort), Toast.LENGTH_SHORT).show();
-        });
         btnSelectMode.setOnClickListener(v -> toggleSelectMode());
-        btnMove.setOnClickListener(v -> onMoveClick());
+
         btnEditName.setOnClickListener(v -> {
             List<Comic> Comics = new ArrayList<>();
             for (Comic comic : displayComics) {
@@ -223,14 +255,38 @@ public class CollectionDetailFragment extends BaseFragment {
 
     }
 
+    public boolean isFirst = true;
+
     @Override
     public void onResume() {
         super.onResume();
         // 从阅读器/播放器返回时差量刷新：仅更新有变化的项（如进度），避免整列表闪烁与滚动跳动
-        loadComics(true);
+        if (isFirst) {
+            isFirst = false;
+        } else {
+            mSplash.postDelayed(mSplashRunnable, 1000);
+        }
     }
 
-    // ==================== 数据加载 ====================
+    // 显式绑定主线程 Looper，避免无参构造 Handler() 的废弃告警
+    final Handler mSplash = new Handler(Looper.getMainLooper());
+    final Runnable mSplashRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (ComicDatabase.isUpdating) {
+                mSplash.postDelayed(mSplashRunnable, 1000);
+            } else {
+                loadComics(true);
+            }
+        }
+    };
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mSplash.removeCallbacks(mSplashRunnable);
+    }
+// ==================== 数据加载 ====================
 
     private void loadComics() {
         loadComics(false);
@@ -251,6 +307,19 @@ public class CollectionDetailFragment extends BaseFragment {
                 comics = MyApplication.comicDatabase.comicDao().getComicsByCollection(collectionId);
             }
 
+            final long[] totalSize = {0};
+            comics.forEach(comic -> {
+                long size = 0;
+                File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
+                if (tempExtractDir != null && tempExtractDir.isDirectory()) {
+                    size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
+                }
+                totalSize[0] += size;
+                comic.setCacheSize(size);
+            });
+
+            setTotalSize(totalSize[0]);
+
             // 在后台线程构建临时列表，避免与主线程遍历 allComics 竞态
             List<Comic> tempList = new ArrayList<>(comics);
 
@@ -266,6 +335,17 @@ public class CollectionDetailFragment extends BaseFragment {
                     updateEmptyState();
                 }
             });
+        });
+    }
+
+    private void setTotalSize(long totalSize) {
+        singleThread.execute(() -> {
+            Collection collection = MyApplication.comicDatabase.collectionDao().getCollectionById(collectionId);
+
+            if (collection != null) {
+                collection.setCacheSize(totalSize);
+                MyApplication.comicDatabase.collectionDao().updateCollection(collection);
+            }
         });
     }
 
@@ -289,47 +369,6 @@ public class CollectionDetailFragment extends BaseFragment {
         updateEmptyState();
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private void applySortAndFilter() {
-        rebuildDisplayList();
-        comicAdapter.notifyDataSetChanged();
-    }
-
-    /**
-     * 根据 allComics + 当前搜索关键字 + 当前排序方式重建 displayComics。
-     * 不触发 adapter 通知，调用方自行决定 notifyDataSetChanged 或 DiffUtil 差量分发。
-     */
-    private void rebuildDisplayList() {
-        displayComics.clear();
-
-        for (Comic c : allComics) {
-            if (searchKeyword.isEmpty() || c.getTitle().toLowerCase().contains(searchKeyword)) {
-                displayComics.add(c);
-            }
-        }
-
-        // 目录始终排在最前面的比较器
-        Comparator<Comic> dirFirst = (a, b) -> {
-            boolean aDir = new java.io.File(a.getPath()).isDirectory();
-            boolean bDir = new java.io.File(b.getPath()).isDirectory();
-            return Boolean.compare(!aDir, !bDir); // false(目录) 排在 true(文件) 前面
-        };
-
-        switch (currentSort) {
-            case SORT_NAME:
-                displayComics.sort(dirFirst.thenComparing(Comic::getTitle, String.CASE_INSENSITIVE_ORDER));
-                break;
-            case SORT_LAST_READ:
-                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getLastRead(), a.getLastRead())));
-                break;
-            case SORT_ADDED:
-                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getId(), a.getId())));
-                break;
-            case SORT_PROGRESS:
-                displayComics.sort(dirFirst.thenComparing((a, b) -> Integer.compare(b.getReadProgress(), a.getReadProgress())));
-                break;
-        }
-    }
 
     private void updateEmptyState() {
         if (allComics.isEmpty()) {
@@ -344,15 +383,19 @@ public class CollectionDetailFragment extends BaseFragment {
     // ==================== 打开漫画 ====================
 
     private void openComic(Comic comic) {
-        FileType type = comic.getFileTypeEnum();
-        if (type == FileType.PDF) {
-            PdfReaderActivity.start(activity, comic);
-        } else if (type == FileType.EPUB) {
-            EpubReaderActivity.start(activity, comic);
-        } else if (type == FileType.VIDEO || type == FileType.MUSIC) {
-            openVideoWithExternalPlayer(comic);
+        if (MyApplication.checkPermissions(activity)) {
+            FileType type = comic.getFileTypeEnum();
+            if (type == FileType.PDF) {
+                PdfReaderActivity.start(activity, comic);
+            } else if (type == FileType.EPUB) {
+                EpubReaderActivity.start(activity, comic);
+            } else if (type == FileType.VIDEO || type == FileType.MUSIC) {
+                openVideoWithExternalPlayer(comic);
+            } else {
+                ReaderActivity.start(activity, comic);
+            }
         } else {
-            ReaderActivity.start(activity, comic);
+            MyApplication.requestPermissions(activity);
         }
     }
 
@@ -406,24 +449,22 @@ public class CollectionDetailFragment extends BaseFragment {
             // 选择模式下：FAB 变为删除按钮，toolbar 显示移动按钮
             addFab.setImageResource(R.drawable.delete_24px);
             addFab.setOnClickListener(v -> onDeleteFabClick());
-            btnMove.setVisibility(View.VISIBLE);
+
             btnEditName.setVisibility(View.VISIBLE);
 
-            btnSplash.setVisibility(View.GONE);
-            btnChangeSort.setVisibility(View.GONE);
+            syncSortMenuCheckState();
 
         } else {
             btnSelectMode.setImageResource(R.drawable.ic_photo_library);
             // 退出选择模式：FAB 恢复为添加按钮，隐藏移动和重命名按钮
             addFab.setImageResource(R.drawable.add_24px);
             addFab.setOnClickListener(v -> launchFolderPicker());
-            btnMove.setVisibility(View.GONE);
+
             btnEditName.setVisibility(View.GONE);
 
-            btnSplash.setVisibility(View.VISIBLE);
-            btnChangeSort.setVisibility(View.VISIBLE);
-
             clearSelections();
+
+            syncSortMenuCheckState();
         }
         comicAdapter.notifyDataSetChanged();
     }
@@ -453,16 +494,19 @@ public class CollectionDetailFragment extends BaseFragment {
             Toast.makeText(activity, "请先选择漫画", Toast.LENGTH_SHORT).show();
             return;
         }
-        DialogHelper.showConfirmDialog(activity,
+        DialogHelper.showDeleteConfirmDialog(activity,
                 "删除漫画",
                 "确定删除选中的 " + selected.size() + " 本漫画？此操作不可撤销。",
-                () -> deleteComics(selected));
+                (del) -> deleteComics(selected, del));
     }
 
-    private void deleteComics(List<Comic> comics) {
+    private void deleteComics(List<Comic> comics, boolean del) {
         singleThread.execute(() -> {
             for (Comic c : comics) {
                 MyApplication.comicDatabase.comicDao().deleteComic(c);
+                if (del) {
+                    new File(c.getPath()).delete();
+                }
             }
             runOnUiIfAlive(() -> {
                 Toast.makeText(activity, "已删除 " + comics.size() + " 本", Toast.LENGTH_SHORT).show();
@@ -570,11 +614,40 @@ public class CollectionDetailFragment extends BaseFragment {
         });
     }
 
+    // ==================== 分享文件 ====================
+
+    /**
+     * 点击 toolbar 分享按钮：将选中的可分享文件（zip/wrz/pdf/epub/视频/音乐等实际文件）
+     * 通过系统分享面板发送。图片目录类型（IMAGE）不可分享。
+     */
+    private void onShareClick() {
+        List<Comic> selected = getSelectedComics();
+        List<File> shareableFiles = new ArrayList<>();
+        for (Comic comic : selected) {
+            FileType fileType = comic.getFileTypeEnum();
+            File file = new File(comic.getPath());
+            // 仅实际文件类型可分享；IMAGE 为目录，排除
+            if (fileType != FileType.IMAGE && file.exists() && file.isFile()) {
+                shareableFiles.add(file);
+            }
+        }
+        if (shareableFiles.isEmpty()) {
+            Toast.makeText(activity, "选中的项目中没有可分享的文件", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FileUtils.shareFiles(activity, shareableFiles);
+    }
+
+
     // ==================== 从本地导入漫画 ====================
 
     private void launchFolderPicker() {
-        Intent intent = new Intent(activity, FolderPickerActivity.class);
-        folderPickerLauncher.launch(intent);
+        if (MyApplication.checkPermissions(activity)) {
+            Intent intent = new Intent(activity, FolderPickerActivity.class);
+            folderPickerLauncher.launch(intent);
+        } else {
+            MyApplication.requestPermissions(activity);
+        }
     }
 
     /**
@@ -628,7 +701,7 @@ public class CollectionDetailFragment extends BaseFragment {
 
         if (file.isDirectory()) {
             // 文件夹：统计图片+视频作为漫画内容
-            List<File> media = FileUtils.getMediaFilesRecursive(file);
+            List<ReadItem> media = FileUtils.getMediaFilesRecursive(file);
             if (media.isEmpty()) return null;
             File cover = FileUtils.getFirstImageFile(file);
             String coverPath = cover != null ? cover.getAbsolutePath() : "";
@@ -676,21 +749,100 @@ public class CollectionDetailFragment extends BaseFragment {
         });
     }
 
-    // ==================== 工具方法 ====================
+    // ==================== 排序搜索功能 ====================
 
-    private String sortName(int sort) {
-        switch (sort) {
-            case SORT_NAME:
-                return "按名称排序";
-            case SORT_LAST_READ:
-                return "按最近阅读排序";
-            case SORT_ADDED:
-                return "按添加时间排序";
-            case SORT_PROGRESS:
-                return "按阅读进度排序";
-            default:
-                return "";
+    @SuppressLint("NotifyDataSetChanged")
+    private void applySortAndFilter() {
+        rebuildDisplayList();
+        comicAdapter.notifyDataSetChanged();
+    }
+
+
+    /**
+     * 根据 allComics + 当前搜索关键字 + 当前排序方式重建 displayComics。
+     * 不触发 adapter 通知，调用方自行决定 notifyDataSetChanged 或 DiffUtil 差量分发。
+     */
+    private void rebuildDisplayList() {
+        displayComics.clear();
+
+        for (Comic c : allComics) {
+            if (searchKeyword.isEmpty() || c.getTitle().toLowerCase().contains(searchKeyword)) {
+                displayComics.add(c);
+            }
         }
+
+        // 目录始终排在最前面的比较器
+        Comparator<Comic> dirFirst = (a, b) -> {
+            boolean aDir = new java.io.File(a.getPath()).isDirectory();
+            boolean bDir = new java.io.File(b.getPath()).isDirectory();
+            return Boolean.compare(!aDir, !bDir); // false(目录) 排在 true(文件) 前面
+        };
+
+        switch (currentSort) {
+            case Collection.SORT_BY_NAME:
+                FileSorter.sortComics(dirFirst, displayComics, false);
+
+                break;
+            case Collection.SORT_BY_NAME_REVERSE:
+                FileSorter.sortComics(dirFirst, displayComics, true);
+
+                break;
+            case Collection.SORT_BY_SIZE:
+                // 目录始终排在最前面的比较器
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(new File(b.getPath()).length(),  new File(a.getPath()).length())));
+
+                break;
+            case Collection.SORT_BY_PROGRESS:
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getReadProgress(), a.getReadProgress())));
+                break;
+            case Collection.SORT_BY_LAST_READ_TIME:
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(b.getLastRead(), a.getLastRead())));
+                break;
+        }
+    }
+
+    // ==================== 排序菜单 ====================
+
+    /**
+     * 将溢出菜单中排序项的勾选状态与 currentSort 同步。
+     */
+    private void syncSortMenuCheckState() {
+        if (mCommonToolbar == null) return;
+        MenuItem sortNameAsc = mCommonToolbar.getMenu().findItem(R.id.action_sort_name_asc);
+        MenuItem sortNameDesc = mCommonToolbar.getMenu().findItem(R.id.action_sort_name_desc);
+        MenuItem sortBySize = mCommonToolbar.getMenu().findItem(R.id.action_sort_by_size);
+        MenuItem sortByTime = mCommonToolbar.getMenu().findItem(R.id.action_sort_by_progress);
+        MenuItem sortByReadTime = mCommonToolbar.getMenu().findItem(R.id.action_sort_by_last_read_time);
+        MenuItem moveItem = mCommonToolbar.getMenu().findItem(R.id.action_move);
+        MenuItem shareItem = mCommonToolbar.getMenu().findItem(R.id.action_share);
+        if (sortNameAsc == null || sortNameDesc == null || sortByTime == null || sortByReadTime == null || moveItem == null) return;
+
+        if (comicAdapter != null) {
+            moveItem.setVisible(comicAdapter.isSelectMode());
+            shareItem.setVisible(comicAdapter.isSelectMode());
+        } else {
+            moveItem.setVisible(false);
+            shareItem.setVisible(false);
+        }
+
+        switch (currentSort) {
+            case Collection.SORT_BY_NAME:
+                sortNameAsc.setChecked(true);
+                break;
+            case Collection.SORT_BY_NAME_REVERSE:
+                sortNameDesc.setChecked(true);
+                break;
+            case Collection.SORT_BY_SIZE:
+                sortBySize.setChecked(true);
+                break;
+            case Collection.SORT_BY_PROGRESS:
+                sortByTime.setChecked(true);
+                break;
+            case Collection.SORT_BY_LAST_READ_TIME:
+                sortByReadTime.setChecked(true);
+                break;
+        }
+
     }
 
 }

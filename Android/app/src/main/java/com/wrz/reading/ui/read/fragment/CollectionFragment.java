@@ -21,8 +21,12 @@ import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.CollectionAdapter;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
+import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.utils.DiffCallBack;
+import com.wrz.reading.ui.read.utils.FileUtils;
+import com.wrz.reading.ui.read.utils.ZipUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +77,7 @@ public class CollectionFragment extends BaseFragment {
 
     @Override
     public void configViews() {
-        collectionRecyclerView.setLayoutManager(new GridLayoutManager(activity, 3));
+        collectionRecyclerView.setLayoutManager(new GridLayoutManager(activity, (MyApplication.isTablet || isLand()) ? 4 : 3));
         collectionAdapter = new CollectionAdapter(collectionItems);
         collectionRecyclerView.setAdapter(collectionAdapter);
 
@@ -162,6 +166,7 @@ public class CollectionFragment extends BaseFragment {
         singleThread.execute(() -> {
             List<Collection> collections = MyApplication.comicDatabase.collectionDao().getAllCollections();
             int uncategorizedCount = MyApplication.comicDatabase.comicDao().getUncategorizedComics().size();
+            List<Comic> comics = MyApplication.comicDatabase.comicDao().getUncategorizedComics();
 
             // 在后台线程构建临时列表，避免与主线程 Adapter 访问竞态
             ArrayList<CollectionItem> tempList = new ArrayList<>();
@@ -169,6 +174,17 @@ public class CollectionFragment extends BaseFragment {
             Collection uncategorized = new Collection();
             uncategorized.setId(UNCATEGORIZED_ID);
             uncategorized.setName("未分组");
+            final long[] totalSize = {0};
+            comics.forEach(comic -> {
+                long size = 0;
+                File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
+                if (tempExtractDir.isDirectory()) {
+                    size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
+                }
+                totalSize[0] += size;
+                comic.setCacheSize(size);
+            });
+            uncategorized.setCacheSize(totalSize[0]);
             tempList.add(new CollectionItem(uncategorized, uncategorizedCount));
 
             for (Collection c : collections) {
@@ -276,11 +292,11 @@ public class CollectionFragment extends BaseFragment {
         });
     }
 
-    private void showEmptyState() {
+    /*private void showEmptyState() {
         collectionRecyclerView.setVisibility(View.GONE);
         emptyStateText.setVisibility(View.VISIBLE);
         btnSelectMode.setVisibility(View.GONE);
-    }
+    }*/
 
     private void hideEmptyState() {
         collectionRecyclerView.setVisibility(View.VISIBLE);
@@ -296,7 +312,7 @@ public class CollectionFragment extends BaseFragment {
                 newName -> renameCollection(collectionId, newName));
     }*/
 
-    private void renameCollection(long collectionId, String newName) {
+    /*private void renameCollection(long collectionId, String newName) {
         singleThread.execute(() -> {
             Collection c = MyApplication.comicDatabase.collectionDao().getCollectionById(collectionId);
             if (c != null) {
@@ -308,7 +324,7 @@ public class CollectionFragment extends BaseFragment {
                 Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
             });
         });
-    }
+    }*/
 
 
 }

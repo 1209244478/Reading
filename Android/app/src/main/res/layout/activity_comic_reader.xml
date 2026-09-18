@@ -33,8 +33,9 @@
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="@android:color/black"
+        android:background="@drawable/preview_card_bg"
         android:theme="@style/ThemeOverlay.ReaderToolbar"
+        android:layout_marginTop="2dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -72,8 +73,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_action_bar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- 底部控制栏：页码 + 进度条 -->
     <LinearLayout
@@ -96,11 +97,11 @@
             android:id="@+id/page_counter_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
             android:fontFamily="sans-serif-medium"
-            android:layout_gravity="center"
             android:gravity="center"
             android:minWidth="52dp"
             android:text="1/10"
