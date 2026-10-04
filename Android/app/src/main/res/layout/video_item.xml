@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@android:color/black">
 
     <androidx.media3.ui.PlayerView
@@ -14,18 +15,42 @@
         app:show_buffering="when_playing"
         app:use_controller="true" />
 
-    <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
-    <ImageButton
-        android:id="@+id/cast_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|end"
+    <LinearLayout
+        android:id="@+id/ll_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="投屏"
-        android:src="@drawable/ic_cast"
-        app:tint="@android:color/white" />
+        android:orientation="horizontal">
+
+        <!-- 标题：文件名 -->
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:visibility="visible"
+            tools:text="@string/about_us" />
+
+        <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
+        <ImageButton
+            android:id="@+id/cast_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="投屏"
+            android:src="@drawable/ic_cast"
+            app:tint="@android:color/white" />
+
+
+    </LinearLayout>
+
+
 
 
 </FrameLayout>

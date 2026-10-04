@@ -13,7 +13,6 @@ public class AutoPlayController {
 
     /** 默认播放间隔（毫秒） */
 
-
     private boolean isPlaying = false;
     private long delay;
 

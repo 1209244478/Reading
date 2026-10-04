@@ -178,7 +178,7 @@ public class CollectionFragment extends BaseFragment {
             comics.forEach(comic -> {
                 long size = 0;
                 File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
-                if (tempExtractDir.isDirectory()) {
+                if (tempExtractDir != null && tempExtractDir.isDirectory()) {
                     size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
                 }
                 totalSize[0] += size;

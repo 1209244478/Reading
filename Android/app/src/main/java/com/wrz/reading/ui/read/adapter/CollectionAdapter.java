@@ -43,7 +43,7 @@ public class CollectionAdapter extends BaseQuickAdapter<CollectionItem, BaseView
         holder.setText(R.id.collection_name, collection.getName());
         holder.setText(R.id.collection_count, item.getComicCount() + " 本");
 
-        holder.setText(R.id.comic_cache, "缓存大小 " + FileUtils.formatFileSizeToString(item.getCollection().getCacheSize()));
+        holder.setText(R.id.comic_cache, "缓存大小 " + FileUtils.formatFileSizeToString(item.getCollection().getCacheSize()) + "\n文件大小 " + FileUtils.formatFileSizeToString(item.getCollection().getFileSize()));
 
         ImageView icon = holder.getView(R.id.collection_icon);
 

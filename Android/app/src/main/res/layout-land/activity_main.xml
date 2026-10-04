@@ -32,7 +32,7 @@
          rightMargin 由 MainActivity 在 inset 回调中设置（基础 8dp + 系统 right inset） -->
     <FrameLayout
         android:id="@+id/bottom_nav_container"
-        android:layout_width="79dp"
+        android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_liquid_glass_nav"
         android:layout_marginEnd="8dp"

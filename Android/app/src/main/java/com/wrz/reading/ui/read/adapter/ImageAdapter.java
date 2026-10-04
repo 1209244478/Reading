@@ -20,7 +20,6 @@ import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.wrz.reading.R;
 import com.wrz.reading.ui.main.Log.LogUtil;
-import com.wrz.reading.ui.read.activity.BaseReaderActivity;
 import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.model.SubProgress;
 import com.wrz.reading.ui.read.utils.FileUtils;
@@ -42,7 +41,7 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
         selected_position = position;
 
         notifyItemChanged(position);
-        if (old_position != -1) {
+        if (old_position != -1 && this.getData().size() > old_position) {
             File file = this.getData().get(old_position).getFile();
             ExoPlayer player;
             if (!playerMap.isEmpty() && playerMap.get(file.getName()) != null) {
@@ -125,6 +124,7 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
         boolean isMusic = FileUtils.isMusicFile(file.getName());
 
         if ((isVideo || isMusic)) {
+            holder.setText(R.id.tv_name, file.getName());
             // 视频页：整页挂载为 VideoPlayFragment 内联播放
             ExoPlayer player;
             if (selected_position == holder.getLayoutPosition()) {
@@ -137,7 +137,7 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
                         .createMediaSource(MediaItem.fromUri(Uri.fromFile(file)));
                 player.setMediaSource(mediaSource);
                 player.prepare();
-                player.setPlayWhenReady(true);
+                player.setPlayWhenReady(false);
 
                 long pos = SubProgress.getSubProgress(file.getName(), subList);
 
@@ -148,6 +148,7 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
                             if (listener != null) {
                                 listener.onVideoClick();
                             }
+                            holder.setGone(R.id.ll_top, (visibility == 8));
                         });
                 player_view.setOnTouchListener((v, event) -> {
                     float yPercent = event.getY() / (float) player_view.getHeight();

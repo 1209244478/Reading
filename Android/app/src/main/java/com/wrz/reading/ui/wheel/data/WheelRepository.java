@@ -86,7 +86,7 @@ public class WheelRepository {
                 "-1",
                 MyApplication.app.getString(R.string.default_list),
                 true,
-                MyApplication.template.getDefaultList()
+                MyApplication.template.getDefaultLists()
         );
         wheel.setTemplate(false);
         return wheel;

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
+    android:layout_height="wrap_content"
     android:background="@color/ios_card_background"
     android:foreground="?android:attr/selectableItemBackground"
     android:orientation="vertical"
@@ -47,10 +47,11 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:layout_margin="@dimen/color_card_margin"
+            android:background="@drawable/bg_oval_stroke_gray"
             android:visibility="gone"
+            app:cardBackgroundColor="#FFFF"
             app:cardCornerRadius="@dimen/color_card_radius"
-            app:cardElevation="0dp"
-            tools:cardBackgroundColor="#FFFF" />
+            app:cardElevation="2dp" />
 
         <TextView
             android:id="@+id/tv_weight"

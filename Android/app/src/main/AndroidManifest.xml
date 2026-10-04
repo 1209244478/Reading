@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <!-- Android 10-14 需要的权限 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -93,16 +94,19 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Cling DLNA/UPnP 服务：负责 SSDP 设备发现与控制。
-             接收端开启时以前台服务运行，保证退出 Activity 后仍可被发现。 -->
+        <!--
+             Cling DLNA/UPnP 服务：负责 SSDP 设备发现与控制。
+             接收端开启时以前台服务运行，保证退出 Activity 后仍可被发现。
+        -->
         <service
-            android:name="com.wrz.reading.ui.read.dlna.CustomAndroidUpnpServiceImpl"
+            android:name=".ui.read.dlna.CustomAndroidUpnpServiceImpl"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="DLNA MediaRenderer,接收投屏" />
         </service>
+
     </application>
 
 </manifest>

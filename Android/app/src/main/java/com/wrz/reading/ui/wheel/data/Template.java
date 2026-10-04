@@ -126,6 +126,14 @@ public class Template {
         return defaultList;
     }
 
+    // 默认Option列表
+    public List<List<Option>> getDefaultLists() {
+        List<List<Option>> lists = new ArrayList<>();
+        lists.add(getDefaultList());
+        lists.add(getLoveMyselfList());
+        return lists;
+    }
+
     public List<Option> getLoveMyselfList() {
         List<Option> loveMyself = new ArrayList<>();
         // 使用资源字符串代替硬编码
@@ -680,7 +688,9 @@ public class Template {
         String category = MyApplication.app.getString(categoryRes);
         String title = MyApplication.app.getString(titleRes);
         String subtitle = subtitleRes != 0 ? MyApplication.app.getString(subtitleRes) : "";
-        Wheel wheel = new Wheel(id, emoji, title, subtitle, options);
+        List<List<Option>> lists = new ArrayList<>();
+        lists.add(options);
+        Wheel wheel = new Wheel(id, emoji, title, subtitle, lists);
         wheel.setCategory(category);
         return wheel;
     }

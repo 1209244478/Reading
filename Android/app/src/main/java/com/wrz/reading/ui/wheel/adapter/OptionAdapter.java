@@ -16,6 +16,12 @@ public class OptionAdapter extends BaseMultiItemQuickAdapter<Option, BaseViewHol
 
     ChangeListener listener;
 
+    public boolean isUseWeight = false;
+
+    public void setUseWeight(boolean useWeight) {
+        isUseWeight = useWeight;
+    }
+
     public OptionAdapter(ChangeListener listener) {
         addItemType(0, R.layout.item_option);
         addItemType(1, R.layout.item_option_add);
@@ -29,6 +35,7 @@ public class OptionAdapter extends BaseMultiItemQuickAdapter<Option, BaseViewHol
         if (option.getItemType() == 0) {
             holder.setText(R.id.et_option, option.getOption());
             holder.setText(R.id.tv_weight, option.getWeight() + " | " + option.getPercent() + "%");
+            holder.setGone(R.id.tv_weight, !isUseWeight);
 
             CardView colorView = holder.getView(R.id.color_view);
             try {

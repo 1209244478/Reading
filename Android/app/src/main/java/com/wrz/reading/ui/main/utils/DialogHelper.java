@@ -1,16 +1,20 @@
 package com.wrz.reading.ui.main.utils;
 
 import android.app.Activity;
+import android.content.Context;
+import android.text.TextUtils;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseDialog;
-import com.wrz.reading.ui.main.dialog.TextInputDialog;
 import com.wrz.reading.ui.read.adapter.RenameCollectionItemAdapter;
 import com.wrz.reading.ui.read.adapter.RenameComicAdapter;
 import com.wrz.reading.ui.read.model.CollectionItem;
@@ -28,25 +32,82 @@ public final class DialogHelper {
     private DialogHelper() {
     }
 
-    /**
-     * 通用的删除确认对话框（2 按钮：确认 / 取消）。
-     *
-     * @param activity  宿主 Activity
-     * @param title     对话框标题
-     * @param message   对话框正文
-     * @param onConfirm 点击确认后回调（在主线程）
-     */
     public static void showConfirmDialog(Activity activity, String title, String message,
                                          final Runnable onConfirm) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
-        new AlertDialog.Builder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(R.string.btn_confirm, (dialog, which) -> {
-                    if (onConfirm != null) onConfirm.run();
-                })
-                .setNegativeButton(R.string.btn_cancel, null)
-                .show();
+
+        new BaseDialog(activity) {
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_comfirm;
+            }
+
+            @Override
+            public void initView() {
+                this.setText(R.id.dialog_title, title);
+                this.setText(R.id.dialog_subtitle, message);
+                this.setText(R.id.btn_confirm, "确认");
+
+                this.setClick(R.id.btn_cancel, v -> this.dismiss());
+
+                this.setClick(R.id.btn_confirm, v -> {this.dismiss();
+                    if (onConfirm != null) onConfirm.run();});
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+        }.show();
+    }
+
+    public static void showConfirmDialog(Context activity, String title, String message,
+                                         final Runnable onConfirm) {
+        if (activity == null) return;
+
+        new BaseDialog(activity) {
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_comfirm;
+            }
+
+            @Override
+            public void initView() {
+                this.setText(R.id.dialog_title, title);
+                this.setText(R.id.dialog_subtitle, message);
+                this.setText(R.id.btn_confirm, "确认");
+
+                this.setClick(R.id.btn_cancel, v -> this.dismiss());
+
+                this.setClick(R.id.btn_confirm, v -> {this.dismiss();
+                    if (onConfirm != null) onConfirm.run();});
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+        }.show();
     }
 
     /**
@@ -61,10 +122,10 @@ public final class DialogHelper {
                                                onDelConfirm onDelConfirm) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
 
-        BaseDialog delDialog = new BaseDialog(activity) {
+        new BaseDialog(activity) {
             @Override
             public int getLayoutId() {
-                return R.layout.dialog_comfirm;
+                return R.layout.dialog_del_comfirm;
             }
 
             @Override
@@ -85,9 +146,21 @@ public final class DialogHelper {
             public void setDialogSize() {
 
             }
-        };
-        delDialog.show();
+
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+        }.show();
     }
+
+
+
 
     public interface onDelConfirm {
 
@@ -117,8 +190,57 @@ public final class DialogHelper {
                                            final TextInputCallback callback) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
 
-        new TextInputDialog(activity, title, subtitle, confirmText, initialText, callback).show();
+        new BaseDialog(activity) {
+            @Override
+            public int getLayoutId() {
+                return R.layout.dialog_create_collection;
+            }
 
+            @Override
+            public void initView() {
+                TextView dialog_title = findId(R.id.dialog_title);
+                TextView dialog_subtitle = findId(R.id.dialog_subtitle);
+
+                MaterialButton btn_confirm = findId(R.id.btn_confirm);
+                setClick(R.id.btn_cancel, v -> this.dismiss());
+
+                TextInputLayout collection_name_layout = findId(R.id.collection_name_layout);
+                TextInputEditText et_collection_name = findId(R.id.et_collection_name);
+
+                if (title != null) setText(dialog_title, title);
+                if (subtitle != null) setText(dialog_subtitle, subtitle);
+                if (confirmText != null) setText(btn_confirm, confirmText);
+                if (!TextUtils.isEmpty(initialText)) {
+                    et_collection_name.setText(initialText);
+                    et_collection_name.setSelection(initialText.length());
+                }
+
+                setClick(btn_confirm, v -> {
+                    String text = !TextUtils.isEmpty(et_collection_name.getText()) ? et_collection_name.getText().toString().trim() : "";
+                    if (text.isEmpty()) {
+                        collection_name_layout.setError(parentView.getContext().getString(R.string.name_should_not_empty));
+                        return;
+                    }
+                    if (callback != null) callback.onConfirm(text);
+                    this.dismiss();
+                });
+            }
+
+            @Override
+            public void setDialogSize() {
+
+            }
+
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+        }.show();
     }
 
     public interface RenameComicCallback {
@@ -174,6 +296,16 @@ public final class DialogHelper {
 
             }
 
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+
         }.show();
 
     }
@@ -200,16 +332,6 @@ public final class DialogHelper {
                                            String confirmText, List<CollectionItem> collections,
                                            final RenameCollectionCallback callback) {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
-
-        /*RenameCollectionsDialog dialog = new RenameCollectionsDialog(activity, collections);
-
-        dialog.show();
-
-        dialog.setCallback(callback);
-
-        dialog.setText(R.id.dialog_title, title);
-        dialog.setText(R.id.dialog_subtitle, subtitle);
-        dialog.setText(R.id.btn_confirm, confirmText);*/
 
         new BaseDialog(activity) {
 
@@ -244,6 +366,16 @@ public final class DialogHelper {
             public void setDialogSize() {
 
             }
+
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
         }.show();
     }
 
@@ -267,7 +399,7 @@ public final class DialogHelper {
         if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
         if (total <= 0) return;
 
-        BaseDialog dialog = new BaseDialog(activity) {
+        new BaseDialog(activity) {
             @Override
             public int getLayoutId() {
                 return R.layout.dialog_page_jump;
@@ -309,8 +441,16 @@ public final class DialogHelper {
             public void setDialogSize() {
 
             }
-        };
 
-        dialog.show();
+            @Override
+            public void onShow() {
+
+            }
+
+            @Override
+            public void onDismiss() {
+
+            }
+        }.show();
     }
 }

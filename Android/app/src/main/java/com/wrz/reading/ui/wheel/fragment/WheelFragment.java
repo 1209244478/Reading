@@ -1,7 +1,7 @@
 package com.wrz.reading.ui.wheel.fragment;
 
 import android.annotation.SuppressLint;
-import android.widget.FrameLayout;
+import android.text.TextUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,15 +13,13 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.common.BaseDialog;
 import com.wrz.reading.common.BaseFragment;
 import com.wrz.reading.ui.wheel.activity.CreateEditActivity;
 import com.wrz.reading.ui.wheel.activity.WheelListActivity;
-import com.wrz.reading.ui.wheel.model.Option;
 import com.wrz.reading.ui.wheel.model.Request;
 import com.wrz.reading.ui.wheel.model.Wheel;
 import com.wrz.reading.ui.wheel.view.wheelview.WheelView;
-
-import java.util.List;
 
 public class WheelFragment extends BaseFragment {
     WheelView wheelView;
@@ -32,8 +30,6 @@ public class WheelFragment extends BaseFragment {
     TextView titleText;
 
     CardView mainCard;
-    FrameLayout wheelContainer;
-    private List<Option> list;
     private Wheel wheel;
     private boolean isSpinning = false;
     private ImageView pointer;
@@ -49,15 +45,64 @@ public class WheelFragment extends BaseFragment {
         wheelView = findId(R.id.wheel);
         startBtn = findId(R.id.startBtn);
         editBtn = findId(R.id.editBtn);
-        resultText = findId(R.id.resultText);
-        titleText = findId(R.id.titleText);
+        resultText = findId(R.id.tv_result);
+        titleText = findId(R.id.tv_title);
         /*resultCard = findId(R.id.resultCard);*/
 
 
         mainCard = findId(R.id.mainCard);
-        wheelContainer = findId(R.id.wheelContainer);
         btn_menu = findId(R.id.btn_menu);
         pointer = findId(R.id.pointer);
+
+        setClick(titleText, v -> showExplanation());
+    }
+
+    BaseDialog explanationDialog;
+
+    private void showExplanation() {
+        if (!TextUtils.isEmpty(wheel.getExplanation())) {
+
+            if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+
+            String title = getString(R.string.wheel_explanation);
+            String message = wheel.getExplanation();
+
+
+            if (explanationDialog == null) {
+                explanationDialog = new BaseDialog(activity) {
+                    @Override
+                    public int getLayoutId() {return R.layout.dialog_comfirm;}
+
+                    @Override
+                    public void initView() {
+                        this.setText(R.id.dialog_title, title);
+                        this.setText(R.id.dialog_subtitle, message);
+                        this.setText(R.id.btn_confirm, "确认");
+
+                        this.setClick(R.id.btn_cancel, v -> this.dismiss());
+
+                        this.setClick(R.id.btn_confirm, v -> {this.dismiss();});
+                    }
+
+                    @Override
+                    public void setDialogSize() {}
+
+                    @Override
+                    public void onShow() {
+
+                    }
+
+                    @Override
+                    public void onDismiss() {
+
+                    }
+                };
+            }
+
+            explanationDialog.show();
+
+            explanationDialog.setText(R.id.dialog_title, title);
+        }
     }
 
     @Override
@@ -67,11 +112,12 @@ public class WheelFragment extends BaseFragment {
             if (w == null) return;
             // 复用 BaseFragment 的 activity 字段与 runOnUiIfAlive，
             // 内部已做 isAdded() 双重校验，避免回调执行时 Fragment 已 detach
-            runOnUiIfAlive(() -> {
-                wheel = w;
-                list = wheel.getList();
-                configViews();
-            });
+            if (!Wheel.isSame(w, wheel)) {
+                runOnUiIfAlive(() -> {
+                    wheel = w;
+                    configViews();
+                });
+            }
         });
     }
 
@@ -85,12 +131,18 @@ public class WheelFragment extends BaseFragment {
         if (wheel != null) {
             wheelView.setItems(wheel);
 
+            setSubTitle();
+
             if (wheel.getEmoji() != null && !wheel.getEmoji().isBlank()) {
                 titleText.setText(wheel.getEmoji() + " " + wheel.getTitle());
             } else {
                 titleText.setText(wheel.getTitle());
             }
         }
+    }
+
+    private void setSubTitle() {
+        setText((wheelView.current + 1) + "/" + wheel.getList().size(), R.id.tv_sub_title);
     }
 
     private void setUpButtonClick() {
@@ -104,6 +156,11 @@ public class WheelFragment extends BaseFragment {
         btn_menu.setOnClickListener(v -> showList());
 
         pointer.setOnClickListener(v -> startSpinning());
+
+        setClick(R.id.nextBtn, v -> {
+            wheelView.setNext();
+            setSubTitle();
+        });
     }
 
     private void setUpWheelView() {
@@ -122,7 +179,7 @@ public class WheelFragment extends BaseFragment {
             @Override
             public void onAllSelected() {
                 isSpinning = false;
-                startBtn.setEnabled(false);
+                startBtn.setEnabled(true);
                 btn_menu.setEnabled(true);
 
                 Toast.makeText(parentView.getContext(), R.string.notification_all_selected, Toast.LENGTH_SHORT).show();
@@ -142,7 +199,7 @@ public class WheelFragment extends BaseFragment {
      */
     private void startSpinning() {
         if (isSpinning) return;
-        if (list.isEmpty()) {
+        if (wheelView.isListEmpty()) {
             Toast.makeText(parentView.getContext(), R.string.message_empty_options, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -195,5 +252,23 @@ public class WheelFragment extends BaseFragment {
         super.onPause();
         wheelView.stopSpin();
     }
+
+    /*class WheelViewAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder> {
+
+        public boolean isSpinning = false;
+
+        public WheelViewAdapter(int layoutResId, @Nullable List<List<Option>> data) {
+            super(layoutResId, data);
+        }
+
+        @Override
+        protected void convert(@NonNull BaseViewHolder holder, List<Option> list) {
+            ImageView pointer = holder.getView(R.id.pointer);
+
+            pointer.setOnClickListener(v -> startSpinning());
+
+        }
+
+    }*/
 
 }

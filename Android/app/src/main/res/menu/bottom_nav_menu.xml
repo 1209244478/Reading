@@ -2,18 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/mainFragment"
-        android:icon="@drawable/ic_home"
-        android:title="首页" />
+        android:icon="@drawable/ic_home" />
     <item
         android:id="@+id/wheelFragment"
-        android:icon="@drawable/ic_settings"
-        android:title="转盘" />
+        android:icon="@drawable/ic_wheel" />
     <item
         android:id="@+id/randomFragment"
-        android:icon="@drawable/ic_settings"
-        android:title="随机数" />
+        android:icon="@drawable/ic_random" />
     <item
         android:id="@+id/settingFragment"
-        android:icon="@drawable/ic_settings"
-        android:title="设置" />
+        android:icon="@drawable/ic_setting" />
 </menu>

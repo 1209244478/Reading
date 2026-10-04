@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_dialog_rounded"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="12dp">
 
     <!-- 标题区 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageView
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginEnd="10dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_folder"
             app:tint="@color/ios_blue" />
@@ -38,7 +39,7 @@
         android:id="@+id/dialog_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="为你的漫画创建一个新集合"
         android:textColor="@color/ios_text_secondary"
@@ -49,28 +50,29 @@
         android:id="@+id/collection_name_layout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         app:boxCornerRadiusBottomEnd="12dp"
         app:boxCornerRadiusBottomStart="12dp"
         app:boxCornerRadiusTopEnd="12dp"
         app:boxCornerRadiusTopStart="12dp"
         app:boxStrokeColor="@color/ios_border"
-        app:boxStrokeWidth="1dp"
-        app:endIconMode="clear_text"
-        app:endIconTint="@color/ios_text_secondary"
-        app:startIconDrawable="@drawable/ic_edit"
-        app:startIconTint="@color/ios_text_secondary">
+        app:boxStrokeWidth="1dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_collection_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:maxLines="1"
+            android:paddingBottom="12dp"
             android:textColor="@color/ios_text_primary"
-            android:textSize="15sp" />
+            android:textSize="18sp"
+            tools:text="1111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111
+            1111111111111111111111111111111111111111111111111111111111111111
+            111111111111" />
 
     </com.google.android.material.textfield.TextInputLayout>
 

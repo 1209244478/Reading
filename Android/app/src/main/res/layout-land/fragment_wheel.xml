@@ -31,7 +31,7 @@
 
             <!-- 标题 -->
             <TextView
-                android:id="@+id/titleText"
+                android:id="@+id/tv_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -40,9 +40,18 @@
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
+            <!-- 副标题 -->
+            <TextView
+                android:id="@+id/tv_sub_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gray_600"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <!-- 结果显示区域 -->
             <TextView
-                android:id="@+id/resultText"
+                android:id="@+id/tv_result"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -116,6 +125,22 @@
             app:backgroundTint="@color/ios_blue"
             app:cornerRadius="14dp"
             app:rippleColor="#22FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/nextBtn"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="8dp"
+            android:layout_toEndOf="@+id/startBtn"
+            android:text="@string/next_wheel"
+            android:textColor="@color/ios_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:cornerRadius="14dp"
+            app:strokeColor="@color/ios_border"
+            app:strokeWidth="1dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/editBtn"

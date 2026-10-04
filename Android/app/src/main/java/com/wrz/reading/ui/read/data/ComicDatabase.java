@@ -16,7 +16,7 @@ import com.wrz.reading.ui.read.model.Comic;
 import java.util.ArrayList;
 import java.util.List;
 
-@Database(entities = {Comic.class, Collection.class}, version = 3)
+@Database(entities = {Comic.class, Collection.class}, version = 4)
 public abstract class ComicDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "comic_database";
     private static ComicDatabase instance;
@@ -46,11 +46,21 @@ public abstract class ComicDatabase extends RoomDatabase {
         }
     };
 
+    /**
+     * v2 -> v3：collections 表新增 cacheSize 列，
+     */
+    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE collections ADD COLUMN fileSize INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
     public static synchronized ComicDatabase getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                             ComicDatabase.class, DATABASE_NAME)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build();
         }

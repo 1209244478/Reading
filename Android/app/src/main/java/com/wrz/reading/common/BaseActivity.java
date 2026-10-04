@@ -95,6 +95,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        // 防止窗口泄漏：销毁前关闭加载弹窗
+        dismissLoading();
+
         super.onDestroy();
 
         // 减少引用计数（不直接关闭共享线程池）
@@ -156,6 +159,13 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected void setClick(View v, View.OnClickListener l) {
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    protected void setClick(int vId, View.OnClickListener l) {
+        View v = findViewById(vId);
         if (v != null) {
             v.setOnClickListener(l);
         }
@@ -235,12 +245,19 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     public void showLoading() {
+        if (isDestroyed() || isFinishing()) {
+            return;
+        }
         getLoadingDialog().show();
     }
 
     public void dismissLoading() {
         if (loadingDialog != null) {
-            loadingDialog.dismiss();
+            try {
+                loadingDialog.dismiss();
+            } catch (Exception e) {
+                // 异步回调时宿主可能已销毁，忽略窗口异常
+            }
             loadingDialog = null;
         }
     }

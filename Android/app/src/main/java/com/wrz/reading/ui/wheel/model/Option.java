@@ -1,10 +1,14 @@
 package com.wrz.reading.ui.wheel.model;
 
+import android.graphics.Color;
+
 import com.chad.library.adapter.base.entity.MultiItemEntity;
+
+import java.util.Objects;
 
 public class Option implements MultiItemEntity {
     private String option;
-    private int color = -1;
+    private int color = Color.RED;
 
     private int weight = 1;
     private int percent = -1;
@@ -75,5 +79,12 @@ public class Option implements MultiItemEntity {
 
     public void setPercent(int percent) {
         this.percent = percent;
+    }
+
+    public static boolean isSame(Option option1, Option option2) {
+        return Objects.equals(option1.getOption(), option2.getOption())
+                && Objects.equals(option1.getColor(), option2.getColor())
+                && Objects.equals(option1.getWeight(), option2.getWeight())
+                && Objects.equals(option1.getPercent(), option2.getPercent());
     }
 }

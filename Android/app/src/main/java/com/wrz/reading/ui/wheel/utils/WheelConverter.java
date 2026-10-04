@@ -18,15 +18,15 @@ public class WheelConverter {
     private static final Gson gson = new Gson();
 
     @TypeConverter
-    public static String fromOptionListToString(List<Option> list) {
+    public static String fromOptionListToString(List<List<Option>> list) {
         if (list == null) return null;
         return gson.toJson(list);
     }
 
     @TypeConverter
-    public static List<Option> fromStringToOptionList(String json) {
+    public static List<List<Option>> fromStringToOptionList(String json) {
         if (json == null || json.isEmpty()) return new ArrayList<>();
-        Type type = new TypeToken<List<Option>>() {}.getType();
+        Type type = new TypeToken<List<List<Option>>>() {}.getType();
         return gson.fromJson(json, type);
     }
 

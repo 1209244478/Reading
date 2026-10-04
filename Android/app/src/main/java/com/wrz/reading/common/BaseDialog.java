@@ -60,26 +60,41 @@ public abstract class BaseDialog extends Dialog {
     public abstract void initView();
 
     public abstract void setDialogSize();
+    public abstract void onShow();
+    public abstract void onDismiss();
 
 
     @Override
     public void show() {
-        super.show();
+        try {
+            super.show();
+        } catch (Exception e) {
+            // 宿主已销毁等情况，放弃显示
+            return;
+        }
         if (listener != null) {
             listener.show();
         }
+        onShow();
     }
 
     @Override
     public void dismiss() {
-        super.dismiss();
+        if (isShowing()) {
+            try {
+                super.dismiss();
+            } catch (Exception e) {
+                // 宿主已销毁时可能抛出窗口异常，忽略
+            }
+        }
         if (listener != null) {
             listener.dismiss();
         }
+        onDismiss();
     }
 
     public <T extends View> T findId(@IdRes int id) {
-        return parentView.findViewById(id);
+        return parentView == null ? null : parentView.findViewById(id);
     }
 
     public void setText(View view, String text) {

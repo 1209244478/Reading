@@ -267,6 +267,16 @@ public class Comic {
         this.subProgress = subProgress;
     }
 
+    public long getAddUpSubProgress() {
+        long progress = 0;
+        if (subProgress != null && !subProgress.isEmpty()) {
+            for (SubProgress p : subProgress) {
+                progress += p.getProgress();
+            }
+        }
+        return progress;
+    }
+
     public boolean isClean() {
         return isClean;
     }

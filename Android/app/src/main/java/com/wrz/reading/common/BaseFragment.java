@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -120,6 +121,7 @@ public abstract class BaseFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         this.activity = null;
+        this.mContext = null;
     }
 
     /**
@@ -145,6 +147,14 @@ public abstract class BaseFragment extends Fragment {
         ExecutorManager.getInstance().removeReference();
     }
 
+    @Override
+    public void onDestroy() {
+        // 防止窗口泄漏：销毁前关闭加载弹窗
+        dismissLoading();
+
+        super.onDestroy();
+    }
+
     public <T extends View> T findId(@IdRes int id) {
         return parentView.findViewById(id);
     }
@@ -164,7 +174,12 @@ public abstract class BaseFragment extends Fragment {
 
     public LoadingDialog getLoadingDialog() {
         if (loadingDialog == null) {
-            loadingDialog = LoadingDialog.instance(getActivity());
+            FragmentActivity act = activity != null ? activity : getSupportActivity();
+            // 宿主已分离或销毁时返回 null，避免创建窗口崩溃
+            if (act == null || act.isFinishing() || act.isDestroyed()) {
+                return null;
+            }
+            loadingDialog = LoadingDialog.instance(act);
             loadingDialog.setCancelable(false);
         }
         return loadingDialog;
@@ -176,17 +191,31 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public void showLoading() {
-        getLoadingDialog().show();
+        LoadingDialog dialog = getLoadingDialog();
+        if (dialog != null && !dialog.isShowing()) {
+            dialog.show();
+        }
     }
 
     public void dismissLoading() {
         if (loadingDialog != null) {
-            loadingDialog.dismiss();
+            try {
+                loadingDialog.dismiss();
+            } catch (Exception e) {
+                // 异步回调时宿主可能已销毁，忽略窗口异常
+            }
             loadingDialog = null;
         }
     }
 
     protected void setClick(View v, View.OnClickListener l) {
+        if (v != null) {
+            v.setOnClickListener(l);
+        }
+    }
+
+    protected void setClick(int vId, View.OnClickListener l) {
+        View v = findId(vId);
         if (v != null) {
             v.setOnClickListener(l);
         }
@@ -216,7 +245,7 @@ public abstract class BaseFragment extends Fragment {
         if (views != null) {
             for (Integer viewId : views) {
                 View view = findId(viewId);
-                if (view != null) {
+                if (view != null && !TextUtils.isEmpty(text)) {
                     ((TextView) view).setText(text);
                 }
             }
@@ -280,15 +309,19 @@ public abstract class BaseFragment extends Fragment {
     }
 
     public void initBackCallback() {
+        FragmentActivity act = getSupportActivity();
+        if (act == null) {
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // 注册预测性返回回调
-            this.getSupportActivity().getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+            act.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_OVERLAY,
                     this::goBack
             );
         } else {
             // 兼容旧版本的返回处理
-            this.getSupportActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            act.getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
                     goBack();

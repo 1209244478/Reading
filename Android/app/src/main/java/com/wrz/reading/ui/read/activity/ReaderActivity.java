@@ -5,6 +5,7 @@ import static com.wrz.reading.common.Constant.EXTRA_COMIC_NAME;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,7 +23,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wrz.reading.R;
-import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.ImageAdapter;
 import com.wrz.reading.ui.read.adapter.PreviewAdapter;
@@ -100,13 +100,13 @@ public class ReaderActivity extends BaseReaderActivity {
         previewCard = findViewById(R.id.preview_card);
         previewRecycler = previewCard.findViewById(R.id.preview_recycler);
         previewPageLabel = previewCard.findViewById(R.id.preview_page_label);
-        /*previewCard.setOnClickListener(v -> {
+        previewCard.setOnClickListener(v -> {
             if (previewIsShowing) {
                 showPageJumpDialog();
             } else {
                 toggleToolBarVisibleOrGone();
             }
-        });*/
+        });
 
         previewRecycler.setLayoutManager(new LinearLayoutManager(this,
                 LinearLayoutManager.HORIZONTAL, false));
@@ -117,6 +117,8 @@ public class ReaderActivity extends BaseReaderActivity {
             if (previewIsShowing) {
                 imageAdapter.setCurrentPlayStatus(false);
                 comicViewPager.setCurrentItem(position, false);
+            } else {
+                toggleToolBarVisibleOrGone();
             }
         });
 
@@ -202,6 +204,8 @@ public class ReaderActivity extends BaseReaderActivity {
      */
     private List<ReadItem> loadFromCompressedFile(String zipPath) {
         File tempExtractDir = ZipUtils.getTempExtractDir(zipPath);
+
+        if (tempExtractDir == null) return null;
 
         // 检查是否已经解压过
         if (tempExtractDir.exists()) {
@@ -400,12 +404,11 @@ public class ReaderActivity extends BaseReaderActivity {
         }
     }
 
-    public final Handler mSetProgress = new Handler();
+    public final Handler mSetProgress = new Handler(Looper.getMainLooper());
 
     public final Runnable mSetProgressRunnable = new Runnable() {
         @Override
         public void run() {
-            LogUtil.e(TAG, "mSetProgressRunnable: (comic == null)=" + (comic == null));
             if (comic == null) {
                 mSetProgress.postDelayed(mSetProgressRunnable, 2000);
             } else {
@@ -417,7 +420,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
     private void setUpProgress() {
         setScrollOrientation(comic.isHorizontal(), false);
-        LogUtil.e(TAG, "setupViewPager: comic.getReadProgress()=" + comic.getReadProgress());
+
         if (comic.getReadProgress() > 0 && comic.getReadProgress() < imageFiles.size()) {
 
             comicViewPager.setCurrentItem(comic.getReadProgress(), false);
@@ -507,21 +510,24 @@ public class ReaderActivity extends BaseReaderActivity {
     }
 
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void updateReadProgress() {
         if (comicViewPager != null) {
             int position = comicViewPager.getCurrentItem();
-            LogUtil.e(TAG, "updateReadProgress: position=" + position);
+
             if (comic != null && imageFiles != null && !imageFiles.isEmpty()) {
                 if (subPosition != -1) {
                     SubProgress.updateSubProgress(String.valueOf(subPosition), position, comic.getSubProgress());
                 }
                 comic.setReadProgress(position);
                 comic.setLastRead(System.currentTimeMillis());
-                comic.setTotal(imageFiles.size());
+                if (subPosition <= 1) {
+                    comic.setTotal(imageFiles.size());
+                }
                 previewAdapter.setCenterPage(position);
 
-                previewPageLabel.setText(+(position + 1) + "/" + imageFiles.size());
+                previewPageLabel.setText((position + 1) + "/" + imageFiles.size());
 
                 if (previewCard != null) {
                     previewRecycler.scrollToPosition(position);
@@ -541,7 +547,7 @@ public class ReaderActivity extends BaseReaderActivity {
         if (imageFiles == null || centerIndex < 0 || centerIndex >= imageFiles.size()) return;
 
         // 更新页码标签
-        previewPageLabel.setText(+(centerIndex + 1) + "/" + imageFiles.size());
+        previewPageLabel.setText((centerIndex + 1) + "/" + imageFiles.size());
 
         /*previewPageLabel.setText((centerIndex + 1) + "/" + imageFiles.size());*/
 
@@ -560,13 +566,6 @@ public class ReaderActivity extends BaseReaderActivity {
         imageAdapter.setCurrentPlayStatus(false);
         VideoPlayerActivity.start(this, comicId, videoFile.getAbsolutePath(),
                 videoFile.getName(), true, 1000);
-
-        /*Intent intent = new Intent(this, VideoPlayerActivity.class);
-        intent.putExtra(VideoPlayerActivity.EXTRA_FROM_READ, true);
-        intent.putExtra(VideoPlayerActivity.EXTRA_COMIC_ID, comicId);
-        intent.putExtra(VideoPlayerActivity.EXTRA_VIDEO_PATH, videoFile.getAbsolutePath());
-        intent.putExtra(VideoPlayerActivity.EXTRA_TITLE, videoFile.getName());
-        startActivityForResult(intent, 1000);*/
     }
 
     public void onSwipe(boolean next) {
@@ -677,7 +676,7 @@ public class ReaderActivity extends BaseReaderActivity {
         File old = new File(coverPath);
 
         boolean delOld = old.delete();
-        LogUtil.e(TAG, "deleteOldCover: " + coverPath + " delOld=" + delOld);
+        /*LogUtil.e(TAG, "deleteOldCover: " + coverPath + " delOld=" + delOld);*/
     }
 
     // ==================== 自动播放 ====================
@@ -742,9 +741,6 @@ public class ReaderActivity extends BaseReaderActivity {
                 sortModified.setChecked(true);
                 break;
         }
-        /*if (sortAsc != null) sortAsc.setChecked(comic.getSort() == Comic.SORT_BY_NAME);
-        if (sortDesc != null) sortDesc.setChecked(comic.getSort() == Comic.SORT_BY_NAME_REVERSE);
-        if (sortModified != null) sortModified.setChecked(comic.getSort() == Comic.SORT_BY_MODIFY_TIME);*/
 
         // 设置翻页方向标题：当前是水平则提示切换为垂直，反之亦然
         MenuItem toggleItem = menu.findItem(R.id.action_toggle_scroll_orientation);
@@ -765,13 +761,13 @@ public class ReaderActivity extends BaseReaderActivity {
         }
 
         // 设置自动播放间隔选中状态
-        MenuItem interval1s = menu.findItem(R.id.action_interval_1s);
+        MenuItem interval2s = menu.findItem(R.id.action_interval_2s);
         MenuItem interval3s = menu.findItem(R.id.action_interval_3s);
         MenuItem interval5s = menu.findItem(R.id.action_interval_5s);
         MenuItem interval10s = menu.findItem(R.id.action_interval_10s);
         switch ((int) comic.getAutoPlay()) {
-            case 1000:
-                interval1s.setChecked(true);
+            case 2000:
+                interval2s.setChecked(true);
                 break;
             case 3000:
                 interval3s.setChecked(true);
@@ -783,13 +779,6 @@ public class ReaderActivity extends BaseReaderActivity {
                 interval10s.setChecked(true);
                 break;
         }
-
-
-        /*long delay = comic.getAutoPlay();
-        if (interval1s != null) interval1s.setChecked(delay == 1000);
-        if (interval3s != null) interval3s.setChecked(delay == 3000);
-        if (interval5s != null) interval5s.setChecked(delay == 5000);
-        if (interval10s != null) interval10s.setChecked(delay == 10000);*/
 
         // 设置自动播放开启/关闭选中状态
         startItem = menu.findItem(R.id.action_auto_play_start);
@@ -886,8 +875,8 @@ public class ReaderActivity extends BaseReaderActivity {
                 Toast.makeText(this, "已停止自动播放", Toast.LENGTH_SHORT).show();
             }
             item.setChecked(true);
-        } else if (itemId == R.id.action_interval_1s) {
-            changeAutoPlayInterval(1000, item);
+        } else if (itemId == R.id.action_interval_2s) {
+            changeAutoPlayInterval(2000, item);
 
         } else if (itemId == R.id.action_interval_3s) {
             changeAutoPlayInterval(3000, item);

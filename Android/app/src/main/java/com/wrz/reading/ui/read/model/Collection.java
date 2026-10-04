@@ -15,6 +15,7 @@ public class Collection {
     private long createdAt;
 
     private long cacheSize = 0; // 缓存大小
+    private long fileSize = 0; // 文件大小
 
     /*-------------------------------排序相关------------------------------------*/
 
@@ -111,4 +112,11 @@ public class Collection {
         this.cacheSize = cacheSize;
     }
 
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
+    }
 }

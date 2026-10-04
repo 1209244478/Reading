@@ -321,13 +321,17 @@ public class WheelView extends View {
      */
     private void drawSectorText(Canvas canvas, int index, float startAngle, float sweepAngle) {
         String text = items.get(index).getOption();
+        if (text.length() > 5) {
+            text = text.substring(0, 5) + "...";
+        }
+
         float textSize = resolveTextSize(text, index);
 
         // 文字颜色：根据背景亮度自动切换
         int bgColor = items.get(index).getColor();
         double luminance = Color.red(bgColor) * 0.299 + Color.green(bgColor) * 0.587 + Color.blue(bgColor) * 0.114;
         textPaint.setColor(luminance > LUMINANCE_THRESHOLD ? textColorDefault : Color.WHITE);
-        LogUtil.e("WheelView", "drawSectorText: luminance=" + luminance + ", text=" + text);
+        LogUtil.d("WheelView", "drawSectorText: luminance=" + luminance + ", text=" + text);
         textPaint.setTextSize(textSize);
 
         // 文字位置：扇形中心半径 70% 处
@@ -466,15 +470,46 @@ public class WheelView extends View {
 
     // ==================== 数据设置 ====================
 
+    public int current = 0;
+
     public void setItems(Wheel wheel) {
         this.wheel = wheel;
-        List<Option> list = wheel.getList();
+        this.current = 0;
+
+        setList();
+    }
+
+    private void setList() {
+        if (wheel.getList().isEmpty()) return;
+        List<Option> list = wheel.getList().get(current);
         if (list == null) return;
 
         reSetSelected();
         this.items = new ArrayList<>(list);
         calculateSectorAngles();
         invalidate();
+    }
+
+    public void setNext() {
+        if (this.current < wheel.getList().size() - 1) {
+            this.current += 1;
+
+        } else {
+            this.current = 0;
+        }
+        setList();
+    }
+
+    public boolean isListEmpty() {
+        if (this.wheel.getList().isEmpty()) return true;
+        return this.wheel.getList().get(current).isEmpty();
+    }
+
+    public void setPrevious() {
+        if (this.current < wheel.getList().size()) {
+            this.current -= 1;
+            setList();
+        }
     }
 
     // ==================== 旋转动画 ====================

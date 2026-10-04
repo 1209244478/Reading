@@ -2,10 +2,16 @@ package com.wrz.reading.ui.read.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DocumentsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
@@ -27,6 +33,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.activity.EpubReaderActivity;
 import com.wrz.reading.ui.read.activity.FolderPickerActivity;
@@ -48,6 +55,10 @@ import com.wrz.reading.ui.read.utils.ZipUtils;
 import com.wrz.reading.ui.read.view.dialog.MoveDialog;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -102,6 +113,18 @@ public class CollectionDetailFragment extends BaseFragment {
                             return;
                         }
                         importComicsFromFolders(folders);
+                    });
+
+    /**
+     * 系统文件夹选择器（SAF）：
+     * 部分机型（如鸿蒙）即使授权后也无法用 File API 读取文件，此时改用系统选择器兜底。
+     */
+    private final ActivityResultLauncher<Uri> safFolderPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocumentTree(),
+                    uri -> {
+                        if (uri != null) {
+                            importComicsFromSafTree(uri);
+                        }
                     });
 
     @Override
@@ -307,23 +330,14 @@ public class CollectionDetailFragment extends BaseFragment {
                 comics = MyApplication.comicDatabase.comicDao().getComicsByCollection(collectionId);
             }
 
-            final long[] totalSize = {0};
-            comics.forEach(comic -> {
-                long size = 0;
-                File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
-                if (tempExtractDir != null && tempExtractDir.isDirectory()) {
-                    size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
-                }
-                totalSize[0] += size;
-                comic.setCacheSize(size);
-            });
+            final long[] totalSize = getComicSize(comics);
 
-            setTotalSize(totalSize[0]);
+            setTotalSize(totalSize[0], totalSize[1]);
 
             // 在后台线程构建临时列表，避免与主线程遍历 allComics 竞态
             List<Comic> tempList = new ArrayList<>(comics);
 
-            comics.forEach(c -> c.setSelected(false));
+            /*comics.forEach(c -> c.setSelected(false));*/
 
             runOnUiIfAlive(() -> {
                 if (useDiff) {
@@ -338,12 +352,36 @@ public class CollectionDetailFragment extends BaseFragment {
         });
     }
 
-    private void setTotalSize(long totalSize) {
+    private long[] getComicSize(List<Comic> comics) {
+        final long[] totalSize = {0, 0};
+        comics.forEach(comic -> {
+            /*FileType fileType = comic.getFileTypeEnum();*/
+
+            File file = new File(comic.getPath());
+            if (file.exists()) {
+                totalSize[1] += file.length();
+            }
+
+            long size = 0;
+            File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
+            if (tempExtractDir != null && tempExtractDir.isDirectory()) {
+                size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
+            }
+            totalSize[0] += size;
+
+            comic.setCacheSize(size);
+
+        });
+        return totalSize;
+    }
+
+    private void setTotalSize(long totalSize, long fileSize) {
         singleThread.execute(() -> {
             Collection collection = MyApplication.comicDatabase.collectionDao().getCollectionById(collectionId);
 
             if (collection != null) {
                 collection.setCacheSize(totalSize);
+                collection.setFileSize(fileSize);
                 MyApplication.comicDatabase.collectionDao().updateCollection(collection);
             }
         });
@@ -643,11 +681,198 @@ public class CollectionDetailFragment extends BaseFragment {
 
     private void launchFolderPicker() {
         if (MyApplication.checkPermissions(activity)) {
-            Intent intent = new Intent(activity, FolderPickerActivity.class);
-            folderPickerLauncher.launch(intent);
+            if (isStorageDirectReadable()) {
+                Intent intent = new Intent(activity, FolderPickerActivity.class);
+                folderPickerLauncher.launch(intent);
+            } else {
+                // 授权后仍读取不到文件（如鸿蒙限制），改用系统文件夹选择器
+                safFolderPickerLauncher.launch(null);
+            }
         } else {
             MyApplication.requestPermissions(activity);
         }
+    }
+
+    /**
+     * 直接路径是否可读：授权后根目录仍列不出内容，说明该机型限制了 File API 访问
+     */
+    private boolean isStorageDirectReadable() {
+        File root = Environment.getExternalStorageDirectory();
+        File[] files = root == null ? null : root.listFiles();
+        return files != null && files.length > 0;
+    }
+
+    // ==================== SAF 导入（受限机型兜底） ====================
+
+    /**
+     * 处理系统文件夹选择器返回的目录树：
+     * 1. 优先把 tree URI 解析为真实路径，可读则直接导入（避免复制大文件）；
+     * 2. 解析失败或不可读时，把目录内容复制到应用私有目录再导入。
+     */
+    private void importComicsFromSafTree(Uri treeUri) {
+        singleThread.execute(() -> {
+            runOnUiIfAlive(this::showLoading);
+            File dir = resolveSafTreeDir(treeUri);
+            if (dir == null) {
+                dir = copySafTreeToLocal(treeUri);
+            }
+            final File importDir = dir;
+            runOnUiIfAlive(() -> {
+                dismissLoading();
+                if (importDir == null) {
+                    Toast.makeText(activity, "无法读取所选文件夹", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                List<String> paths = collectSafImportPaths(importDir);
+                if (paths.isEmpty()) {
+                    Toast.makeText(activity, "所选文件夹中没有可导入的内容", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                importComicsFromFolders(paths);
+            });
+        });
+    }
+
+    /**
+     * 把 SAF tree URI 解析为真实路径（仅支持主存储），并确认 File API 可读。
+     */
+    private File resolveSafTreeDir(Uri treeUri) {
+        try {
+            String docId = DocumentsContract.getTreeDocumentId(treeUri);
+            String[] split = docId.split(":");
+            if (!"primary".equalsIgnoreCase(split[0])) return null;
+            File dir = new File(Environment.getExternalStorageDirectory(),
+                    split.length > 1 ? split[1] : "");
+            File[] files = dir.listFiles();
+            if (dir.isDirectory() && files != null) return dir;
+        } catch (Exception e) {
+            LogUtil.e("CollectionDetailFragment", "resolveSafTreeDir failed: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * SAF 目录的导入策略与 FolderPickerActivity 对齐：
+     * 顶层有子文件夹或支持的文件时逐个导入；否则把所选目录整体作为一部漫画导入。
+     */
+    private List<String> collectSafImportPaths(File dir) {
+        List<String> paths = new ArrayList<>();
+        File[] children = dir.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                if (child.isDirectory()
+                        || !FileUtils.isSupportedExtFormat(child.getName()).isEmpty()
+                        || FileUtils.isVideoFile(child.getName())
+                        || FileUtils.isMusicFile(child.getName())) {
+                    paths.add(child.getAbsolutePath());
+                }
+            }
+        }
+        if (paths.isEmpty()) {
+            paths.add(dir.getAbsolutePath());
+        }
+        return paths;
+    }
+
+    /**
+     * 真实路径不可读时，把 SAF 目录树中可导入的文件复制到应用私有目录。
+     * 返回复制后的本地目录，失败返回 null。
+     */
+    private File copySafTreeToLocal(Uri treeUri) {
+        try {
+            String docId = DocumentsContract.getTreeDocumentId(treeUri);
+            if ("primary".equalsIgnoreCase(docId) || "primary:".equals(docId)) {
+                return null; // 不整盘复制存储根目录
+            }
+            Context context = activity.getApplicationContext();
+            String displayName = queryDocumentName(context,
+                    DocumentsContract.buildDocumentUriUsingTree(treeUri, docId));
+            String folderName = sanitizeFileName(displayName);
+            if (folderName.isEmpty()) folderName = "saf_import";
+            File destRoot = new File(context.getExternalFilesDir(null), "saf_import/" + folderName);
+            File[] copied = destRoot.listFiles();
+            if (copied != null && copied.length > 0) {
+                return destRoot; // 已复制过，直接复用
+            }
+            if (!destRoot.isDirectory() && !destRoot.mkdirs()) {
+                return null;
+            }
+            copyDocumentChildren(context, treeUri, docId, destRoot);
+            copied = destRoot.listFiles();
+            return (copied != null && copied.length > 0) ? destRoot : null;
+        } catch (Exception e) {
+            LogUtil.e("CollectionDetailFragment", "copySafTreeToLocal failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 递归遍历目录树：子目录继续深入，可导入的文件复制到 destDir。
+     */
+    private void copyDocumentChildren(Context context, Uri treeUri, String parentDocId, File destDir) {
+        ContentResolver resolver = context.getContentResolver();
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId);
+        try (Cursor cursor = resolver.query(childrenUri, new String[]{
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+            while (cursor != null && cursor.moveToNext()) {
+                String docId = cursor.getString(0);
+                String name = cursor.getString(1);
+                String mime = cursor.getString(2);
+                if (docId == null || name == null) continue;
+                Uri docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId);
+                if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
+                    File subDir = new File(destDir, sanitizeFileName(name));
+                    if (subDir.isDirectory() || subDir.mkdirs()) {
+                        copyDocumentChildren(context, treeUri, docId, subDir);
+                    }
+                } else if (isImportableDocument(name)) {
+                    copyDocumentFile(resolver, docUri, new File(destDir, sanitizeFileName(name)));
+                }
+            }
+        } catch (Exception e) {
+            LogUtil.e("CollectionDetailFragment", "copyDocumentChildren failed: " + e.getMessage());
+        }
+    }
+
+    private boolean isImportableDocument(String name) {
+        return FileUtils.isImageFile(name)
+                || !FileUtils.isSupportedExtFormat(name).isEmpty()
+                || FileUtils.isVideoFile(name)
+                || FileUtils.isMusicFile(name);
+    }
+
+    private void copyDocumentFile(ContentResolver resolver, Uri docUri, File dest) {
+        try (InputStream in = resolver.openInputStream(docUri);
+             OutputStream out = new FileOutputStream(dest)) {
+            if (in == null) return;
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+        } catch (IOException e) {
+            //noinspection ResultOfMethodCallIgnored
+            dest.delete();
+            LogUtil.e("CollectionDetailFragment", "copyDocumentFile failed: " + e.getMessage());
+        }
+    }
+
+    private String queryDocumentName(Context context, Uri docUri) {
+        try (Cursor cursor = context.getContentResolver().query(docUri,
+                new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                String name = cursor.getString(0);
+                if (name != null) return name;
+            }
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    private String sanitizeFileName(String name) {
+        return name == null ? "" : name.replaceAll("[/\\\\:*?\"<>|]", "_").trim();
     }
 
     /**
@@ -789,7 +1014,7 @@ public class CollectionDetailFragment extends BaseFragment {
                 break;
             case Collection.SORT_BY_SIZE:
                 // 目录始终排在最前面的比较器
-                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(new File(b.getPath()).length(),  new File(a.getPath()).length())));
+                displayComics.sort(dirFirst.thenComparing((a, b) -> Long.compare(new File(b.getPath()).length(), new File(a.getPath()).length())));
 
                 break;
             case Collection.SORT_BY_PROGRESS:
@@ -815,7 +1040,8 @@ public class CollectionDetailFragment extends BaseFragment {
         MenuItem sortByReadTime = mCommonToolbar.getMenu().findItem(R.id.action_sort_by_last_read_time);
         MenuItem moveItem = mCommonToolbar.getMenu().findItem(R.id.action_move);
         MenuItem shareItem = mCommonToolbar.getMenu().findItem(R.id.action_share);
-        if (sortNameAsc == null || sortNameDesc == null || sortByTime == null || sortByReadTime == null || moveItem == null) return;
+        if (sortNameAsc == null || sortNameDesc == null || sortByTime == null || sortByReadTime == null || moveItem == null)
+            return;
 
         if (comicAdapter != null) {
             moveItem.setVisible(comicAdapter.isSelectMode());

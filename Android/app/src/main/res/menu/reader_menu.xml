@@ -110,8 +110,8 @@
                 <menu>
                     <group android:checkableBehavior="single">
                         <item
-                            android:id="@+id/action_interval_1s"
-                            android:title="1 秒"
+                            android:id="@+id/action_interval_2s"
+                            android:title="2 秒"
                             app:showAsAction="never" />
                         <item
                             android:id="@+id/action_interval_3s"

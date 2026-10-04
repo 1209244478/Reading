@@ -1,5 +1,6 @@
 package com.wrz.reading.ui.wheel.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.View;
@@ -15,7 +16,6 @@ import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.wheel.adapter.ListTagAdapter;
 import com.wrz.reading.ui.wheel.adapter.WheelListAdapter;
@@ -182,6 +182,7 @@ public class WheelListActivity extends BaseActivity {
         });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void delWheel(Wheel toDelete) {
         DialogHelper.showConfirmDialog(this,
                 getString(R.string.confirm_deletion),
@@ -190,23 +191,10 @@ public class WheelListActivity extends BaseActivity {
                     MyApplication.wheelRepository.removeWheel(toDelete);
                     runOnUiThread(() -> {
                         if (isFinishing() || isDestroyed()) return;
-                        // 依据 id 而非 position 定位，避免快速连续删除时索引错位
-                        int idx = -1;
-                        for (int i = 0; i < list.size(); i++) {
-                            if (list.get(i).getId().equals(toDelete.getId())) {
-                                idx = i;
-                                break;
-                            }
-                        }
-                        if (idx >= 0) {
-                            list.remove(idx);
-                        }
-                        // 从 displayList 中移除并通知适配器
-                        int displayIdx = displayList.indexOf(toDelete);
-                        if (displayIdx >= 0) {
-                            displayList.remove(displayIdx);
-                            wheelListAdapter.notifyItemRemoved(displayIdx);
-                        }
+
+                        list.removeIf(wheel -> wheel.getId().equals(toDelete.getId()));
+                        displayList.removeIf(wheel -> wheel.getId().equals(toDelete.getId()));
+                        wheelListAdapter.notifyDataSetChanged();
                     });
                 }));
     }
@@ -272,7 +260,6 @@ public class WheelListActivity extends BaseActivity {
                 if (w.getTags() != null) {
                     for (Tag t : w.getTags()) {
                         if (tagSet.contains(t.getTag())) {
-                            LogUtil.e(TAG, "applyFilter: " + w.getTitle());
                             displayList.add(w);
                             break;
                         }

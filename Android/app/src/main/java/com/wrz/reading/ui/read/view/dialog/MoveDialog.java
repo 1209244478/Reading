@@ -79,4 +79,14 @@ public class MoveDialog extends BaseDialog {
             );
         }
     }
+
+    @Override
+    public void onShow() {
+
+    }
+
+    @Override
+    public void onDismiss() {
+
+    }
 }

@@ -12,8 +12,8 @@ android {
         applicationId "com.wrz.reading"
         minSdk 27
         targetSdk 36
-        versionCode 2026083104
-        versionName "1.0"
+        versionCode 2026092001
+        versionName "Reading_v1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation libs.activity.ktx
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

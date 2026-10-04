@@ -153,6 +153,7 @@
     <string name="cpv_select">选择</string>
     <string name="cpv_transparency">透明度</string>
     <string name="allow_duplicates">允许重复</string>
+    <string name="wheel_explanation">转盘说明</string>
     <string name="add_new_option">添加新选项</string>
     <string name="quantity">数量</string>
     <string name="scope">范围</string>
@@ -169,6 +170,7 @@
     <string name="add_batch_option">批量添加选项</string>
 
     <string name="edit_wheel">编辑转盘</string>
+    <string name="next_wheel">下一个</string>
     <string name="create_wheel">新建转盘</string>
     <string name="create_template">新建模板</string>
     <string name="edit_template">编辑模板</string>

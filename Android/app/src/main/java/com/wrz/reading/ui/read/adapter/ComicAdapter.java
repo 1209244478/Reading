@@ -16,7 +16,6 @@ import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FileType;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.VideoUtils;
-import com.wrz.reading.ui.read.utils.ZipUtils;
 
 import java.io.File;
 import java.util.List;
@@ -58,12 +57,13 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
         String coverPath = comic.getCoverPath();
         FileType fileType = comic.getFileTypeEnum();
 
-        if (coverPath != null && !coverPath.isEmpty()) {
+        if (coverPath != null && !coverPath.isEmpty() && new File(coverPath).exists()) {
             Glide.with(holder.itemView)
                     .load(coverPath)
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.ic_launcher_background)
                     .into(coverImageView);
+
         } else if (fileType == FileType.VIDEO) {
             // 旧视频数据（coverPath 为空）：异步提取非首帧，避免纯黑封面；
             // 同时持久化 coverPath，下次直接走上面的 Glide 文件加载分支。
@@ -87,6 +87,7 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
                     }
                 });
             });
+
         } else {
             switch (fileType) {
                 case PDF:
@@ -96,6 +97,7 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
                     coverImageView.setImageResource(R.drawable.menu_book_24px);
                     break;
                 default:
+                    holder.setText(R.id.tv_cover, comic.getTitle());
                     break;
             }
         }
@@ -108,14 +110,25 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
             holder.setText(R.id.comic_progress, VideoUtils.formatTime(comic.getVideoPosition()) + "-" + VideoUtils.formatTime(comic.getTotal()));
             comicProgressBar.setProgress((int) comic.getVideoPosition());
 
-            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length()));
-
         } else {
-            holder.setText(R.id.comic_progress, (comic.getReadProgress() + 1) + "/" + comic.getTotal());
+            if (comic.getSubProgress() != null && !comic.getSubProgress().isEmpty() && fileType == FileType.ZIP) {
+                holder.setText(R.id.comic_progress, (comic.getAddUpSubProgress() + 1) + "/" + comic.getTotal());
+                comicProgressBar.setProgress((int) comic.getAddUpSubProgress());
 
+            } else {
+                holder.setText(R.id.comic_progress, (comic.getReadProgress() + 1) + "/" + comic.getTotal());
+                comicProgressBar.setProgress(comic.getReadProgress());
+            }
+        }
+
+        if (fileType != FileType.IMAGE) {
+            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length()));
+        } else {
             holder.setText(R.id.comic_cache, "缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
-
-            comicProgressBar.setProgress(comic.getReadProgress());
+        }
+        if (fileType == FileType.ZIP) {
+            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length())
+                    + "\n缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
         }
 
         if (isSelectMode) {
@@ -129,4 +142,5 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
             holder.setGone(R.id.select_indicator, true);
         }
     }
+
 }
