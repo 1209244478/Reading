@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.DiffUtil;
@@ -43,6 +44,7 @@ import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 import com.wrz.reading.ui.read.adapter.ComicAdapter;
 import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
 import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.data.VideoPlaylistStore;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FileType;
@@ -81,7 +83,42 @@ public class CollectionDetailFragment extends BaseFragment {
     private long collectionId;
 
     private final List<Comic> allComics = new ArrayList<>();
-    public static final List<Comic> displayComics = new ArrayList<>();
+    private static final List<Comic> displayComics = new ArrayList<>();
+
+    /**
+     * 视频连播状态源：注册到 VideoPlaylistStore 供 VideoPlayerActivity 读取，
+     * 替代原先播放器跨组件直接访问 CollectionDetailFragment.displayComics 的静态耦合。
+     */
+    private final VideoPlaylistStore.PlaylistProvider collectionPlaylistProvider =
+            new VideoPlaylistStore.PlaylistProvider() {
+                @Nullable
+                @Override
+                public List<ReadItem> getSubFiles() {
+                    return null;
+                }
+
+                @Nullable
+                @Override
+                public Comic getReaderComic() {
+                    return null;
+                }
+
+                @Override
+                public List<Comic> getDisplayComics() {
+                    return displayComics;
+                }
+
+                @Override
+                public void updateVideoPosition(long comicId, long position) {
+                    for (Comic c : displayComics) {
+                        if (c != null && c.getId() == comicId) {
+                            c.setVideoPosition(position);
+                            return;
+                        }
+                    }
+                }
+            };
+
 
     private RecyclerView comicRecyclerView;
     private ComicAdapter comicAdapter;
@@ -307,6 +344,7 @@ public class CollectionDetailFragment extends BaseFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        VideoPlaylistStore.clear(collectionPlaylistProvider);
         mSplash.removeCallbacks(mSplashRunnable);
     }
 // ==================== 数据加载 ====================
@@ -458,6 +496,8 @@ public class CollectionDetailFragment extends BaseFragment {
             videoPath = videos.get(0).getAbsolutePath();
         }
 
+        // 注册连播状态源后再启动播放器，保证播放器 onCreate 时可读取
+        VideoPlaylistStore.set(collectionPlaylistProvider);
         VideoPlayerActivity.start(activity, comic.getId(),
                 videoPath, comic.getTitle(),
                 false, 1000);

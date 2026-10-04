@@ -51,7 +51,8 @@ public class EPubReaderFragment extends BaseFragment {
     private EpubReaderActivity activity;
 
     private Animation mFadeInAnimation, mFadeOutAnimation;
-    private Handler mHandler = new Handler();
+    // 显式绑定主线程 Looper，避免无参构造隐式绑当前线程
+    private Handler mHandler = new Handler(Looper.getMainLooper());
     private long mComicId;
     private volatile Comic comic;
 

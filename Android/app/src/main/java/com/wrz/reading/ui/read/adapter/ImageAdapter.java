@@ -96,7 +96,23 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
         SubProgress.updateSubProgress(fileName + "_total", duration, subList);
     }
 
+    /**
+     * 创建播放器并装载本地视频源，恢复上次播放进度（仅创建时调用一次，复用实例不重复 prepare/seek）
+     */
+    @OptIn(markerClass = UnstableApi.class)
+    private ExoPlayer buildPlayer(android.content.Context context, File file) {
+        ExoPlayer player = new ExoPlayer.Builder(context).build();
+        MediaSource mediaSource = new ProgressiveMediaSource.Factory(FileDataSource::new)
+                .createMediaSource(MediaItem.fromUri(Uri.fromFile(file)));
+        player.setMediaSource(mediaSource);
+        player.prepare();
+        player.setPlayWhenReady(false);
+        player.seekTo(SubProgress.getSubProgress(file.getName(), subList));
+        return player;
+    }
+
     public void setCurrentPlayStatus(boolean play) {
+        if (selected_position < 0 || selected_position >= getData().size()) return;
         File file = this.getData().get(selected_position).getFile();
         ExoPlayer player;
         if (!playerMap.isEmpty() && playerMap.get(file.getName()) != null) {
@@ -126,22 +142,15 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
         if ((isVideo || isMusic)) {
             holder.setText(R.id.tv_name, file.getName());
             // 视频页：整页挂载为 VideoPlayFragment 内联播放
-            ExoPlayer player;
+            PlayerView player_view = holder.getView(R.id.player_view);
             if (selected_position == holder.getLayoutPosition()) {
-                PlayerView player_view = holder.getView(R.id.player_view);
-                player = new ExoPlayer.Builder(holder.itemView.getContext()).build();
-
-                playerMap.put(file.getName(), player);
+                // 同一文件复用已有播放器，避免每次 convert 重复创建导致旧实例泄漏
+                ExoPlayer player = playerMap.get(file.getName());
+                if (player == null) {
+                    player = buildPlayer(holder.itemView.getContext(), file);
+                    playerMap.put(file.getName(), player);
+                }
                 player_view.setPlayer(player);
-                MediaSource mediaSource = new ProgressiveMediaSource.Factory(FileDataSource::new)
-                        .createMediaSource(MediaItem.fromUri(Uri.fromFile(file)));
-                player.setMediaSource(mediaSource);
-                player.prepare();
-                player.setPlayWhenReady(false);
-
-                long pos = SubProgress.getSubProgress(file.getName(), subList);
-
-                player.seekTo(pos);
 
                 player_view.setControllerVisibilityListener(
                         (PlayerView.ControllerVisibilityListener) visibility -> {
@@ -161,6 +170,9 @@ public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHo
                     }
                     return false;
                 });
+            } else {
+                // 非当前页：解除挂载，避免 holder 复用时残留已释放的播放器画面
+                player_view.setPlayer(null);
             }
             return;
         }

@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -27,6 +28,7 @@ import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.ImageAdapter;
 import com.wrz.reading.ui.read.adapter.PreviewAdapter;
 import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.data.VideoPlaylistStore;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.model.SubProgress;
@@ -37,6 +39,7 @@ import com.wrz.reading.ui.read.utils.ZipUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ReaderActivity extends BaseReaderActivity {
@@ -49,7 +52,36 @@ public class ReaderActivity extends BaseReaderActivity {
     private TextView pageCounterText;
     private Spinner folderSpinner;
     private ImageAdapter imageAdapter;
-    public static List<ReadItem> imageFiles;
+    private static List<ReadItem> imageFiles;
+
+    /**
+     * 视频连播状态源：注册到 VideoPlaylistStore 供 VideoPlayerActivity 读取，
+     * 替代原先跨组件直接访问 ReaderActivity.imageFiles / BaseReaderActivity.comic 的静态耦合。
+     */
+    private final VideoPlaylistStore.PlaylistProvider readerPlaylistProvider =
+            new VideoPlaylistStore.PlaylistProvider() {
+                @Nullable
+                @Override
+                public List<ReadItem> getSubFiles() {
+                    return imageFiles;
+                }
+
+                @Nullable
+                @Override
+                public Comic getReaderComic() {
+                    return comic;
+                }
+
+                @Override
+                public List<Comic> getDisplayComics() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public void updateVideoPosition(long comicId, long position) {
+                }
+            };
+
     /**
      * 完整未过滤的文件列表，用于排序和过滤的基准
      */
@@ -564,6 +596,8 @@ public class ReaderActivity extends BaseReaderActivity {
         }
 
         imageAdapter.setCurrentPlayStatus(false);
+        // 注册连播状态源后再启动播放器，保证播放器 onCreate 时可读取
+        VideoPlaylistStore.set(readerPlaylistProvider);
         VideoPlayerActivity.start(this, comicId, videoFile.getAbsolutePath(),
                 videoFile.getName(), true, 1000);
     }
@@ -957,6 +991,7 @@ public class ReaderActivity extends BaseReaderActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        VideoPlaylistStore.clear(readerPlaylistProvider);
         imageAdapter.releaseAllPlayer();
         if (comic != null && comic.isClean()) {
             if (new File(comic.getPath()).getName().endsWith(FileUtils.SPECIAL_FORMATS)) {

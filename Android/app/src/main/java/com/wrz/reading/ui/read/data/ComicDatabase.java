@@ -10,11 +10,13 @@ import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.ui.main.utils.ExecutorManager;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Database(entities = {Comic.class, Collection.class}, version = 4)
 public abstract class ComicDatabase extends RoomDatabase {
@@ -47,7 +49,7 @@ public abstract class ComicDatabase extends RoomDatabase {
     };
 
     /**
-     * v2 -> v3：collections 表新增 cacheSize 列，
+     * v3 -> v4：collections 表新增 fileSize 列
      */
     private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
@@ -67,33 +69,57 @@ public abstract class ComicDatabase extends RoomDatabase {
         return instance;
     }
 
-    public static long lastUpdate = 0;
     public static long UPDATE_LIMIT = 2000;
 
-    public static boolean isUpdating = false;
+    /**
+     * 是否有 DB 写入正在进行（供外部轮询等待写入完成，如列表返回刷新场景）。
+     */
+    public static volatile boolean isUpdating = false;
 
+    private static final AtomicLong lastUpdateTime = new AtomicLong(0);
+    private static final AtomicBoolean writeInFlight = new AtomicBoolean(false);
+
+    /**
+     * 节流更新单个 Comic：UPDATE_LIMIT 毫秒内最多一次，DB 写入切换到后台单线程执行。
+     * 使用 CAS 保证并发调用下既不重复节流放行、也不会并发写库。
+     */
     public static void update(Comic comic) {
         long current = System.currentTimeMillis();
-        if (current - lastUpdate > UPDATE_LIMIT && !isUpdating) {
-            isUpdating = true;
-            MyApplication.comicDatabase.comicDao().updateComic(comic);
-            lastUpdate = current;
-            isUpdating = false;
+        long last = lastUpdateTime.get();
+        if (current - last <= UPDATE_LIMIT) {
+            return;
         }
-    }
-    public static void updateList(ArrayList<Comic> list) {
-        for (Comic comic : list) {
-            if (comic != null) {
+        if (!lastUpdateTime.compareAndSet(last, current)) {
+            return;
+        }
+        if (!writeInFlight.compareAndSet(false, true)) {
+            return;
+        }
+        isUpdating = true;
+        ExecutorManager.getInstance().getSingleThreadExecutor().execute(() -> {
+            try {
                 MyApplication.comicDatabase.comicDao().updateComic(comic);
+            } finally {
+                writeInFlight.set(false);
+                isUpdating = false;
             }
-        }
+        });
     }
 
+    /**
+     * 批量更新：单事务写入，失败整体回滚，避免逐条提交的性能与一致性问题。
+     * 调用方需在后台线程调用（与 Room 主线程检查约定一致）。
+     */
     public static void updateList(List<Comic> list) {
-        for (Comic comic : list) {
-            if (comic != null) {
-                MyApplication.comicDatabase.comicDao().updateComic(comic);
-            }
+        if (list == null || list.isEmpty()) {
+            return;
         }
+        MyApplication.comicDatabase.runInTransaction(() -> {
+            for (Comic comic : list) {
+                if (comic != null) {
+                    MyApplication.comicDatabase.comicDao().updateComic(comic);
+                }
+            }
+        });
     }
 }

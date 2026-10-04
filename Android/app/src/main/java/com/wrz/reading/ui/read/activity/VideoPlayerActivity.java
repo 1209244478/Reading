@@ -42,8 +42,9 @@ import com.wrz.reading.common.BaseActivity;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.dlna.DlnaManager;
 import com.wrz.reading.ui.read.dlna.DlnaRendererManager;
-import com.wrz.reading.ui.read.fragment.CollectionDetailFragment;
+import com.wrz.reading.ui.read.data.VideoPlaylistStore;
 import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.ReadItem;
 import com.wrz.reading.ui.read.model.SubProgress;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.view.dialog.PlayListDialog;
@@ -238,26 +239,31 @@ public class VideoPlayerActivity extends BaseActivity {
      */
     private void PlayNextVideo() {
         if (!receiverMode) {
+            VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+            if (source == null) {
+                return;
+            }
             if (isFromRead) {
-                if (!ReaderActivity.imageFiles.isEmpty()) {
+                List<ReadItem> subFiles = source.getSubFiles();
+                if (subFiles != null && !subFiles.isEmpty()) {
                     int index = getNextSubIndex();
 
-                    if (index != -1 && ReaderActivity.imageFiles.get(index) != null) {
-                        switchToSubFile(comicId, ReaderActivity.imageFiles.get(index).getFile());
+                    if (index != -1 && subFiles.get(index) != null) {
+                        switchToSubFile(comicId, subFiles.get(index).getFile());
                     }
                 }
             } else {
-                if (!CollectionDetailFragment.displayComics.isEmpty()) {
+                List<Comic> display = source.getDisplayComics();
+                if (!display.isEmpty()) {
                     int index = getComicIndex(comicId) + 1;
 
                     saveProgress();
 
-                    if (index != -1) {
-                        if (CollectionDetailFragment.displayComics.get(index) != null) {
-                            switchToComic(CollectionDetailFragment.displayComics.get(index));
-                        } else {
-                            switchToComic(CollectionDetailFragment.displayComics.get(0));
-                        }
+                    if (index > 0 && index < display.size()) {
+                        switchToComic(display.get(index));
+                    } else {
+                        // 当前是最后一项或未在列表中：回到列表开头
+                        switchToComic(display.get(0));
                     }
                 }
             }
@@ -276,9 +282,11 @@ public class VideoPlayerActivity extends BaseActivity {
 
             long pos = -1;
             long total = -1;
-            if (BaseReaderActivity.comic != null) {
-                pos = SubProgress.getSubProgress(videoTitle, BaseReaderActivity.comic.getSubProgress());
-                total = SubProgress.getSubProgress(videoTitle + "_total", BaseReaderActivity.comic.getSubProgress());
+            VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+            Comic hostComic = source != null ? source.getReaderComic() : null;
+            if (hostComic != null) {
+                pos = SubProgress.getSubProgress(videoTitle, hostComic.getSubProgress());
+                total = SubProgress.getSubProgress(videoTitle + "_total", hostComic.getSubProgress());
             }
 
 
@@ -323,19 +331,18 @@ public class VideoPlayerActivity extends BaseActivity {
                     pos = 0L;
                 }
 
-                if (!CollectionDetailFragment.displayComics.isEmpty()) {
-                    int index = getComicIndex(comicId);
-
-                    if (CollectionDetailFragment.displayComics.get(index) != null) {
-                        CollectionDetailFragment.displayComics.get(index).setVideoPosition(pos);
-                    }
+                // 回写内存中的播放进度（合集列表项），供返回列表页时差量刷新
+                VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+                if (source != null) {
+                    source.updateVideoPosition(comicId, pos);
                 }
 
                 if (isFromRead) {
-                    SubProgress.updateSubProgress(videoTitle, pos, BaseReaderActivity.comic.getSubProgress());
-                    SubProgress.updateSubProgress(videoTitle + "_total", duration[0], BaseReaderActivity.comic.getSubProgress());
-
-                    /*MyApplication.comicDatabase.comicDao().updateComic(BaseReaderActivity.comic);*/
+                    Comic hostComic = source != null ? source.getReaderComic() : null;
+                    if (hostComic != null) {
+                        SubProgress.updateSubProgress(videoTitle, pos, hostComic.getSubProgress());
+                        SubProgress.updateSubProgress(videoTitle + "_total", duration[0], hostComic.getSubProgress());
+                    }
                 } else {
                     final long lastRead = System.currentTimeMillis();
                     MyApplication.comicDatabase.comicDao().updateVideoProgress(comicId, pos, lastRead, duration[0]);
@@ -349,9 +356,15 @@ public class VideoPlayerActivity extends BaseActivity {
      * @return index
      */
     public int getNextSubIndex() {
+        VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+        List<ReadItem> subFiles = source != null ? source.getSubFiles() : null;
+        if (subFiles == null || subFiles.isEmpty()) {
+            return -1;
+        }
+
         int index = -1;
-        for (int i = 0; i < ReaderActivity.imageFiles.size(); i++) {
-            if (Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getFile().getAbsolutePath())) {
+        for (int i = 0; i < subFiles.size(); i++) {
+            if (Objects.equals(videoPath, subFiles.get(i).getFile().getAbsolutePath())) {
                 index = i;
                 break;
             }
@@ -359,17 +372,17 @@ public class VideoPlayerActivity extends BaseActivity {
         int nextIndex = -1;
 
         if (index != -1) {
-            for (int i = index; i < ReaderActivity.imageFiles.size(); i++) {
-                if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getFile().getName())
-                        && !Objects.equals(videoPath, ReaderActivity.imageFiles.get(i).getFile().getAbsolutePath())) {
+            for (int i = index; i < subFiles.size(); i++) {
+                if (FileUtils.isVideoFile(subFiles.get(index).getFile().getName())
+                        && !Objects.equals(videoPath, subFiles.get(i).getFile().getAbsolutePath())) {
                     nextIndex = i;
                     break;
                 }
             }
 
             if (nextIndex == -1) {
-                for (int i = index; i < ReaderActivity.imageFiles.size(); i++) {
-                    if (FileUtils.isVideoFile(ReaderActivity.imageFiles.get(index).getFile().getName())) {
+                for (int i = index; i < subFiles.size(); i++) {
+                    if (FileUtils.isVideoFile(subFiles.get(index).getFile().getName())) {
                         nextIndex = i;
                         break;
                     }
@@ -386,9 +399,14 @@ public class VideoPlayerActivity extends BaseActivity {
      * @return index
      */
     public int getComicIndex(long comicId) {
+        VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+        List<Comic> display = source != null ? source.getDisplayComics() : null;
+        if (display == null) {
+            return -1;
+        }
         int index = -1;
-        for (int i = 0; i < CollectionDetailFragment.displayComics.size(); i++) {
-            if (comicId == CollectionDetailFragment.displayComics.get(i).getId()) {
+        for (int i = 0; i < display.size(); i++) {
+            if (comicId == display.get(i).getId()) {
                 index = i;
                 break;
             }
@@ -758,7 +776,7 @@ public class VideoPlayerActivity extends BaseActivity {
                                     "投屏成功", Toast.LENGTH_SHORT).show();
                             onCastStarted(device);
                             if (player != null && player.getCurrentPosition() > 0) {
-                                new Handler().postDelayed(() ->
+                                castHandler.postDelayed(() ->
                                         castSeek(player.getCurrentPosition()), 5000);
                             }
                         });
@@ -789,7 +807,7 @@ public class VideoPlayerActivity extends BaseActivity {
                                     "投屏成功", Toast.LENGTH_SHORT).show();
                             onCastStarted(device);
                             if (player != null && player.getCurrentPosition() > 0) {
-                                new Handler().postDelayed(() ->
+                                castHandler.postDelayed(() ->
                                         castSeek(player.getCurrentPosition()), 5000);
                             }
                         });
@@ -1059,7 +1077,11 @@ public class VideoPlayerActivity extends BaseActivity {
     private void setupPlaylistButton() {
         play_list.setOnClickListener(v -> {
             saveProgress();
-            PlayListDialog dialog = new PlayListDialog(this, CollectionDetailFragment.displayComics);
+            VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
+            List<Comic> playlist = source != null
+                    ? source.getDisplayComics()
+                    : new ArrayList<>();
+            PlayListDialog dialog = new PlayListDialog(this, playlist);
             dialog.setListener(c -> {
                 if (comicId != c.getId()) {
                     dialog.dismiss();

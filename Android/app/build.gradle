@@ -29,6 +29,11 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
 
+    testOptions {
+        // JVM 单元测试中 android.* 方法（如 Log）默认返回值而非抛异常
+        unitTests.returnDefaultValues = true
+    }
+
     sourceSets {
         main {
             jniLibs.srcDirs = ['libs']
