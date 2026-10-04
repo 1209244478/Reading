@@ -4,16 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -22,7 +17,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AlertDialog;
 import androidx.media3.common.C;
@@ -39,13 +33,12 @@ import androidx.media3.ui.PlayerView;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
-import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.dlna.DlnaManager;
 import com.wrz.reading.ui.read.dlna.DlnaRendererManager;
 import com.wrz.reading.ui.read.data.VideoPlaylistStore;
+import com.wrz.reading.ui.read.data.VideoProgressRepository;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.ReadItem;
-import com.wrz.reading.ui.read.model.SubProgress;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.view.dialog.PlayListDialog;
 
@@ -55,19 +48,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 应用内视频播放器，使用 ExoPlayer 播放本地视频文件。
  * 通过 Intent 传入 EXTRA_VIDEO_PATH（文件路径）和 EXTRA_TITLE（标题，可选）。
  * 支持通过 DLNA 将本地视频投屏到智能电视（小米电视、B 站电视版等）。
+ * <p>职责拆分：播放进度持久化见 {@link VideoProgressRepository}，
+ * 投屏进度轮询见 {@link CastPollingController}，手势交互见 {@link GestureHandler}。
  */
 @SuppressWarnings({"rawtypes"})
 @OptIn(markerClass = UnstableApi.class)
-public class VideoPlayerActivity extends BaseActivity {
+public class VideoPlayerActivity extends BaseActivity implements CastPollingController.Host {
 
-    private static final String TAG = "VideoPlayerActivity";
+    static final String TAG = "VideoPlayerActivity";
 
     public static void start(Activity activity, long comicId,
                              String videoPath, String videoTitle,
@@ -124,8 +117,8 @@ public class VideoPlayerActivity extends BaseActivity {
     public static final String EXTRA_CASTER_NAME = "cast_name";
 
 
-    private ExoPlayer player;
-    private PlayerView player_view;
+    ExoPlayer player;
+    PlayerView player_view;
     private ImageButton cast_button;
     private TextView tv_name;
     private TextView tv_keep_watch;
@@ -142,16 +135,19 @@ public class VideoPlayerActivity extends BaseActivity {
     private ImageButton cast_stop;
 
     // 手势交互
-    private TextView gesture_indicator;
+    TextView gesture_indicator;
 
-    /**
-     * 后台 IO 线程：加载/持久化播放进度
-     */
-    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "VideoPlayer-IO");
-        t.setDaemon(true);
-        return t;
-    });
+    // 统一主线程 Handler：投屏 castSeek 延迟 / 手势组件 / 接收端进度刷新共用
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    /** 播放进度仓库：restoreProgress/saveProgress 的 DB 读写（ui/read/data） */
+    private final VideoProgressRepository progressRepository = new VideoProgressRepository();
+
+    /** 投屏进度轮询控制器：轮询 + 超时重试 + 进度缓存 */
+    private final CastPollingController castPollingController = new CastPollingController(this);
+
+    /** 手势处理组件：双击/长按/滑动 seek/亮度/音量/手势提示 */
+    private final GestureHandler gestureHandler = new GestureHandler(this, mainHandler);
 
 
 
@@ -237,7 +233,8 @@ public class VideoPlayerActivity extends BaseActivity {
     /**
      * 播放下一个视频
      */
-    private void PlayNextVideo() {
+    @Override
+    public void PlayNextVideo() {
         if (!receiverMode) {
             VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
             if (source == null) {
@@ -271,84 +268,23 @@ public class VideoPlayerActivity extends BaseActivity {
     }
 
     /**
-     * 从 DB 读取上次保存的播放位置并 seekTo
+     * 从 DB 读取上次保存的播放位置并 seekTo（DB 读写见 VideoProgressRepository）
      */
     private void restoreProgress() {
-        if (comicId == -1L) return;
-        ioExecutor.execute(() -> {
-            Comic loaded = MyApplication.comicDatabase.comicDao().getComicById(comicId);
-            if (loaded == null/* || loaded.getFileType().equals(FileType.MUSIC.getCode())*/)
-                return;
-
-            long pos = -1;
-            long total = -1;
-            VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
-            Comic hostComic = source != null ? source.getReaderComic() : null;
-            if (hostComic != null) {
-                pos = SubProgress.getSubProgress(videoTitle, hostComic.getSubProgress());
-                total = SubProgress.getSubProgress(videoTitle + "_total", hostComic.getSubProgress());
-            }
-
-
-            if (!isFromRead || pos == -1 || total == -1) {
-                pos = loaded.getVideoPosition();
-                total = loaded.getTotal();
-            }
-
-            if (pos > 0 && pos < total - 3000L) {
-                long finalPos = pos;
-                runOnUiThread(() -> {
-                    if (player != null) {
-                        player.seekTo(finalPos);
-                    }
-                });
+        progressRepository.restore(comicId, videoTitle, isFromRead, finalPos -> {
+            if (player != null) {
+                player.seekTo(finalPos);
             }
         });
     }
 
     /**
-     * 保存当前播放进度到 DB（投屏中不保存本地进度）
+     * 保存当前播放进度到 DB（投屏中不保存本地进度，DB 读写见 VideoProgressRepository）
      */
     private void saveProgress() {
         if (comicId == -1L || player == null) return;
-        final long current = player.getCurrentPosition();
-        final long[] duration = {player.getDuration()};
-        ioExecutor.execute(() -> {
-            Comic comic = MyApplication.comicDatabase.comicDao().getComicById(comicId);
-            if (comic != null) {
-                long pos;
-                if (isCasting) {
-                    pos = castDurationMs;
-                } else {
-                    pos = current;
-                }
-
-                if (duration[0] <= 0) {
-                    duration[0] = pos;
-                }
-                // 已基本播放完毕（剩余 < 3 秒）则重置为 0，避免下次恢复到结尾定格
-                if (duration[0] > 0 && pos >= duration[0] - 3000L) {
-                    pos = 0L;
-                }
-
-                // 回写内存中的播放进度（合集列表项），供返回列表页时差量刷新
-                VideoPlaylistStore.PlaylistProvider source = VideoPlaylistStore.get();
-                if (source != null) {
-                    source.updateVideoPosition(comicId, pos);
-                }
-
-                if (isFromRead) {
-                    Comic hostComic = source != null ? source.getReaderComic() : null;
-                    if (hostComic != null) {
-                        SubProgress.updateSubProgress(videoTitle, pos, hostComic.getSubProgress());
-                        SubProgress.updateSubProgress(videoTitle + "_total", duration[0], hostComic.getSubProgress());
-                    }
-                } else {
-                    final long lastRead = System.currentTimeMillis();
-                    MyApplication.comicDatabase.comicDao().updateVideoProgress(comicId, pos, lastRead, duration[0]);
-                }
-            }
-        });
+        progressRepository.save(comicId, videoTitle, player.getCurrentPosition(), player.getDuration(),
+                isFromRead, isCasting, castDurationMs);
     }
 
     /**
@@ -426,7 +362,7 @@ public class VideoPlayerActivity extends BaseActivity {
     private final List<Device> devices = new ArrayList<>();
 
     // 投屏状态
-    private boolean isCasting = false;
+    boolean isCasting = false;
     private boolean isCastPaused = false;
 
     /**
@@ -445,7 +381,7 @@ public class VideoPlayerActivity extends BaseActivity {
         isCastPaused = false;
         castDurationMs = 0;
         lastCastPositionMs = 0;
-        cast_device_name.setText("投屏中：" + getDeviceName(device));
+        cast_device_name.setText(getString(R.string.msg_casting_label, getDeviceName(device)));
         cast_title.setText(videoTitle);
         cast_current_time.setText("0:00");
         cast_duration.setText("0:00");
@@ -466,63 +402,10 @@ public class VideoPlayerActivity extends BaseActivity {
             }
         }
         // 开始轮询播放进度
-        stopCastPoll();
-        stopPollTimeOut();
-        startCastPoll();
+        castPollingController.stopPoll();
+        castPollingController.stopPollTimeOut();
+        castPollingController.startPoll();
     }
-
-    /**
-     * 投屏进度轮询间隔（毫秒）
-     */
-    private static final long POLL_INTERVAL_MS = 1000L;
-    /**
-     * 单次轮询超时：超过该时间未收到 GetPositionInfo 回调视为接收端无响应
-     */
-    private static final long POLL_TIMEOUT_MS = 5000L;
-    private final Handler castHandler = new Handler(Looper.getMainLooper());
-    private final Runnable pollRunnable = this::pollPlaybackInfo;
-
-    /**
-     * 开启投屏轮询
-     */
-    private void startCastPoll() {
-        if (isCasting) {
-            castHandler.postDelayed(pollRunnable, POLL_INTERVAL_MS);
-        }
-    }
-
-    /**
-     * 开关闭投屏轮询
-     */
-    private void stopCastPoll() {
-        castHandler.removeCallbacks(pollRunnable);
-    }
-
-    /**
-     * 标记本次 poll 是否已超时（超时后迟到的回调忽略）
-     */
-    private boolean pollTimedOut = false;
-
-    /**
-     * 单次 poll 超时检测：超过 POLL_TIMEOUT_MS 未回调则判定接收端无响应
-     */
-    private final Runnable pollTimeoutRunnable = () -> {
-        pollTimedOut = true;
-        LogUtil.w(TAG, "poll 超时: GetPositionInfo " + POLL_TIMEOUT_MS + "ms 无响应（接收端未回复），继续轮询");
-
-        startCastPoll();
-    };
-
-    /**
-     * 开启单次 poll 超时检测
-     */
-    private void startPollTimeOut() {
-        castHandler.postDelayed(pollTimeoutRunnable, POLL_TIMEOUT_MS);
-    }
-    private void stopPollTimeOut() {
-        castHandler.removeCallbacks(pollTimeoutRunnable);
-    }
-
 
     /**
      * 切换暂停/播放
@@ -542,7 +425,7 @@ public class VideoPlayerActivity extends BaseActivity {
                 @Override
                 public void onFailure(String message) {
                     runOnUiThread(() -> Toast.makeText(VideoPlayerActivity.this,
-                            "恢复播放失败: " + message, Toast.LENGTH_SHORT).show());
+                            getString(R.string.msg_resume_failed, message), Toast.LENGTH_SHORT).show());
                 }
             });
         } else {
@@ -558,7 +441,7 @@ public class VideoPlayerActivity extends BaseActivity {
                 @Override
                 public void onFailure(String message) {
                     runOnUiThread(() -> Toast.makeText(VideoPlayerActivity.this,
-                            "暂停失败: " + message, Toast.LENGTH_SHORT).show());
+                            getString(R.string.msg_pause_failed, message), Toast.LENGTH_SHORT).show());
                 }
             });
         }
@@ -567,12 +450,13 @@ public class VideoPlayerActivity extends BaseActivity {
     /**
      * 停止投屏，从电视端最后进度恢复本机播放
      */
-    private void stopCasting() {
+    @Override
+    public void stopCasting() {
         if (!isCasting) return;
         final long resumePos = lastCastPositionMs;
         dlnaManager.stopCast();
         hideCastOverlay();
-        Toast.makeText(this, "已停止投屏", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.msg_cast_stopped), Toast.LENGTH_SHORT).show();
         // 恢复本机播放，跳到电视端最后进度
         if (player != null && !player.isPlaying()) {
             if (resumePos > 0) {
@@ -586,8 +470,8 @@ public class VideoPlayerActivity extends BaseActivity {
      * 隐藏浮层并停止轮询
      */
     private void hideCastOverlay() {
-        stopCastPoll();
-        stopPollTimeOut();
+        castPollingController.stopPoll();
+        castPollingController.stopPollTimeOut();
         isCasting = false;
         isCastPaused = false;
         castDurationMs = 0;
@@ -600,84 +484,6 @@ public class VideoPlayerActivity extends BaseActivity {
         }
         // 恢复 ExoPlayer 控制器
         player_view.setUseController(true);
-    }
-
-    /**
-     * 轮询电视端播放进度并刷新 UI
-     */
-    private void pollPlaybackInfo() {
-        if (!isCasting) return;
-
-        pollTimedOut = false;
-        stopPollTimeOut();
-        startPollTimeOut();
-        dlnaManager.getPlaybackInfo(new DlnaManager.PlaybackInfoListener() {
-            @Override
-            public void onResult(long positionMs, long durationMs, String transportState) {
-                runOnUiThread(() -> {
-                    LogUtil.e(TAG, "pollPlaybackInfo: positionMs=" + positionMs + " durationMs=" + durationMs + " transportState=" + transportState);
-                    stopPollTimeOut();
-                    // 超时已触发并已重新调度，忽略迟到响应
-                    if (pollTimedOut) return;
-                    if (!isCasting) return;
-
-                    // 接收端已停止/结束播放：退出投屏态（stopCasting 会发送 Stop 清理接收端）
-                    if ("STOPPED".equals(transportState)) {
-                        stopCasting();
-                        return;
-                    }
-
-                    // 同步播放/暂停按钮（接收端可能自行暂停/恢复）
-                    if ("PAUSED_PLAYBACK".equals(transportState)) {
-                        if (!isCastPaused) {
-                            isCastPaused = true;
-                            cast_play_pause.setImageResource(android.R.drawable.ic_media_play);
-                        }
-                    } else if ("PLAYING".equals(transportState)) {
-                        if (isCastPaused) {
-                            isCastPaused = false;
-                            cast_play_pause.setImageResource(android.R.drawable.ic_media_pause);
-                        }
-                    }
-                    if (!isUserSeeking && durationMs > 0) {
-                        castDurationMs = durationMs;
-                        cast_duration.setText(DlnaManager.formatTimeReadable(durationMs));
-                    }
-                    if (positionMs > 0) {
-                        lastCastPositionMs = positionMs;
-                    }
-
-                    cachedPositionMs = positionMs;
-                    cachedDurationMs = durationMs;
-                    cast_current_time.setText(DlnaManager.formatTimeReadable(positionMs));
-                    // 用户拖动时不更新 SeekBar，避免抖动
-                    if (!isUserSeeking && castDurationMs > 0) {
-                        int progress = (int) (positionMs * cast_seekbar.getMax() / castDurationMs);
-                        cast_seekbar.setProgress(progress);
-                    }
-                    if (positionMs >= durationMs && "PAUSED_PLAYBACK".equals(transportState)) {
-                        PlayNextVideo();
-                        if (isCasting) {
-                            castToDevice(false);
-                        }
-                    }
-
-                    // 安排下一次轮询
-                    startCastPoll();
-                });
-            }
-
-            @Override
-            public void onFailure(String message) {
-                runOnUiThread(() -> {
-                    stopPollTimeOut();
-                    if (pollTimedOut) return;
-
-                    // 失败时也继续轮询，避免一次网络抖动就停掉
-                    startCastPoll();
-                });
-            }
-        });
     }
 
 
@@ -696,7 +502,7 @@ public class VideoPlayerActivity extends BaseActivity {
             if (position < devices.size()) {
                 device = devices.get(position);
                 deviceDialog.dismiss();
-                Toast.makeText(this, "正在投屏到 " + getDeviceName(device), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.msg_casting_to, getDeviceName(device)), Toast.LENGTH_SHORT).show();
                 if (receiverMode) {
                     castUriToDevice(true);
                 } else {
@@ -706,10 +512,10 @@ public class VideoPlayerActivity extends BaseActivity {
         });
 
         deviceDialog = new AlertDialog.Builder(this)
-                .setTitle("选择投屏设备")
-                .setMessage("搜索中...")
+                .setTitle(getString(R.string.title_select_cast_device))
+                .setMessage(getString(R.string.msg_cast_searching))
                 .setView(listView)
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .setOnDismissListener(d -> {
                     deviceAdapter = null;
                     deviceDialog = null;
@@ -741,8 +547,8 @@ public class VideoPlayerActivity extends BaseActivity {
         deviceAdapter.addAll(names);
         deviceAdapter.notifyDataSetChanged();
         deviceDialog.setMessage(devices.isEmpty()
-                ? "搜索中...未发现设备"
-                : "已发现 " + devices.size() + " 个设备，点击投屏");
+                ? getString(R.string.msg_cast_search_no_device)
+                : getString(R.string.msg_cast_found_devices, devices.size()));
     }
 
     /**
@@ -764,6 +570,7 @@ public class VideoPlayerActivity extends BaseActivity {
      * 投屏到设备（本地视频）
      * @param isChangeCast 是否改变了投屏设备，true:改变了投屏设备，false:还是原来的设备
      */
+    @Override
     public void castToDevice(boolean isChangeCast) {
         long startPos = player != null ? player.getCurrentPosition() : 0;
 
@@ -773,10 +580,10 @@ public class VideoPlayerActivity extends BaseActivity {
                     public void onSuccess() {
                         runOnUiThread(() -> {
                             Toast.makeText(VideoPlayerActivity.this,
-                                    "投屏成功", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.msg_cast_success), Toast.LENGTH_SHORT).show();
                             onCastStarted(device);
                             if (player != null && player.getCurrentPosition() > 0) {
-                                castHandler.postDelayed(() ->
+                                mainHandler.postDelayed(() ->
                                         castSeek(player.getCurrentPosition()), 5000);
                             }
                         });
@@ -785,7 +592,7 @@ public class VideoPlayerActivity extends BaseActivity {
                     @Override
                     public void onFailure(String message) {
                         runOnUiThread(() -> Toast.makeText(
-                                VideoPlayerActivity.this, "投屏失败: " + message,
+                                VideoPlayerActivity.this, getString(R.string.msg_cast_failed, message),
                                 Toast.LENGTH_LONG).show());
                     }
                 });
@@ -804,10 +611,10 @@ public class VideoPlayerActivity extends BaseActivity {
                     public void onSuccess() {
                         runOnUiThread(() -> {
                             Toast.makeText(VideoPlayerActivity.this,
-                                    "投屏成功", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.msg_cast_success), Toast.LENGTH_SHORT).show();
                             onCastStarted(device);
                             if (player != null && player.getCurrentPosition() > 0) {
-                                castHandler.postDelayed(() ->
+                                mainHandler.postDelayed(() ->
                                         castSeek(player.getCurrentPosition()), 5000);
                             }
                         });
@@ -816,10 +623,74 @@ public class VideoPlayerActivity extends BaseActivity {
                     @Override
                     public void onFailure(String message) {
                         runOnUiThread(() -> Toast.makeText(
-                                VideoPlayerActivity.this, "投屏失败: " + message,
+                                VideoPlayerActivity.this, getString(R.string.msg_cast_failed, message),
                                 Toast.LENGTH_LONG).show());
                     }
                 });
+    }
+
+
+    // ========================= CastPollingController.Host 实现 =========================
+
+    @Override
+    public boolean isCasting() {
+        return isCasting;
+    }
+
+    @Override
+    public boolean isCastPaused() {
+        return isCastPaused;
+    }
+
+    @Override
+    public void setCastPaused(boolean paused) {
+        isCastPaused = paused;
+    }
+
+    @Override
+    public void setCastPlayPauseIcon(int resId) {
+        cast_play_pause.setImageResource(resId);
+    }
+
+    @Override
+    public boolean isUserSeeking() {
+        return isUserSeeking;
+    }
+
+    @Override
+    public long getCastDurationMs() {
+        return castDurationMs;
+    }
+
+    @Override
+    public void setCastDurationMs(long durationMs) {
+        castDurationMs = durationMs;
+    }
+
+    @Override
+    public void showCastDurationText(long durationMs) {
+        cast_duration.setText(DlnaManager.formatTimeReadable(durationMs));
+    }
+
+    @Override
+    public void showCastCurrentTimeText(long positionMs) {
+        cast_current_time.setText(DlnaManager.formatTimeReadable(positionMs));
+    }
+
+    @Override
+    public void updateCastSeekBarProgress(long positionMs) {
+        int progress = (int) (positionMs * cast_seekbar.getMax() / castDurationMs);
+        cast_seekbar.setProgress(progress);
+    }
+
+    @Override
+    public void setLastCastPositionMs(long positionMs) {
+        lastCastPositionMs = positionMs;
+    }
+
+    @Override
+    public DlnaManager getDlnaManager() {
+        return dlnaManager;
     }
 
 
@@ -846,7 +717,7 @@ public class VideoPlayerActivity extends BaseActivity {
         dlnaManager.setDeviceListener(null);
         if (receiverMode) {
             // Activity 不可见时暂停进度上报，但保持播放（音频继续）与桥接注册
-            receiverUpdateHandler.removeCallbacks(receiverUpdateRunnable);
+            mainHandler.removeCallbacks(receiverUpdateRunnable);
             return;
         }
     }
@@ -859,8 +730,8 @@ public class VideoPlayerActivity extends BaseActivity {
             return;
         }
         // 暂停轮询，Activity 不可见时无需刷新 UI
-        stopCastPoll();
-        stopPollTimeOut();
+        castPollingController.stopPoll();
+        castPollingController.stopPollTimeOut();
         // 保存播放进度（在 pause 之前取 currentPosition，避免被 reset）
         if (!isFinishing() && !isDestroyed()) {
             saveProgress();
@@ -878,7 +749,7 @@ public class VideoPlayerActivity extends BaseActivity {
         }
         // 投屏中恢复轮询；未投屏则恢复本机播放
         if (isCasting) {
-            startCastPoll();
+            castPollingController.startPoll();
         } else if (player != null) {
             player.setPlayWhenReady(true);
         }
@@ -887,8 +758,8 @@ public class VideoPlayerActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        receiverUpdateHandler.removeCallbacks(receiverUpdateRunnable);
-        gestureHandler.removeCallbacks(hideHintRunnable);
+        mainHandler.removeCallbacks(receiverUpdateRunnable);
+        gestureHandler.removeHintCallback();
 
         dlnaManager.release();
 
@@ -904,8 +775,8 @@ public class VideoPlayerActivity extends BaseActivity {
             return;
         }
         // 普通模式：停止轮询、停止投屏、停止本地 HTTP 服务、解绑 DLNA 服务
-        stopCastPoll();
-        stopPollTimeOut();
+        castPollingController.stopPoll();
+        castPollingController.stopPollTimeOut();
         // 释放前再保存一次进度，覆盖 onPause 之后到退出之间的播放位置
         saveProgress();
         isCasting = false;
@@ -940,7 +811,7 @@ public class VideoPlayerActivity extends BaseActivity {
             videoPath = null;
             videoTitle = getIntent().getStringExtra(EXTRA_CAST_TITLE);
             if (videoTitle == null) {
-                videoTitle = "投屏接收";
+                videoTitle = getString(R.string.title_cast_receive);
             }
             comicId = -1L;
 
@@ -949,7 +820,7 @@ public class VideoPlayerActivity extends BaseActivity {
             DlnaRendererManager.getInstance().stop();
 
             if (videoPath == null || !new File(videoPath).exists()) {
-                Toast.makeText(this, "视频文件不存在", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.msg_video_not_found), Toast.LENGTH_SHORT).show();
                 finish();
             }
             videoTitle = getIntent().getStringExtra(EXTRA_TITLE);
@@ -1025,7 +896,7 @@ public class VideoPlayerActivity extends BaseActivity {
         tv_name.setText(videoTitle);
 
         // 手势交互：双击快进/退、横向滑动 seek、纵向滑动调亮度/音量
-        setupGestures();
+        gestureHandler.setupGestures();
 
         if (receiverMode) {
             applyReceiverModeUi();
@@ -1048,10 +919,10 @@ public class VideoPlayerActivity extends BaseActivity {
 
         castConfirmDone = true;
         new AlertDialog.Builder(VideoPlayerActivity.this)
-                .setTitle("投屏请求")
-                .setMessage(caster + "要向你投屏\n" + videoTitle)
-                .setPositiveButton("接受", (d, w) -> configView())
-                .setNegativeButton("拒绝", (d, w) -> {
+                .setTitle(getString(R.string.title_cast_request))
+                .setMessage(getString(R.string.msg_cast_incoming, caster, videoTitle))
+                .setPositiveButton(getString(R.string.accept), (d, w) -> configView())
+                .setNegativeButton(getString(R.string.refuse), (d, w) -> {
                     DlnaRendererManager.getInstance().onStop();
                     finish();
                 })
@@ -1066,7 +937,7 @@ public class VideoPlayerActivity extends BaseActivity {
         cast_button.setVisibility(View.VISIBLE);
         play_list.setVisibility(View.GONE);
         cast_control_panel.setVisibility(View.GONE);
-        Toast.makeText(this, "接收投屏中", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.msg_cast_receiving), Toast.LENGTH_SHORT).show();
     }
 
     // =========== 普通模式（按钮事件 ===========
@@ -1142,24 +1013,6 @@ public class VideoPlayerActivity extends BaseActivity {
         player.setMediaSource(mediaSource);
         player.prepare();
         player.setPlayWhenReady(true);
-        // 仅普通模式恢复上次播放进度（接收模式不持久化）
-        /*if (!receiverMode) {
-            if (comicId == -1L) return;
-            ioExecutor.execute(() -> {
-                Comic loaded = MyApplication.comicDatabase.comicDao().getComicById(comicId);
-                if (loaded == null || loaded.getVideoPosition() <= 0*//* || loaded.getFileType().equals(FileType.MUSIC.getCode())*//*)
-                    return;
-
-                final long pos = loaded.getVideoPosition();
-                if (pos < loaded.getTotal() - 3000L) {
-                    runOnUiThread(() -> {
-                        if (player != null) {
-                            player.seekTo(pos);
-                        }
-                    });
-                }
-            });
-        }*/
 
     }
 
@@ -1231,13 +1084,13 @@ public class VideoPlayerActivity extends BaseActivity {
             @Override
             public void onSuccess() {
                 // 拖动后立即拉取一次进度
-                pollPlaybackInfo();
+                castPollingController.pollPlaybackInfo();
             }
 
             @Override
             public void onFailure(String message) {
                 Toast.makeText(VideoPlayerActivity.this,
-                        "拖动失败: " + message, Toast.LENGTH_SHORT).show();
+                        getString(R.string.msg_seek_failed, message), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -1261,241 +1114,8 @@ public class VideoPlayerActivity extends BaseActivity {
 
 
 
-    // ========================= 手势交互 =========================
-
-    /**
-     * 双击快进/快退步长（毫秒）
-     */
-    private static final long DOUBLE_TAP_SEEK_MS = 10_000L;
-    private static final long LONG_TAP_SEEK_MS = 1_000L;
-    private static final long LONG_TAP_REPEAT_INTERVAL_MS = 300L;
-
-
-    /**
-     * 横向滑动：一屏宽度对应的 seek 量（毫秒），相对起拖位置增减
-     */
-    private static final long SWIPE_SEEK_MS_PER_WIDTH = 90_000L;
-
-    private GestureDetector gestureDetector;
-
-    // ==== 音量相关 ====
-    private AudioManager audioManager;
-    private int streamMaxVolume;
-
-
-    /**
-     * 在 player_view 上挂手势：
-     * <ul>
-     *   <li>单击：切换控制器显示/隐藏（替代 PlayerView 默认点击行为）</li>
-     *   <li>双击左半屏：后退 {@link #DOUBLE_TAP_SEEK_MS}；双击右半屏：前进</li>
-     *   <li>横向滑动：相对起拖位置 seek（一屏宽度 = {@link #SWIPE_SEEK_MS_PER_WIDTH}）</li>
-     *   <li>左半屏纵向滑动：调节屏幕亮度；右半屏纵向滑动：调节媒体音量</li>
-     * </ul>
-     * 投屏到电视（isCasting）或无播放器时禁用，交还默认处理。
-     */
-    @SuppressLint("ClickableViewAccessibility")
-    private void setupGestures() {
-        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        if (audioManager != null) {
-            streamMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        }
-        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
-            @OptIn(markerClass = UnstableApi.class)
-            @Override
-            public boolean onSingleTapConfirmed(@NonNull MotionEvent e) {
-                if (player_view.isControllerFullyVisible()) {
-                    player_view.hideController();
-                } else {
-                    player_view.showController();
-                }
-                return true;
-            }
-
-            @Override
-            public void onLongPress(@NonNull MotionEvent e) {
-                if (player == null || isCasting) return;
-                long dur = player.getDuration();
-                if (dur <= 0) return;
-                longSeekForward = e.getX() >= player_view.getWidth() / 2f;
-                longSeekRunnable.run(); // 立即执行一次
-            }
-
-            @Override
-            public boolean onDoubleTap(@NonNull MotionEvent e) {
-                if (player == null || isCasting) return true;
-                long dur = player.getDuration();
-                if (dur <= 0) return true;
-
-                if (e.getX() < player_view.getWidth() / 3f) {
-                    long target = player.getCurrentPosition() - DOUBLE_TAP_SEEK_MS;
-                    target = Math.max(0, Math.min(target, dur));
-                    player.seekTo(target);
-                    showGestureHint(("◀ ")
-                            + DlnaManager.formatTimeReadable(target));
-                } else if (e.getX() > (2 * player_view.getWidth()) / 3f) {
-                    long target = player.getCurrentPosition() + DOUBLE_TAP_SEEK_MS;
-                    target = Math.max(0, Math.min(target, dur));
-                    player.seekTo(target);
-                    showGestureHint(("▶ ")
-                            + DlnaManager.formatTimeReadable(target));
-                } else {
-                    if (player.isPlaying()) {
-                        player.pause();
-                    } else {
-                        player.setPlayWhenReady(true);
-                    }
-                }
-
-                return true;
-            }
-        });
-        player_view.setOnTouchListener((v, event) -> handleGestureTouch(event));
-    }
-
-    private final Handler gestureHandler = new Handler(Looper.getMainLooper());
-
-    private static final int MODE_NONE = 0, MODE_SEEK = 1, MODE_BRIGHTNESS = 2, MODE_VOLUME = 3;
-    private int gestureMode = MODE_NONE;
-
-    private float downX, downY;
-    private boolean leftHalf;
-
-    private long seekStartPosMs;
-    private long seekTargetPosMs;
-
-
-    private float startBrightness;
-
-    private int startVolume;
-
-    private boolean handleGestureTouch(MotionEvent event) {
-        if (player == null || isCasting) {
-            gestureMode = MODE_NONE;
-            return false;
-        }
-        // 交给 GestureDetector 识别单击/双击
-        gestureDetector.onTouchEvent(event);
-
-        float x = event.getX();
-        float y = event.getY();
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                downX = x;
-                downY = y;
-                leftHalf = downX < player_view.getWidth() / 2f;
-                gestureMode = MODE_NONE;
-                seekStartPosMs = player.getCurrentPosition();
-                seekTargetPosMs = seekStartPosMs;
-                startBrightness = getWindow().getAttributes().screenBrightness;
-                if (startBrightness < 0) startBrightness = 0.5f; // 未设过则按 50% 起算
-                startVolume = audioManager != null
-                        ? audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) : 0;
-                break;
-
-            case MotionEvent.ACTION_MOVE: {
-                float dx = x - downX;
-                float dy = y - downY;
-                float slop = ViewConfiguration.get(this).getScaledTouchSlop();
-                if (gestureMode == MODE_NONE) {
-                    if (Math.abs(dx) > slop && Math.abs(dx) > Math.abs(dy)
-                            && player.getDuration() > 0) {
-                        gestureMode = MODE_SEEK;
-                    } else if (Math.abs(dy) > slop && Math.abs(dy) > Math.abs(dx)) {
-                        gestureMode = leftHalf ? MODE_BRIGHTNESS : MODE_VOLUME;
-                    }
-                }
-                if (gestureMode == MODE_SEEK) {
-                    long dur = player.getDuration();
-                    long delta = (long) (dx / player_view.getWidth() * SWIPE_SEEK_MS_PER_WIDTH);
-                    long target = seekStartPosMs + delta;
-                    target = Math.max(0, Math.min(target, dur));
-                    seekTargetPosMs = target;
-                    showGestureHint(DlnaManager.formatTimeReadable(target)
-                            + " / " + DlnaManager.formatTimeReadable(dur));
-                } else if (gestureMode == MODE_BRIGHTNESS) {
-                    float b = startBrightness - dy / player_view.getHeight();
-                    applyBrightness(Math.max(0f, Math.min(1f, b)));
-                } else if (gestureMode == MODE_VOLUME) {
-                    int v = startVolume
-                            - (int) (dy / player_view.getHeight() * streamMaxVolume);
-                    applyVolume(Math.max(0, Math.min(v, streamMaxVolume)));
-                }
-                break;
-            }
-
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                gestureHandler.removeCallbacks(longSeekRunnable);
-                if (gestureMode == MODE_SEEK) {
-                    player.seekTo(seekTargetPosMs);
-                }
-                gestureMode = MODE_NONE;
-                break;
-            default:
-                break;
-        }
-        return true;
-    }
-
-    // ===== 长按连续快进/快退 =====
-    private boolean longSeekForward;
-    private final Runnable longSeekRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (player == null || isCasting) return;
-            long dur = player.getDuration();
-            if (dur <= 0) return;
-            long target = player.getCurrentPosition() + (longSeekForward ? LONG_TAP_SEEK_MS : -LONG_TAP_SEEK_MS);
-            target = Math.max(0, Math.min(target, dur));
-            player.seekTo(target);
-            showGestureHint((longSeekForward ? "▶ " : "◀ ") + DlnaManager.formatTimeReadable(target));
-            gestureHandler.postDelayed(this, LONG_TAP_REPEAT_INTERVAL_MS);
-        }
-    };
-
-
-    private void applyBrightness(float b) {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        lp.screenBrightness = b;
-        getWindow().setAttributes(lp);
-        showGestureHint("亮度 " + (int) (b * 100) + "%");
-    }
-
-    private void applyVolume(int v) {
-        if (audioManager == null) return;
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0);
-        showGestureHint("音量 " + (streamMaxVolume > 0 ? v * 100 / streamMaxVolume : 0) + "%");
-    }
-
-    /**
-     * 手势提示自动隐藏延时（毫秒）
-     */
-    private static final int GESTURE_HINT_HIDE_MS = 600;
-
-    private void showGestureHint(String text) {
-        if (gesture_indicator == null) return;
-        gesture_indicator.setText(text);
-        gesture_indicator.setVisibility(View.VISIBLE);
-        gestureHandler.removeCallbacks(hideHintRunnable);
-        gestureHandler.postDelayed(hideHintRunnable, GESTURE_HINT_HIDE_MS);
-    }
-
-    private final Runnable hideHintRunnable = () -> {
-        if (gesture_indicator != null) {
-            gesture_indicator.setVisibility(View.GONE);
-        }
-    };
-
-
     // ========================= 接收模式：PlayerBridge =========================
 
-    /**
-     * 缓存的播放位置/时长，由主线程定期从 ExoPlayer 读取并写入 volatile，
-     * 供 DlnaRendererManager 在 Cling 线程查询 GetPositionInfo 时读取。
-     */
-    private volatile long cachedPositionMs = 0;
-    private volatile long cachedDurationMs = 0;
-    private final Handler receiverUpdateHandler = new Handler(Looper.getMainLooper());
     private final Runnable receiverUpdateRunnable = this::updateReceiverPosition;
 
     private DlnaRendererManager.PlayerBridge playerBridge;
@@ -1545,13 +1165,13 @@ public class VideoPlayerActivity extends BaseActivity {
 
                     if (isNewDevice) {
                         new AlertDialog.Builder(VideoPlayerActivity.this)
-                                .setTitle("投屏请求")
-                                .setMessage(casterName + " 要向你投屏\n" + title)
-                                .setPositiveButton("接受", (d, w) -> {
+                                .setTitle(getString(R.string.title_cast_request))
+                                .setMessage(getString(R.string.msg_cast_incoming, casterName, title))
+                                .setPositiveButton(getString(R.string.accept), (d, w) -> {
                                     DlnaRendererManager.getInstance().setCurrentCasterName(casterName);
                                     playNewCast(uri, title);
                                 })
-                                .setNegativeButton("拒绝", (d, w) -> {
+                                .setNegativeButton(getString(R.string.refuse), (d, w) -> {
                                     DlnaRendererManager.getInstance().onStop();
                                     finish();
                                 })
@@ -1565,12 +1185,12 @@ public class VideoPlayerActivity extends BaseActivity {
 
                 @Override
                 public long getPositionMs() {
-                    return cachedPositionMs;
+                    return castPollingController.cachedPositionMs;
                 }
 
                 @Override
                 public long getDurationMs() {
-                    return cachedDurationMs;
+                    return castPollingController.cachedDurationMs;
                 }
             };
         }
@@ -1580,8 +1200,8 @@ public class VideoPlayerActivity extends BaseActivity {
         if ("PAUSED_PLAYBACK".equals(state) && player != null) {
             player.setPlayWhenReady(false);
         }
-        receiverUpdateHandler.removeCallbacks(receiverUpdateRunnable);
-        receiverUpdateHandler.post(receiverUpdateRunnable);
+        mainHandler.removeCallbacks(receiverUpdateRunnable);
+        mainHandler.post(receiverUpdateRunnable);
     }
 
     /**
@@ -1614,21 +1234,21 @@ public class VideoPlayerActivity extends BaseActivity {
 
 
     /**
-     * 主线程定期读取 ExoPlayer 进度并写入 volatile 缓存，供 Cling 线程查询。
+     * 主线程定期读取 ExoPlayer 进度并写入 volatile 缓存（见 CastPollingController），供 Cling 线程查询。
      */
     private void updateReceiverPosition() {
         if (player == null) {
-            receiverUpdateHandler.postDelayed(receiverUpdateRunnable, 500);
+            mainHandler.postDelayed(receiverUpdateRunnable, 500);
             return;
         }
         if (!isCasting) {
-            cachedPositionMs = player.getCurrentPosition();
+            castPollingController.cachedPositionMs = player.getCurrentPosition();
             long d = player.getDuration();
             // getDuration() 在媒体未就绪时返回 C.TIME_UNSET（巨大负数），需当作 0 处理，
             // 否则接收端会向发送端返回非法时长字符串。
-            cachedDurationMs = (d == C.TIME_UNSET) ? 0 : d;
+            castPollingController.cachedDurationMs = (d == C.TIME_UNSET) ? 0 : d;
         }
-        receiverUpdateHandler.postDelayed(receiverUpdateRunnable, 500);
+        mainHandler.postDelayed(receiverUpdateRunnable, 500);
     }
 
 

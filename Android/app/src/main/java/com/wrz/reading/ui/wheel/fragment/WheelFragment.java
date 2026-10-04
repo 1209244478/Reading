@@ -77,24 +77,11 @@ public class WheelFragment extends BaseFragment {
                     public void initView() {
                         this.setText(R.id.dialog_title, title);
                         this.setText(R.id.dialog_subtitle, message);
-                        this.setText(R.id.btn_confirm, "确认");
+                        this.setText(R.id.btn_confirm, getContext().getString(R.string.btn_confirm));
 
                         this.setClick(R.id.btn_cancel, v -> this.dismiss());
 
                         this.setClick(R.id.btn_confirm, v -> {this.dismiss();});
-                    }
-
-                    @Override
-                    public void setDialogSize() {}
-
-                    @Override
-                    public void onShow() {
-
-                    }
-
-                    @Override
-                    public void onDismiss() {
-
                     }
                 };
             }
@@ -229,7 +216,7 @@ public class WheelFragment extends BaseFragment {
         resultText.setText(MyApplication.app.getString(R.string.message_result, option));
         resultText.setTextColor(ContextCompat.getColor(parentView.getContext(), R.color.apple_red));
 
-        Toast.makeText(parentView.getContext(), "选择了 " + option, Toast.LENGTH_SHORT).show();
+        Toast.makeText(parentView.getContext(), getString(R.string.msg_wheel_choice, option), Toast.LENGTH_SHORT).show();
     }
 
     private void resetWheel() {

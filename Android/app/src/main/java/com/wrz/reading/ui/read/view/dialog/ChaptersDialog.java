@@ -52,22 +52,7 @@ public class ChaptersDialog extends BaseDialog {
 
     @Override
     public void setDialogSize() {
-        if (this.getWindow() != null) {
-            this.getWindow().setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
-
-    @Override
-    public void onShow() {
-
-    }
-
-    @Override
-    public void onDismiss() {
-
+        applySize(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
 }

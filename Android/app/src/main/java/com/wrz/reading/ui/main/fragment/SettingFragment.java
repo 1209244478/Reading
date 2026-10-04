@@ -63,7 +63,7 @@ public class SettingFragment extends BaseFragment {
         });
 
         ll_name.setOnClickListener(v -> {
-            DialogHelper.showTextInputDialog(getActivity(), "设置接收投屏名称", "", "保存", cast_name,
+            DialogHelper.showTextInputDialog(getActivity(), getString(R.string.title_set_cast_name), "", getString(R.string.btn_save), cast_name,
                     text -> {
                         cast_name = text;
                         tv_name.setText(cast_name);

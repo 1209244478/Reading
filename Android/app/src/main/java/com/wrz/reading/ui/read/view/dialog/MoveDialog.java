@@ -1,7 +1,6 @@
 package com.wrz.reading.ui.read.view.dialog;
 
 import android.content.Context;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -36,7 +35,7 @@ public class MoveDialog extends BaseDialog {
         TextView subtitleView = findId(R.id.move_dialog_subtitle);
         RecyclerView listView = findId(R.id.move_target_list);
 
-        subtitleView.setText("选择目标集合");
+        subtitleView.setText(getContext().getString(R.string.select_target_collection));
 
         listView.setLayoutManager(new LinearLayoutManager(getContext()));
         MoveTargetAdapter adapter = new MoveTargetAdapter(targets);
@@ -68,25 +67,5 @@ public class MoveDialog extends BaseDialog {
 
     public void setMoveTitle(String title) {
         setText(R.id.move_dialog_title, title);
-    }
-
-    @Override
-    public void setDialogSize() {
-        if (this.getWindow() != null) {
-            this.getWindow().setLayout(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
-
-    @Override
-    public void onShow() {
-
-    }
-
-    @Override
-    public void onDismiss() {
-
     }
 }

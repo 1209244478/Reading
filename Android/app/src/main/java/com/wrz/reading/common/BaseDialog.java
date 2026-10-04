@@ -43,14 +43,7 @@ public abstract class BaseDialog extends Dialog {
         parentView = LayoutInflater.from(getContext()).inflate(getLayoutId(), null);
         setContentView(parentView);
 
-        if (this.getWindow() != null) {
-            this.getWindow().setLayout(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-
-        // 设置对话框大小
+        // 设置对话框大小（默认 WRAP_CONTENT，子类可覆写调整）
         setDialogSize();
 
         initView();
@@ -59,9 +52,26 @@ public abstract class BaseDialog extends Dialog {
     public abstract int getLayoutId();
     public abstract void initView();
 
-    public abstract void setDialogSize();
-    public abstract void onShow();
-    public abstract void onDismiss();
+    /** 子类可覆写以自定义窗口尺寸，默认 WRAP_CONTENT×WRAP_CONTENT */
+    public void setDialogSize() {
+        applySize(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    /** show 后回调，子类按需覆写 */
+    public void onShow() {
+    }
+
+    /** dismiss 后回调，子类按需覆写 */
+    public void onDismiss() {
+    }
+
+    /** 设置窗口尺寸（内部对 getWindow() 判空） */
+    protected void applySize(int width, int height) {
+        Window window = getWindow();
+        if (window != null) {
+            window.setLayout(width, height);
+        }
+    }
 
 
     @Override

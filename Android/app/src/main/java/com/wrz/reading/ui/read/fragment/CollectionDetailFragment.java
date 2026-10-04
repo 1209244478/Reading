@@ -44,6 +44,7 @@ import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 import com.wrz.reading.ui.read.adapter.ComicAdapter;
 import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
 import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.data.ComicSizeCalculator;
 import com.wrz.reading.ui.read.data.VideoPlaylistStore;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
@@ -53,7 +54,6 @@ import com.wrz.reading.ui.read.utils.DiffCallBack;
 import com.wrz.reading.ui.read.utils.FileSorter;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.VideoUtils;
-import com.wrz.reading.ui.read.utils.ZipUtils;
 import com.wrz.reading.ui.read.view.dialog.MoveDialog;
 
 import java.io.File;
@@ -199,7 +199,7 @@ public class CollectionDetailFragment extends BaseFragment {
 
         // 设置 Toolbar 标题与返回按钮
         if (mCommonToolbar != null) {
-            mCommonToolbar.setTitle(collectionName.isEmpty() ? "未分组" : collectionName);
+            mCommonToolbar.setTitle(collectionName.isEmpty() ? getString(R.string.uncategorized) : collectionName);
             mCommonToolbar.setNavigationOnClickListener(v -> navController.navigateUp());
             // 挂载溢出菜单并处理点击
             mCommonToolbar.inflateMenu(R.menu.collection_detail_menu);
@@ -368,9 +368,8 @@ public class CollectionDetailFragment extends BaseFragment {
                 comics = MyApplication.comicDatabase.comicDao().getComicsByCollection(collectionId);
             }
 
-            final long[] totalSize = getComicSize(comics);
-
-            setTotalSize(totalSize[0], totalSize[1]);
+            // 计算每个漫画的缓存大小（用于列表展示），不再每次加载都写库
+            ComicSizeCalculator.calculate(comics);
 
             // 在后台线程构建临时列表，避免与主线程遍历 allComics 竞态
             List<Comic> tempList = new ArrayList<>(comics);
@@ -390,39 +389,29 @@ public class CollectionDetailFragment extends BaseFragment {
         });
     }
 
-    private long[] getComicSize(List<Comic> comics) {
-        final long[] totalSize = {0, 0};
-        comics.forEach(comic -> {
-            /*FileType fileType = comic.getFileTypeEnum();*/
-
-            File file = new File(comic.getPath());
-            if (file.exists()) {
-                totalSize[1] += file.length();
-            }
-
-            long size = 0;
-            File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
-            if (tempExtractDir != null && tempExtractDir.isDirectory()) {
-                size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
-            }
-            totalSize[0] += size;
-
-            comic.setCacheSize(size);
-
+    /**
+     * 将指定集合的缓存/文件总大小写入数据库（后台执行）。
+     * 仅在显式增删（导入/删除/移动）后调用，避免每次加载页面都产生写库副作用。
+     */
+    private void persistCollectionSize(long targetCollectionId) {
+        if (targetCollectionId == CollectionFragment.UNCATEGORIZED_ID) {
+            return; // 未分组没有集合记录，无需持久化
+        }
+        singleThread.execute(() -> {
+            List<Comic> comics = MyApplication.comicDatabase.comicDao()
+                    .getComicsByCollection(targetCollectionId);
+            long[] totalSize = ComicSizeCalculator.calculate(comics);
+            updateCollectionSizeInDb(targetCollectionId, totalSize[0], totalSize[1]);
         });
-        return totalSize;
     }
 
-    private void setTotalSize(long totalSize, long fileSize) {
-        singleThread.execute(() -> {
-            Collection collection = MyApplication.comicDatabase.collectionDao().getCollectionById(collectionId);
-
-            if (collection != null) {
-                collection.setCacheSize(totalSize);
-                collection.setFileSize(fileSize);
-                MyApplication.comicDatabase.collectionDao().updateCollection(collection);
-            }
-        });
+    private static void updateCollectionSizeInDb(long collectionId, long cacheSize, long fileSize) {
+        Collection collection = MyApplication.comicDatabase.collectionDao().getCollectionById(collectionId);
+        if (collection != null) {
+            collection.setCacheSize(cacheSize);
+            collection.setFileSize(fileSize);
+            MyApplication.comicDatabase.collectionDao().updateCollection(collection);
+        }
     }
 
     /**
@@ -481,7 +470,7 @@ public class CollectionDetailFragment extends BaseFragment {
     private void openVideoWithExternalPlayer(Comic comic) {
         File file = new File(comic.getPath());
         if (!file.exists()) {
-            Toast.makeText(activity, "视频文件不存在", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, getString(R.string.msg_video_not_found), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -490,7 +479,7 @@ public class CollectionDetailFragment extends BaseFragment {
         if (file.isDirectory()) {
             List<File> videos = FileUtils.getVideoFiles(file);
             if (videos.isEmpty()) {
-                Toast.makeText(activity, "目录中没有视频文件", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_dir_no_video), Toast.LENGTH_SHORT).show();
                 return;
             }
             videoPath = videos.get(0).getAbsolutePath();
@@ -569,7 +558,7 @@ public class CollectionDetailFragment extends BaseFragment {
     private void onDeleteFabClick() {
         List<Comic> selected = getSelectedComics();
         if (selected.isEmpty()) {
-            Toast.makeText(activity, "请先选择漫画", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, getString(R.string.msg_select_comics_first), Toast.LENGTH_SHORT).show();
             return;
         }
         DialogHelper.showDeleteConfirmDialog(activity,
@@ -586,8 +575,9 @@ public class CollectionDetailFragment extends BaseFragment {
                     new File(c.getPath()).delete();
                 }
             }
+            persistCollectionSize(collectionId);
             runOnUiIfAlive(() -> {
-                Toast.makeText(activity, "已删除 " + comics.size() + " 本", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_deleted_comics, comics.size()), Toast.LENGTH_SHORT).show();
                 toggleSelectMode();
                 loadComics();
             });
@@ -602,7 +592,7 @@ public class CollectionDetailFragment extends BaseFragment {
     private void onMoveClick() {
         List<Comic> selected = getSelectedComics();
         if (selected.isEmpty()) {
-            Toast.makeText(activity, "请先选择漫画", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, getString(R.string.msg_select_comics_first), Toast.LENGTH_SHORT).show();
             return;
         }
         showMoveDialog(selected);
@@ -624,7 +614,7 @@ public class CollectionDetailFragment extends BaseFragment {
             }
             runOnUiIfAlive(() -> {
                 if (targets.isEmpty()) {
-                    Toast.makeText(activity, "没有可移动的目标集合", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, getString(R.string.msg_no_move_target), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -654,7 +644,7 @@ public class CollectionDetailFragment extends BaseFragment {
         singleThread.execute(() -> {
             long newId = MyApplication.comicDatabase.collectionDao().insertCollection(Collection.create(name));
             runOnUiIfAlive(() -> {
-                Toast.makeText(activity, "已创建集合「" + name + "」", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_collection_created, name), Toast.LENGTH_SHORT).show();
                 // 直接移动到新集合
                 moveComics(comics, newId);
             });
@@ -684,8 +674,11 @@ public class CollectionDetailFragment extends BaseFragment {
             } else {
                 MyApplication.comicDatabase.comicDao().moveToCollection(targetCollectionId, ids);
             }
+            // 源集合与目标集合的大小都发生变化，一并持久化
+            persistCollectionSize(collectionId);
+            persistCollectionSize(targetCollectionId);
             runOnUiIfAlive(() -> {
-                Toast.makeText(activity, "已移动 " + ids.size() + " 本", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_moved_comics, ids.size()), Toast.LENGTH_SHORT).show();
                 toggleSelectMode();
                 loadComics();
             });
@@ -710,7 +703,7 @@ public class CollectionDetailFragment extends BaseFragment {
             }
         }
         if (shareableFiles.isEmpty()) {
-            Toast.makeText(activity, "选中的项目中没有可分享的文件", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, getString(R.string.msg_no_shareable_file), Toast.LENGTH_SHORT).show();
             return;
         }
         FileUtils.shareFiles(activity, shareableFiles);
@@ -760,12 +753,12 @@ public class CollectionDetailFragment extends BaseFragment {
             runOnUiIfAlive(() -> {
                 dismissLoading();
                 if (importDir == null) {
-                    Toast.makeText(activity, "无法读取所选文件夹", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, getString(R.string.msg_cannot_read_folder), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 List<String> paths = collectSafImportPaths(importDir);
                 if (paths.isEmpty()) {
-                    Toast.makeText(activity, "所选文件夹中没有可导入的内容", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, getString(R.string.msg_folder_no_import_content), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 importComicsFromFolders(paths);
@@ -937,10 +930,11 @@ public class CollectionDetailFragment extends BaseFragment {
                     imported++;
                 }
             }
+            persistCollectionSize(collectionId);
             final int count = imported;
             runOnUiIfAlive(() -> {
                 dismissLoading();
-                Toast.makeText(activity, "已导入 " + count + " 本漫画", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_imported_comics, count), Toast.LENGTH_SHORT).show();
                 loadComics();
             });
         });
@@ -1009,7 +1003,7 @@ public class CollectionDetailFragment extends BaseFragment {
 
             runOnUiIfAlive(() -> {
                 loadComics(true);
-                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_renamed), Toast.LENGTH_SHORT).show();
             });
         });
     }

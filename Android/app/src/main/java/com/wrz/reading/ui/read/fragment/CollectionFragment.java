@@ -140,7 +140,7 @@ public class CollectionFragment extends BaseFragment {
 
             runOnUiIfAlive(() -> {
                 loadCollections(true);
-                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_renamed), Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -223,7 +223,7 @@ public class CollectionFragment extends BaseFragment {
         singleThread.execute(() -> {
             MyApplication.comicDatabase.collectionDao().insertCollection(Collection.create(name));
             runOnUiIfAlive(() -> {
-                Toast.makeText(activity, "已创建集合「" + name + "」", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_collection_created, name), Toast.LENGTH_SHORT).show();
                 loadCollections(true);
             });
         });
@@ -261,16 +261,16 @@ public class CollectionFragment extends BaseFragment {
             }
         }
         if (selected.isEmpty()) {
-            Toast.makeText(activity, "请选择要删除的集合（未分组不可删除）", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, getString(R.string.msg_select_delete_collection), Toast.LENGTH_SHORT).show();
             return;
         }
 
         new AlertDialog.Builder(activity)
-                .setTitle("删除集合")
-                .setMessage("删除 " + selected.size() + " 个集合\n\n是否同时删除集合中的所有漫画？")
-                .setPositiveButton("删除集合和漫画", (dialog, which) -> deleteCollections(selected, true))
-                .setNegativeButton("仅删除集合", (dialog, which) -> deleteCollections(selected, false))
-                .setNeutralButton("取消", null)
+                .setTitle(getString(R.string.title_delete_collection))
+                .setMessage(getString(R.string.msg_delete_collections_confirm, selected.size()))
+                .setPositiveButton(getString(R.string.btn_delete_collection_and_comics), (dialog, which) -> deleteCollections(selected, true))
+                .setNegativeButton(getString(R.string.btn_delete_collection_only), (dialog, which) -> deleteCollections(selected, false))
+                .setNeutralButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -285,7 +285,7 @@ public class CollectionFragment extends BaseFragment {
                 MyApplication.comicDatabase.collectionDao().deleteCollection(c);
             }
             runOnUiIfAlive(() -> {
-                Toast.makeText(activity, "已删除 " + collections.size() + " 个集合", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_deleted_collections, collections.size()), Toast.LENGTH_SHORT).show();
                 toggleSelectMode();
                 loadCollections(true);
             });
@@ -321,7 +321,7 @@ public class CollectionFragment extends BaseFragment {
             }
             runOnUiIfAlive(() -> {
                 loadCollections(true);
-                Toast.makeText(activity, "已重命名", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, getString(R.string.msg_renamed), Toast.LENGTH_SHORT).show();
             });
         });
     }*/

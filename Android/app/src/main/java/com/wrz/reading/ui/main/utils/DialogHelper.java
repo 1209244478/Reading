@@ -46,27 +46,12 @@ public final class DialogHelper {
             public void initView() {
                 this.setText(R.id.dialog_title, title);
                 this.setText(R.id.dialog_subtitle, message);
-                this.setText(R.id.btn_confirm, "确认");
+                this.setText(R.id.btn_confirm, getContext().getString(R.string.btn_confirm));
 
                 this.setClick(R.id.btn_cancel, v -> this.dismiss());
 
                 this.setClick(R.id.btn_confirm, v -> {this.dismiss();
                     if (onConfirm != null) onConfirm.run();});
-            }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
             }
         }.show();
     }
@@ -85,27 +70,12 @@ public final class DialogHelper {
             public void initView() {
                 this.setText(R.id.dialog_title, title);
                 this.setText(R.id.dialog_subtitle, message);
-                this.setText(R.id.btn_confirm, "确认");
+                this.setText(R.id.btn_confirm, getContext().getString(R.string.btn_confirm));
 
                 this.setClick(R.id.btn_cancel, v -> this.dismiss());
 
                 this.setClick(R.id.btn_confirm, v -> {this.dismiss();
                     if (onConfirm != null) onConfirm.run();});
-            }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
             }
         }.show();
     }
@@ -132,7 +102,7 @@ public final class DialogHelper {
             public void initView() {
                 this.setText(R.id.dialog_title, title);
                 this.setText(R.id.dialog_subtitle, message);
-                this.setText(R.id.btn_confirm, "确认");
+                this.setText(R.id.btn_confirm, getContext().getString(R.string.btn_confirm));
 
                 SwitchCompat switch_confirm = this.findId(R.id.switch_confirm);
 
@@ -140,21 +110,6 @@ public final class DialogHelper {
 
                 this.setClick(R.id.btn_confirm, v -> {this.dismiss();
                             if (onDelConfirm != null) onDelConfirm.onDelFile(switch_confirm.isChecked());});
-            }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
             }
         }.show();
     }
@@ -225,21 +180,6 @@ public final class DialogHelper {
                     this.dismiss();
                 });
             }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
-            }
         }.show();
     }
 
@@ -290,22 +230,6 @@ public final class DialogHelper {
                     this.dismiss();
                 });
             }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
-            }
-
         }.show();
 
     }
@@ -360,21 +284,6 @@ public final class DialogHelper {
                     if (callback != null) callback.onConfirm(renameCollectionItemAdapter.getEdited());
                     this.dismiss();
                 });
-            }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
             }
         }.show();
     }
@@ -435,21 +344,6 @@ public final class DialogHelper {
                     if (callback != null) callback.onJumpTo(pageSeekBar.getProgress());
                     dismiss();
                 });
-            }
-
-            @Override
-            public void setDialogSize() {
-
-            }
-
-            @Override
-            public void onShow() {
-
-            }
-
-            @Override
-            public void onDismiss() {
-
             }
         }.show();
     }

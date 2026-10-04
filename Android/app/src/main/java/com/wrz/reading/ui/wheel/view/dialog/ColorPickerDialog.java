@@ -3,7 +3,6 @@ package com.wrz.reading.ui.wheel.view.dialog;
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -77,25 +76,5 @@ public class ColorPickerDialog extends BaseDialog {
 
     public void setOnClickListener(onClickListener onClickListener) {
         this.onClickListener = onClickListener;
-    }
-
-    @Override
-    public void setDialogSize() {
-        if (this.getWindow() != null) {
-            this.getWindow().setLayout(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
-
-    @Override
-    public void onShow() {
-
-    }
-
-    @Override
-    public void onDismiss() {
-
     }
 }

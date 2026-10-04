@@ -504,4 +504,51 @@
     <string name="wheel_time">转盘旋转时间</string>
     <string name="share">分享</string>
     <string name="empty"> </string>
+
+    <!-- ===== 重构：从 Java 硬编码外移的文案 ===== -->
+    <string name="uncategorized">未分组</string>
+    <string name="accept">接受</string>
+    <string name="refuse">拒绝</string>
+    <string name="select_target_collection">选择目标集合</string>
+    <string name="title_set_cast_name">设置接收投屏名称</string>
+    <string name="title_delete_collection">删除集合</string>
+    <string name="title_select_cast_device">选择投屏设备</string>
+    <string name="title_cast_request">投屏请求</string>
+    <string name="title_cast_receive">投屏接收</string>
+
+    <string name="msg_renamed">已重命名</string>
+    <string name="msg_collection_created">已创建集合「%1$s」</string>
+    <string name="msg_select_comics_first">请先选择漫画</string>
+    <string name="msg_deleted_comics">已删除 %1$d 本</string>
+    <string name="msg_no_move_target">没有可移动的目标集合</string>
+    <string name="msg_moved_comics">已移动 %1$d 本</string>
+    <string name="msg_no_shareable_file">选中的项目中没有可分享的文件</string>
+    <string name="msg_cannot_read_folder">无法读取所选文件夹</string>
+    <string name="msg_folder_no_import_content">所选文件夹中没有可导入的内容</string>
+    <string name="msg_imported_comics">已导入 %1$d 本漫画</string>
+    <string name="msg_video_not_found">视频文件不存在</string>
+    <string name="msg_dir_no_video">目录中没有视频文件</string>
+    <string name="msg_select_delete_collection">请选择要删除的集合（未分组不可删除）</string>
+    <string name="msg_deleted_collections">已删除 %1$d 个集合</string>
+    <string name="msg_max_count_reached">已达最大数</string>
+    <string name="msg_wheel_choice">选择了 %1$s</string>
+
+    <string name="msg_casting_to">正在投屏到 %1$s</string>
+    <string name="msg_cast_stopped">已停止投屏</string>
+    <string name="msg_cast_success">投屏成功</string>
+    <string name="msg_cast_failed">投屏失败: %1$s</string>
+    <string name="msg_resume_failed">恢复播放失败: %1$s</string>
+    <string name="msg_pause_failed">暂停失败: %1$s</string>
+    <string name="msg_seek_failed">拖动失败: %1$s</string>
+    <string name="msg_casting_label">投屏中：%1$s</string>
+    <string name="msg_cast_receiving">接收投屏中</string>
+    <string name="msg_cast_incoming">%1$s 要向你投屏\n%2$s</string>
+    <string name="msg_cast_searching">搜索中...</string>
+    <string name="msg_cast_search_no_device">搜索中...未发现设备</string>
+    <string name="msg_cast_found_devices">已发现 %1$d 个设备，点击投屏</string>
+    <string name="msg_brightness">亮度 %1$d%%</string>
+    <string name="msg_volume">音量 %1$d%%</string>
+    <string name="msg_delete_collections_confirm">删除 %1$d 个集合\n\n是否同时删除集合中的所有漫画？</string>
+    <string name="btn_delete_collection_and_comics">删除集合和漫画</string>
+    <string name="btn_delete_collection_only">仅删除集合</string>
 </resources>

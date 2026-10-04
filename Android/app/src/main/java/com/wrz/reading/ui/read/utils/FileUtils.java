@@ -32,13 +32,21 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -63,34 +71,59 @@ public class FileUtils {
     };
 
     public static List<File> getImageFiles(File directory, boolean sortByName) {
-        List<File> imageFiles = new ArrayList<>();
-        File[] files = directory.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile() && isImageFile(file.getName())) {
-                    imageFiles.add(file);
-                }
-            }
-
-            if (sortByName) {
-                imageFiles.sort((f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
-            }
+        List<File> imageFiles = collect(directory, f -> isImageFile(f.getName()), false);
+        if (sortByName) {
+            imageFiles.sort((f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
         }
-
         return imageFiles;
     }
 
     public static boolean haveImageFiles(File directory) {
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile() && isImageFile(file.getName())) {
-                    return true;
-                }
-            }
+        return !collect(directory, f -> isImageFile(f.getName()), false).isEmpty();
+    }
+
+    /**
+     * 单趟遍历核心：深度优先遍历目录树，收集满足条件的文件。
+     * 无法访问的条目直接跳过（与 listFiles 返回 null 的容错语义一致），
+     * 且不会跟随符号链接，天然避免循环递归。
+     *
+     * @param root      起始目录
+     * @param accept    文件过滤条件
+     * @param recursive 是否递归遍历子目录
+     * @return 按遍历顺序（目录内条目顺序）排列的文件列表
+     */
+    private static List<File> collect(File root, Predicate<File> accept, boolean recursive) {
+        List<File> result = new ArrayList<>();
+        if (root == null || !root.isDirectory()) {
+            return result;
         }
-        return false;
+        Path rootPath = root.toPath();
+        FileVisitResult dirResult = recursive ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
+        try {
+            Files.walkFileTree(rootPath, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    File f = file.toFile();
+                    if (accept.test(f)) {
+                        result.add(f);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                    return dir.equals(rootPath) ? FileVisitResult.CONTINUE : dirResult;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            LogUtil.e(TAG, "collect: ", e);
+        }
+        return result;
     }
 
     /**
@@ -98,112 +131,51 @@ public class FileUtils {
      * 用于支持压缩包解压后保留目录结构的情况
      */
     public static List<File> getImageFilesRecursive(File directory) {
-        List<File> imageFiles = new ArrayList<>();
-        if (directory == null || !directory.exists()) {
-            return imageFiles;
-        }
-        collectImageFilesRecursive(directory, imageFiles);
-        return imageFiles;
+        return collect(directory, f -> isImageFile(f.getName()), true);
     }
 
     /**
-     * 递归收集图片文件
-     */
-    private static void collectImageFilesRecursive(File directory, List<File> imageFiles) {
-        File[] files = directory.listFiles();
-        if (files == null) {
-            return;
-        }
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                // 递归搜索子目录
-                collectImageFilesRecursive(file, imageFiles);
-            } else if (file.isFile() && isImageFile(file.getName())) {
-                imageFiles.add(file);
-            }
-        }
-    }
-
-    /**
-     * 递归获取目录下所有媒体文件（图片+视频），包括子目录。
+     * 递归获取目录下所有媒体文件（图片+视频+音乐），包括子目录。
      * 用于文件夹漫画中混合图片与视频的场景。
      */
     public static List<ReadItem> getMediaFilesRecursive(File directory) {
         List<ReadItem> mediaFiles = new ArrayList<>();
-        if (directory == null || !directory.exists()) {
-            return mediaFiles;
+        for (File file : collect(directory,
+                f -> isImageFile(f.getName()) || isVideoFile(f.getName()) || isMusicFile(f.getName()),
+                true)) {
+            mediaFiles.add(new ReadItem(file));
         }
-        collectMediaFilesRecursive(directory, mediaFiles);
         return mediaFiles;
-    }
-
-    private static void collectMediaFilesRecursive(File directory, List<ReadItem> mediaFiles) {
-        File[] files = directory.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File file : files) {
-            if (file.isDirectory()) {
-                collectMediaFilesRecursive(file, mediaFiles);
-            } else if (file.isFile() && (isImageFile(file.getName()) || isVideoFile(file.getName())|| isMusicFile(file.getName()))) {
-                mediaFiles.add(new ReadItem(file));
-            }
-        }
     }
 
     /**
      * 检查目录（包括子目录）是否包含图片文件
      */
     public static boolean haveImageFilesRecursive(File directory) {
-        if (directory == null || !directory.exists()) {
-            return false;
-        }
-        return checkImageFilesRecursive(directory);
+        return !collect(directory, f -> isImageFile(f.getName()), true).isEmpty();
     }
 
     /**
-     * 递归检查是否有图片文件
-     */
-    private static boolean checkImageFilesRecursive(File directory) {
-        File[] files = directory.listFiles();
-        if (files == null) {
-            return false;
-        }
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                if (checkImageFilesRecursive(file)) {
-                    return true;
-                }
-            } else if (file.isFile() && isImageFile(file.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 获取目录下包含图片的子目录列表
+     * 获取目录下包含图片的子目录列表（单趟遍历实现）
      * 用于在阅读器中提供文件夹选择功能
      */
     public static List<File> getSubdirectoriesWithImages(File directory) {
         List<File> subdirs = new ArrayList<>();
-        if (directory == null || !directory.exists()) {
+        if (directory == null || !directory.isDirectory()) {
             return subdirs;
         }
-
-        File[] files = directory.listFiles();
-        if (files == null) {
-            return subdirs;
-        }
-
-        for (File file : files) {
-            if (file.isDirectory() && haveImageFilesRecursive(file)) {
-                subdirs.add(file);
+        Path rootPath = directory.toPath();
+        Set<String> seen = new HashSet<>();
+        for (File image : collect(directory, f -> isImageFile(f.getName()), true)) {
+            Path relative = rootPath.relativize(image.toPath());
+            if (relative.getNameCount() < 2) {
+                continue; // 图片直接位于根目录下，不属于任何子目录
+            }
+            File top = rootPath.resolve(relative.getName(0)).toFile();
+            if (seen.add(top.getAbsolutePath())) {
+                subdirs.add(top);
             }
         }
-
         // 按目录名排序
         subdirs.sort((f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
         return subdirs;
@@ -300,19 +272,9 @@ public class FileUtils {
         return imageFiles.isEmpty() ? null : imageFiles.get(0);
     }
 
-    /** 递归获取目录下所有视频文件 */
+    /** 递归获取目录下所有视频文件，按文件名排序 */
     public static List<File> getVideoFiles(File dir) {
-        List<File> result = new ArrayList<>();
-        File[] files = dir.listFiles();
-        if (files == null) return result;
-        for (File f : files) {
-            if (f.isFile() && FileUtils.isVideoFile(f.getName())) {
-                result.add(f);
-            } else if (f.isDirectory()) {
-                result.addAll(getVideoFiles(f));
-            }
-        }
-        // 按文件名排序
+        List<File> result = collect(dir, f -> isVideoFile(f.getName()), true);
         result.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         return result;
     }
@@ -861,27 +823,6 @@ public class FileUtils {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * 递归获取所有文件
-     *
-     * @param root
-     * @param ext  指定扩展名
-     */
-    private synchronized void getAllFiles(File root, String ext) {
-        List<File> list = new ArrayList<>();
-        File files[] = root.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    getAllFiles(f, ext);
-                } else {
-                    if (f.getName().endsWith(ext) && f.length() > 50)
-                        list.add(f);
-                }
-            }
-        }
     }
 
     public static String getCharset(String fileName) {

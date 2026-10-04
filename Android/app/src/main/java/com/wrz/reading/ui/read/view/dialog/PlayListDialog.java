@@ -2,7 +2,6 @@ package com.wrz.reading.ui.read.view.dialog;
 
 import android.content.Context;
 import android.util.Log;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -103,25 +102,5 @@ public class PlayListDialog extends BaseDialog {
 
     public void setListener(onClickListener listener) {
         this.listener = listener;
-    }
-
-    @Override
-    public void setDialogSize() {
-        if (this.getWindow() != null) {
-            this.getWindow().setLayout(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
-
-    @Override
-    public void onShow() {
-
-    }
-
-    @Override
-    public void onDismiss() {
-
     }
 }

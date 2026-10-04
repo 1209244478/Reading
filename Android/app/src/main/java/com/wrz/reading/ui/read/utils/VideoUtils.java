@@ -5,16 +5,16 @@ import android.media.MediaMetadataRetriever;
 import android.util.Log;
 
 import com.wrz.reading.ui.main.Log.LogUtil;
+import com.wrz.reading.ui.main.utils.ExecutorManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 视频工具类：提取非首帧作为封面（避免首帧纯黑），并保存为 JPEG 文件。
- * 所有耗时操作均通过 {@link #runOnIoThread(Runnable)} 在单线程后台执行。
+ * 所有耗时操作均通过 {@link #runOnIoThread(Runnable)} 在共享线程池后台执行。
  */
 public final class VideoUtils {
 
@@ -22,11 +22,11 @@ public final class VideoUtils {
     /** 取帧时间点：1 秒（微秒），避开多数视频开头黑场 */
     private static final long FRAME_AT_TIME_US = 10_000_000L;
 
-    private static final ExecutorService IO = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "VideoUtils-IO");
-        t.setDaemon(true);
-        return t;
-    });
+    /**
+     * 共享固定线程池：取帧是重 IO 任务，放并行池避免阻塞共享单线程上的 DB 操作；
+     * 池大小有上限（max(4, CPU)），不会失控。
+     */
+    private static final ExecutorService IO = ExecutorManager.getInstance().getThreadPool();
 
     private VideoUtils() {
     }

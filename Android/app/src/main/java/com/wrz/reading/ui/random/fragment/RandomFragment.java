@@ -96,7 +96,7 @@ public class RandomFragment extends BaseFragment {
         for (int i = 0; i < quantity; i++) {
             int randomNumber = generateRandomNumber(random);
             if (randomNumber == -1) {
-                Toast.makeText(parentView.getContext(), "已达最大数", Toast.LENGTH_SHORT).show();
+                Toast.makeText(parentView.getContext(), getString(R.string.msg_max_count_reached), Toast.LENGTH_SHORT).show();
                 break;
             }
             list.add(String.valueOf(randomNumber));
