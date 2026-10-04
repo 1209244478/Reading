@@ -227,14 +227,8 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
         } else {
             btnSelectAll.setText(R.string.select_all);
         }
-        String prefix = "已选择: (";
-        String number = String.valueOf(selectedFolders.size());
-        String suffix = ") 项";
-
         SpannableStringBuilder builder = new SpannableStringBuilder();
-        builder.append(prefix);
-        builder.append(number);
-        builder.append(suffix);
+        builder.append(getString(R.string.msg_selected_count_paren, selectedFolders.size()));
 
         /*// 设置数字部分为红色
         builder.setSpan(
@@ -365,7 +359,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
                 currentList.addAll(tempList);
                 // 显示当前路径
                 setButtonText();
-                currentPathTextView.setText(currentDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "内部存储"));
+                currentPathTextView.setText(currentDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), getString(R.string.path_internal_storage)));
                 folderAdapter.notifyDataSetChanged();
                 if (currentList.isEmpty()) {
                     emptyStateLayout.setVisibility(View.VISIBLE);
@@ -395,7 +389,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
 
         } else if (viewId == R.id.btn_confirm) {
             if (selectedFolders.isEmpty()) {
-                Toast.makeText(this, "请至少选择一个文件夹", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_select_at_least_one, Toast.LENGTH_SHORT).show();
             } else {
                 MyApplication.manager.saveLastAdd(currentDir.getAbsolutePath());
 

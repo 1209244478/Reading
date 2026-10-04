@@ -14,6 +14,9 @@ import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 移动漫画到集合的选择对话框：列表展示全部可选目标集合，点选后通过 listener 回调目标。
+ */
 public class MoveDialog extends BaseDialog {
 
     List<MoveTargetAdapter.MoveTarget> targets;

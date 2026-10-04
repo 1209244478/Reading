@@ -31,6 +31,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 阅读器主适配器：按 {@link ReadItem#getItemType()} 渲染图片/视频/音乐三种条目。
+ * <p>
+ * 视频播放：playerMap 按文件名缓存 ExoPlayer 实例（{@link #buildPlayer} 创建一次、复用），
+ * {@link #setPosition(int)} 切页时释放并移除离页视频的播放器；
+ * 回收的 holder 需调用 {@code player_view.setPlayer(null)} 防止泄漏。
+ */
 public class ImageAdapter extends BaseMultiItemQuickAdapter<ReadItem, BaseViewHolder> {
 
     private int selected_position = -1;

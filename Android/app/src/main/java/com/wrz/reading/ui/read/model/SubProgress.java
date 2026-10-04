@@ -3,6 +3,10 @@ package com.wrz.reading.ui.read.model;
 import java.util.ArrayList;
 import java.util.Objects;
 
+/**
+ * 子文件夹阅读进度：title 为子文件夹标识（"全部文件夹"为固定键），progress 为页码。
+ * 以 JSON 数组持久化在 Comic.subProgress 字段，静态方法提供查/更操作。
+ */
 public class SubProgress {
     public String title;
     public long progress;

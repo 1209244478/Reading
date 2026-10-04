@@ -50,6 +50,17 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/**
+ * 文件操作工具集（纯静态）：
+ * <ul>
+ *   <li>目录遍历：所有遍历统一走私有 {@code collect(File, Predicate, boolean)}，
+ *       基于 {@link Files#walkFileTree} 实现（不跟随符号链接，天然避免循环）；
+ *       getMediaFilesRecursive 等公开方法均为其不同谓词/深度组合</li>
+ *   <li>媒体类型识别：图片/视频/音乐/压缩包/文档按扩展名判断</li>
+ *   <li>封面：getAndSetCoverImagePath 生成"."开头的隐藏封面图并缓存路径</li>
+ *   <li>分享：通过 FileProvider 以 content:// URI 调起系统分享面板</li>
+ * </ul>
+ */
 public class FileUtils {
     private static final String TAG = "FileUtils";
     public static final String SPECIAL_FORMATS = ".zip";

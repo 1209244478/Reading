@@ -10,6 +10,12 @@ import com.wrz.reading.ui.read.model.Comic;
 
 import java.util.List;
 
+/**
+ * comics 表的 Room DAO。
+ * <p>
+ * 约定：局部字段变更（视频进度/percentMap/封面路径）使用对应的字段级 @Query 更新，
+ * 避免 @Update 整行覆盖并发修改的其他字段。
+ */
 @Dao
 public interface ComicDao {
     @Query("SELECT * FROM comics ORDER BY lastRead DESC")

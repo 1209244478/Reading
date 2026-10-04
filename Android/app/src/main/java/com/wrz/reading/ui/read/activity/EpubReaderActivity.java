@@ -114,7 +114,7 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
             } catch (Exception e) {
                 LogUtil.e("EPUB_READ", "loadBook: ", e);
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "加载失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, R.string.msg_load_failed, Toast.LENGTH_SHORT).show();
                     finish();
                 });
                 return;

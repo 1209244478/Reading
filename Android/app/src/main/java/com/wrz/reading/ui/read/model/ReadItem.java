@@ -5,6 +5,9 @@ import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
 
+/**
+ * 阅读器内单个媒体文件的包装：图片/视频/音乐按扩展名归类为 multi-item 类型。
+ */
 public class ReadItem implements MultiItemEntity {
 
     private File file;

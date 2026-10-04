@@ -15,6 +15,9 @@ import com.wrz.reading.ui.read.utils.FileUtils;
 import java.io.File;
 import java.util.List;
 
+/**
+ * 阅读器底部预览条适配器：横向缩略图列表，centerPage 标记当前页用于高亮/跟随定位。
+ */
 public class PreviewAdapter extends BaseQuickAdapter<ReadItem, BaseViewHolder> {
 
     private int centerPage = -1;

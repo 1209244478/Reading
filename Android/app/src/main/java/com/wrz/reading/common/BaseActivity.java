@@ -19,6 +19,16 @@ import com.wrz.reading.ui.main.utils.ExecutorManager;
 
 import java.util.concurrent.ExecutorService;
 
+/**
+ * Activity 基类：统一模板流程与共享资源。
+ * <ul>
+ *   <li>线程：从 {@link ExecutorManager} 取共享 singleThread/threadPool 并引用计数，
+ *       子类勿自行 new 线程池；onDestroy 释放引用</li>
+ *   <li>模板方法：{@link #getLayoutId()} 必须实现；
+ *       getIntentData → initToolBar → initView → initData → configView 按序回调，goBack() 处理返回</li>
+ *   <li>Toolbar：布局内 id 为 toolbar 的控件自动绑定为 mCommonToolbar 并 setSupportActionBar</li>
+ * </ul>
+ */
 public abstract class BaseActivity extends AppCompatActivity {
     public final String TAG = getClass().getSimpleName();
     public ExecutorService singleThread;

@@ -65,7 +65,7 @@ public class PdfReaderActivity extends BaseReaderActivity {
                 LogUtil.e(TAG, "PDF open failed: " + e.getMessage());
                 runOnUiThread(() -> {
                     if (!isFinishing() && !isDestroyed()) {
-                        showToastAndFinish("PDF 文件打开失败或已损坏");
+                        showToastAndFinish(getString(R.string.msg_pdf_open_failed));
                     }
                 });
                 return;

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
+import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
 import com.wrz.reading.ui.read.data.ComicDatabase;
@@ -40,12 +41,12 @@ public abstract class BaseReaderActivity extends BaseActivity {
     public void initData() {
         Intent intent = getIntent();
         if (intent == null || !intent.hasExtra(EXTRA_COMIC_ID)) {
-            showToastAndFinish("书本错误，请重新导入");
+            showToastAndFinish(getString(R.string.msg_book_error_reimport));
             return;
         }
         comicId = intent.getLongExtra(EXTRA_COMIC_ID, -1);
         if (comicId == -1) {
-            showToastAndFinish("书本错误，请重新导入");
+            showToastAndFinish(getString(R.string.msg_book_error_reimport));
             return;
         }
         loadComic();
@@ -67,7 +68,7 @@ public abstract class BaseReaderActivity extends BaseActivity {
             if (loaded == null) {
                 runOnUiThread(() -> {
                     if (isFinishing() || isDestroyed()) return;
-                    showToastAndFinish("找不到漫画信息");
+                    showToastAndFinish(getString(R.string.msg_comic_info_not_found));
                 });
                 return;
             }

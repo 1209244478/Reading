@@ -551,4 +551,39 @@
     <string name="msg_delete_collections_confirm">删除 %1$d 个集合\n\n是否同时删除集合中的所有漫画？</string>
     <string name="btn_delete_collection_and_comics">删除集合和漫画</string>
     <string name="btn_delete_collection_only">仅删除集合</string>
+
+    <!-- 阅读器 -->
+    <string name="msg_no_images_in_folder">漫画文件夹中没有图片文件</string>
+    <string name="msg_file_lost">文件丢失或损坏</string>
+    <string name="msg_extracting_comic">正在解压漫画文件...</string>
+    <string name="all_folders">全部文件夹</string>
+    <string name="msg_no_supported_files">所选文件夹没有可支持的文件</string>
+    <string name="filter_show_prefix">显示：</string>
+    <string name="filter_video">视频</string>
+    <string name="filter_image">图片</string>
+    <string name="filter_music">音乐</string>
+    <string name="filter_all">全部</string>
+    <string name="msg_sorted_name_asc">已按名称升序排序</string>
+    <string name="msg_sorted_name_desc">已按名称降序排序</string>
+    <string name="msg_sorted_by_mtime">已按修改时间排序</string>
+    <string name="msg_switched_horizontal">已切换为左右滑动</string>
+    <string name="msg_switched_vertical">已切换为上下滑动</string>
+    <string name="msg_set_as_cover">已设置为漫画封面</string>
+    <string name="menu_toggle_vertical_paging">切换为上下滑动翻页</string>
+    <string name="menu_toggle_horizontal_paging">切换为左右滑动翻页</string>
+    <string name="msg_zoom_on">已开启缩放模式</string>
+    <string name="msg_zoom_off">已关闭缩放模式</string>
+    <string name="msg_cleanup_on">已开启清理</string>
+    <string name="msg_cleanup_off">已关闭清理</string>
+    <string name="msg_autoplay_started">已开始自动播放</string>
+    <string name="msg_autoplay_stopped">已停止自动播放</string>
+    <string name="msg_interval_set">间隔已设为 %1$d 秒</string>
+    <string name="msg_book_error_reimport">书本错误，请重新导入</string>
+    <string name="msg_comic_info_not_found">找不到漫画信息</string>
+    <string name="msg_pdf_open_failed">PDF 文件打开失败或已损坏</string>
+    <string name="msg_load_failed">加载失败</string>
+
+    <!-- 文件夹选择器 -->
+    <string name="msg_selected_count_paren">已选择: (%1$d) 项</string>
+    <string name="msg_select_at_least_one">请至少选择一个文件夹</string>
 </resources>

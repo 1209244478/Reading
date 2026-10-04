@@ -10,8 +10,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -100,9 +98,8 @@ public class ReaderActivity extends BaseReaderActivity {
     private PreviewAdapter previewAdapter;
 
 
-    // 文件夹选择相关
-    private List<File> subdirectories;
-    private boolean isFolderSelection = false;
+    // 文件夹选择：委托给独立的 FolderSelector（Spinner 生命周期 + 所选文件夹文件收集）
+    private FolderSelector folderSelector;
 
     // 自动播放：委托给独立的 Controller，避免在 Activity 中持有 Handler/Runnable/状态
     private final AutoPlayController autoPlay = new AutoPlayController(() -> onSwipe(true));
@@ -127,6 +124,7 @@ public class ReaderActivity extends BaseReaderActivity {
 
         // 初始化文件夹选择Spinner
         folderSpinner = findViewById(R.id.folder_spinner);
+        folderSelector = new FolderSelector(this, folderSpinner, this::handleFolderSelected);
 
         // 初始化进度条与预览卡片
         previewCard = findViewById(R.id.preview_card);
@@ -176,7 +174,7 @@ public class ReaderActivity extends BaseReaderActivity {
             if (imageFiles == null || imageFiles.isEmpty()) {
                 runOnUiThread(() -> {
                     if (isFinishing() || isDestroyed()) return;
-                    showToastAndFinish("漫画文件夹中没有图片文件");
+                    showToastAndFinish(getString(R.string.msg_no_images_in_folder));
                 });
                 return;
             }
@@ -208,7 +206,7 @@ public class ReaderActivity extends BaseReaderActivity {
             List<ReadItem> files = FileUtils.getMediaFilesRecursive(originalDirectory);
             if (!files.isEmpty()) {
                 // 检查是否有多个子目录
-                checkAndSetupFolderSelector(originalDirectory);
+                folderSelector.bind(originalDirectory);
                 return files;
             }
         }
@@ -222,12 +220,12 @@ public class ReaderActivity extends BaseReaderActivity {
         if (comicFile.exists() && comicFile.isDirectory()) {
             List<ReadItem> files = FileUtils.getMediaFilesRecursive(comicFile);
             if (!files.isEmpty()) {
-                checkAndSetupFolderSelector(comicFile);
+                folderSelector.bind(comicFile);
             }
             return files;
         }
 
-        runOnUiThread(() -> Toast.makeText(this, "文件丢失或损坏", Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(this, R.string.msg_file_lost, Toast.LENGTH_SHORT).show());
         return null;
     }
 
@@ -243,111 +241,30 @@ public class ReaderActivity extends BaseReaderActivity {
         if (tempExtractDir.exists()) {
             List<ReadItem> files = FileUtils.getMediaFilesRecursive(tempExtractDir);
             if (!files.isEmpty()) {
-                checkAndSetupFolderSelector(tempExtractDir);
+                folderSelector.bind(tempExtractDir);
             }
             return files;
         }
 
         // 解压文件
-        runOnUiThread(() -> Toast.makeText(this, "正在解压漫画文件...", Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(this, R.string.msg_extracting_comic, Toast.LENGTH_SHORT).show());
         List<ReadItem> files = ZipUtils.extractReadItemsFromZip(zipPath, tempExtractDir);
         if (files != null && !files.isEmpty()) {
-            checkAndSetupFolderSelector(tempExtractDir);
+            folderSelector.bind(tempExtractDir);
         }
         return files;
     }
 
     /**
-     * 检查并设置文件夹选择器
+     * 文件夹选择事件处理（由 {@link FolderSelector} 回调）
      */
-    private void checkAndSetupFolderSelector(File rootDir) {
-        subdirectories = FileUtils.getSubdirectoriesWithImages(rootDir);
-        if (subdirectories.size() > 1) {
-            runOnUiThread(() -> setupFolderSpinner(subdirectories));
-        } else {
-            runOnUiThread(this::hideFolderSpinner);
-        }
-    }
+    private int subPosition = -1;
 
-    /**
-     * 设置文件夹下拉选择器
-     */
-    private void setupFolderSpinner(List<File> folders) {
-        if (folderSpinner == null) {
-            return;
-        }
-
-        isFolderSelection = true;
-
-        // 创建文件夹名称列表，添加"全部"选项
-        List<String> folderNames = new ArrayList<>();
-        folderNames.add("全部文件夹");
-        for (File folder : folders) {
-            folderNames.add(folder.getName());
-        }
-
-        // 使用自定义布局确保文字颜色正确显示
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                R.layout.spinner_item, folderNames);
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
-        folderSpinner.setAdapter(adapter);
-        folderSpinner.setVisibility(View.VISIBLE);
-
-        // 设置选择监听器
-        folderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                onFolderSelected(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-    }
-
-    /**
-     * 隐藏文件夹选择器
-     */
-    private void hideFolderSpinner() {
-        if (folderSpinner != null) {
-            folderSpinner.setVisibility(View.GONE);
-            folderSpinner.setOnItemSelectedListener(null);
-        }
-        isFolderSelection = false;
-        subdirectories = null;
-    }
-
-    public int subPosition = -1;
-
-    /**
-     * 文件夹选择事件处理
-     */
-    private void onFolderSelected(int position) {
-        if (!isFolderSelection || subdirectories == null) {
-            return;
-        }
-
+    private void handleFolderSelected(int position, List<ReadItem> newImageFiles) {
         subPosition = position;
 
-        List<ReadItem> newImageFiles;
-        if (position == 0) {
-            // 选择"全部文件夹"
-            newImageFiles = new ArrayList<>();
-            for (File folder : subdirectories) {
-                newImageFiles.addAll(FileUtils.getMediaFilesRecursive(folder));
-            }
-        } else {
-            // 选择特定文件夹
-            if (position - 1 < subdirectories.size()) {
-                newImageFiles = FileUtils.getMediaFilesRecursive(subdirectories.get(position - 1));
-            } else {
-                return;
-            }
-        }
-
         if (newImageFiles.isEmpty()) {
-            Toast.makeText(this, "所选文件夹没有可支持的文件", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_no_supported_files, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -524,11 +441,11 @@ public class ReaderActivity extends BaseReaderActivity {
         updatePageCounter(0);
         previewAdapter.setData(imageFiles, 0);
 
-        StringBuilder sb = new StringBuilder("显示：");
-        if ((showFilter & FILTER_VIDEO) != 0) sb.append("视频 ");
-        if ((showFilter & FILTER_IMAGE) != 0) sb.append("图片 ");
-        if ((showFilter & FILTER_MUSIC) != 0) sb.append("音乐 ");
-        if (showFilter == 0) sb.append("全部");
+        StringBuilder sb = new StringBuilder(getString(R.string.filter_show_prefix));
+        if ((showFilter & FILTER_VIDEO) != 0) sb.append(getString(R.string.filter_video)).append(' ');
+        if ((showFilter & FILTER_IMAGE) != 0) sb.append(getString(R.string.filter_image)).append(' ');
+        if ((showFilter & FILTER_MUSIC) != 0) sb.append(getString(R.string.filter_music)).append(' ');
+        if (showFilter == 0) sb.append(getString(R.string.filter_all));
         Toast.makeText(this, sb.toString().trim(), Toast.LENGTH_SHORT).show();
     }
 
@@ -591,7 +508,7 @@ public class ReaderActivity extends BaseReaderActivity {
      */
     private void openVideoWithExternalPlayer(File videoFile) {
         if (!videoFile.exists()) {
-            Toast.makeText(this, "视频文件不存在", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_video_not_found, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -644,7 +561,7 @@ public class ReaderActivity extends BaseReaderActivity {
         allImageFiles = sortFiles(allImageFiles);
         applyShowFilter();
         showPreviewAtThumb(comicViewPager.getCurrentItem());
-        refreshViewPager("已按名称" + (ascending ? "升序" : "降序") + "排序");
+        refreshViewPager(getString(ascending ? R.string.msg_sorted_name_asc : R.string.msg_sorted_name_desc));
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -655,7 +572,7 @@ public class ReaderActivity extends BaseReaderActivity {
         allImageFiles = sortFiles(allImageFiles);
         applyShowFilter();
         showPreviewAtThumb(comicViewPager.getCurrentItem());
-        refreshViewPager("已按修改时间排序");
+        refreshViewPager(getString(R.string.msg_sorted_by_mtime));
     }
 
     private void refreshViewPager(String message) {
@@ -672,7 +589,7 @@ public class ReaderActivity extends BaseReaderActivity {
     private void setScrollOrientation(boolean horizontal, boolean isAction) {
         comicViewPager.setOrientation(horizontal ? ViewPager2.ORIENTATION_HORIZONTAL : ViewPager2.ORIENTATION_VERTICAL);
         if (isAction) {
-            Toast.makeText(this, horizontal ? "已切换为左右滑动" : "已切换为上下滑动", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, horizontal ? R.string.msg_switched_horizontal : R.string.msg_switched_vertical, Toast.LENGTH_SHORT).show();
             if (comic != null) {
                 comic.setHorizontal(horizontal);
             }
@@ -695,7 +612,7 @@ public class ReaderActivity extends BaseReaderActivity {
                     comic.getTitle()
             );
             comic.setCoverPath(coverPath);
-            Toast.makeText(this, "已设置为漫画封面", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_set_as_cover, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -780,7 +697,7 @@ public class ReaderActivity extends BaseReaderActivity {
         MenuItem toggleItem = menu.findItem(R.id.action_toggle_scroll_orientation);
         if (toggleItem != null && comic != null) {
             boolean isHorizontal = comic.isHorizontal();
-            toggleItem.setTitle(isHorizontal ? "切换为上下滑动翻页" : "切换为左右滑动翻页");
+            toggleItem.setTitle(isHorizontal ? R.string.menu_toggle_vertical_paging : R.string.menu_toggle_horizontal_paging);
         }
 
         // 设置缩放模式选中状态
@@ -878,7 +795,7 @@ public class ReaderActivity extends BaseReaderActivity {
             // 切换翻页方向：当前水平则切为垂直，反之亦然
             boolean currentHorizontal = comic != null && comic.isHorizontal();
             setScrollOrientation(!currentHorizontal, true);
-            item.setTitle(currentHorizontal ? "切换为左右滑动翻页" : "切换为上下滑动翻页");
+            item.setTitle(currentHorizontal ? R.string.menu_toggle_horizontal_paging : R.string.menu_toggle_vertical_paging);
 
         } else if (itemId == R.id.action_toggle_zoom) {
             // 切换缩放模式：开启后可双指/双击缩放，关闭后恢复单击翻页
@@ -886,12 +803,12 @@ public class ReaderActivity extends BaseReaderActivity {
             imageAdapter.setZoomMode(newMode);
             item.setChecked(newMode);
             // 关闭缩放模式时若自动播放仍在进行不受影响
-            Toast.makeText(this, newMode ? "已开启缩放模式" : "已关闭缩放模式", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, newMode ? R.string.msg_zoom_on : R.string.msg_zoom_off, Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.action_toggle_clean) {
             boolean clean = !comic.isClean();
             comic.setClean(clean);
             item.setChecked(clean);
-            Toast.makeText(this, clean ? "已开启清理" : "已关闭清理", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, clean ? R.string.msg_cleanup_on : R.string.msg_cleanup_off, Toast.LENGTH_SHORT).show();
         }
 
         else if (itemId == R.id.action_share) {
@@ -901,12 +818,12 @@ public class ReaderActivity extends BaseReaderActivity {
         } else if (itemId == R.id.action_auto_play_start) {
             if (!autoPlay.isPlaying()) {
                 startAutoPlay();
-                Toast.makeText(this, "已开始自动播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_autoplay_started, Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.action_auto_play_stop) {
             if (autoPlay.isPlaying()) {
                 stopAutoPlay();
-                Toast.makeText(this, "已停止自动播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_autoplay_stopped, Toast.LENGTH_SHORT).show();
             }
             item.setChecked(true);
         } else if (itemId == R.id.action_interval_2s) {
@@ -916,19 +833,19 @@ public class ReaderActivity extends BaseReaderActivity {
             changeAutoPlayInterval(3000, item);
             if (!autoPlay.isPlaying()) {
                 startAutoPlay();
-                Toast.makeText(this, "已开始自动播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_autoplay_started, Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.action_interval_5s) {
             changeAutoPlayInterval(5000, item);
             if (!autoPlay.isPlaying()) {
                 startAutoPlay();
-                Toast.makeText(this, "已开始自动播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_autoplay_started, Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.action_interval_10s) {
             changeAutoPlayInterval(10000, item);
             if (!autoPlay.isPlaying()) {
                 startAutoPlay();
-                Toast.makeText(this, "已开始自动播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_autoplay_started, Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.action_exit) {
             finish();
@@ -956,7 +873,7 @@ public class ReaderActivity extends BaseReaderActivity {
         comic.setAutoPlay(newDelay);
         autoPlay.setDelay(newDelay);
         item.setChecked(true);
-        Toast.makeText(this, "间隔已设为 " + (newDelay / 1000) + " 秒", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.msg_interval_set, newDelay / 1000), Toast.LENGTH_SHORT).show();
     }
 
     // ==================== 底部栏显隐同步 ====================
