@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat;
 
 import com.wrz.reading.R;
 import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.data.VideoDownloadManager;
 import com.wrz.reading.ui.wheel.data.EmojiData;
 import com.wrz.reading.ui.wheel.data.Template;
 import com.wrz.reading.ui.wheel.data.WheelDatabase;
@@ -39,6 +40,8 @@ public class MyApplication extends Application {
         app = this;
 
         comicDatabase = ComicDatabase.getInstance(this);
+        // 初始化视频下载管理器：重置进程重启后未完成的下载状态（保留断点文件）
+        VideoDownloadManager.getInstance().init(this);
         wheelDatabase = WheelDatabase.getInstance(this);
         wheelRepository = WheelRepository.getInstance();
 

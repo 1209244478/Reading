@@ -14,6 +14,7 @@ public class WheelListAdapter extends BaseQuickAdapter<Wheel, BaseViewHolder> {
 
     @Override
     protected void convert(@NonNull BaseViewHolder holder, Wheel wheel) {
+        holder.itemView.setFocusable(true);
         holder.setText(R.id.tv_option, wheel.getTitle());
 
         holder.setText(R.id.tv_count, getContext().getString(R.string.message_option_count, String.valueOf(wheel.getList().size())));

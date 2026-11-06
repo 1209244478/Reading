@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  电视端主框架：底部为新粗野主义块状导航条。
+  手机横屏（layout-land）仍使用右侧玻璃导航栏；此处仅覆盖电视端。
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tv_ink"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Navigation Host Fragment：底部约束到导航容器顶部 -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:defaultNavHost="true"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/nav_graph" />
+
+    <!-- 电视端块状导航：近黑底 + 亮黄粗边，图标选中态同步为亮黄 -->
+    <FrameLayout
+        android:id="@+id/bottom_nav_container"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_tv_nav"
+        android:elevation="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.wrz.reading.ui.main.view.BottomNavBar
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/mainFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:scaleX="1.36"
+                android:scaleY="1.36"
+                android:src="@drawable/ic_home"
+                app:tint="@color/tv_muted" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/wheelFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:scaleX="1.36"
+                android:scaleY="1.36"
+                android:src="@drawable/ic_wheel"
+                android:visibility="gone"
+                app:tint="@color/tv_muted" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/randomFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:scaleX="1.36"
+                android:scaleY="1.36"
+                android:src="@drawable/ic_random"
+                android:visibility="gone"
+                app:tint="@color/tv_muted" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/settingFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:scaleX="1.36"
+                android:scaleY="1.36"
+                android:src="@drawable/ic_setting"
+                app:tint="@color/tv_muted" />
+
+        </com.wrz.reading.ui.main.view.BottomNavBar>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

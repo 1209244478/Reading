@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wrz.reading.R;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.ImageAdapter;
 import com.wrz.reading.ui.read.adapter.PreviewAdapter;
@@ -37,7 +38,6 @@ import com.wrz.reading.ui.read.utils.ZipUtils;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ReaderActivity extends BaseReaderActivity {
@@ -48,7 +48,6 @@ public class ReaderActivity extends BaseReaderActivity {
 
     private ViewPager2 comicViewPager;
     private TextView pageCounterText;
-    private Spinner folderSpinner;
     private ImageAdapter imageAdapter;
     private static List<ReadItem> imageFiles;
 
@@ -72,7 +71,9 @@ public class ReaderActivity extends BaseReaderActivity {
 
                 @Override
                 public List<Comic> getDisplayComics() {
-                    return Collections.emptyList();
+                    List<Comic> tempList = new ArrayList<>();
+                    tempList.add(comic);
+                    return tempList;
                 }
 
                 @Override
@@ -104,6 +105,18 @@ public class ReaderActivity extends BaseReaderActivity {
     // 自动播放：委托给独立的 Controller，避免在 Activity 中持有 Handler/Runnable/状态
     private final AutoPlayController autoPlay = new AutoPlayController(() -> onSwipe(true));
 
+
+    @Override
+    public void goBack() {
+        if (previewIsShowing) {
+            // 第一次返回：收起预览卡片（同时收起工具栏与底部控制栏）
+            hideToolBarIfVisible();
+            return;
+        }
+        // 预览已隐藏：退出阅读器
+        super.goBack();
+    }
+
     @Override
     public int getLayoutId() {
         return R.layout.activity_comic_reader;
@@ -120,17 +133,18 @@ public class ReaderActivity extends BaseReaderActivity {
     public void initView() {
         comicViewPager = findViewById(R.id.comic_view_pager);
         pageCounterText = findViewById(R.id.page_counter_text);
-        pageCounterText.setOnClickListener(v -> showPageJumpDialog());
+        setClick(R.id.page_counter_text, v -> showPageJumpDialog());
 
         // 初始化文件夹选择Spinner
-        folderSpinner = findViewById(R.id.folder_spinner);
+        Spinner folderSpinner = findViewById(R.id.folder_spinner);
         folderSelector = new FolderSelector(this, folderSpinner, this::handleFolderSelected);
 
         // 初始化进度条与预览卡片
         previewCard = findViewById(R.id.preview_card);
         previewRecycler = previewCard.findViewById(R.id.preview_recycler);
         previewPageLabel = previewCard.findViewById(R.id.preview_page_label);
-        previewCard.setOnClickListener(v -> {
+
+        setClick(previewCard, v -> {
             if (previewIsShowing) {
                 showPageJumpDialog();
             } else {
@@ -169,7 +183,16 @@ public class ReaderActivity extends BaseReaderActivity {
     protected void onComicLoaded(Comic comic) {
         // 后台加载图片文件
         singleThread.execute(() -> {
-            imageFiles = loadImageFiles(comic);
+            List<ReadItem> loaded;
+            try {
+                loaded = loadImageFiles(comic);
+            } catch (Exception | NoClassDefFoundError e) {
+                // 老电视（API 23）可能缺少某些较新的 JDK 类，兜底为「无图片」提示，
+                // 避免整个阅读器进程崩溃
+                LogUtil.e("ReaderActivity", "loadImageFiles failed: " + e.getMessage());
+                loaded = null;
+            }
+            imageFiles = loaded;
 
             if (imageFiles == null || imageFiles.isEmpty()) {
                 runOnUiThread(() -> {
@@ -242,8 +265,10 @@ public class ReaderActivity extends BaseReaderActivity {
             List<ReadItem> files = FileUtils.getMediaFilesRecursive(tempExtractDir);
             if (!files.isEmpty()) {
                 folderSelector.bind(tempExtractDir);
+                return files;
             }
-            return files;
+            // 上次解压失败/中断会留下空目录，清理后重新解压，避免永远判定为「无图片」
+            ZipUtils.cleanupTempDir(tempExtractDir);
         }
 
         // 解压文件
@@ -293,7 +318,7 @@ public class ReaderActivity extends BaseReaderActivity {
             update = true;
         }
 
-        if (comic.getTotal() == 0) {
+        if (comic.getTotal() == 0 && subPosition < 1) {
             comic.setTotal(imageFiles.size());
             update = true;
         }
@@ -442,9 +467,12 @@ public class ReaderActivity extends BaseReaderActivity {
         previewAdapter.setData(imageFiles, 0);
 
         StringBuilder sb = new StringBuilder(getString(R.string.filter_show_prefix));
-        if ((showFilter & FILTER_VIDEO) != 0) sb.append(getString(R.string.filter_video)).append(' ');
-        if ((showFilter & FILTER_IMAGE) != 0) sb.append(getString(R.string.filter_image)).append(' ');
-        if ((showFilter & FILTER_MUSIC) != 0) sb.append(getString(R.string.filter_music)).append(' ');
+        if ((showFilter & FILTER_VIDEO) != 0)
+            sb.append(getString(R.string.filter_video)).append(' ');
+        if ((showFilter & FILTER_IMAGE) != 0)
+            sb.append(getString(R.string.filter_image)).append(' ');
+        if ((showFilter & FILTER_MUSIC) != 0)
+            sb.append(getString(R.string.filter_music)).append(' ');
         if (showFilter == 0) sb.append(getString(R.string.filter_all));
         Toast.makeText(this, sb.toString().trim(), Toast.LENGTH_SHORT).show();
     }
@@ -471,7 +499,7 @@ public class ReaderActivity extends BaseReaderActivity {
                 }
                 comic.setReadProgress(position);
                 comic.setLastRead(System.currentTimeMillis());
-                if (subPosition <= 1) {
+                if (subPosition < 1) {
                     comic.setTotal(imageFiles.size());
                 }
                 previewAdapter.setCenterPage(position);
@@ -745,14 +773,14 @@ public class ReaderActivity extends BaseReaderActivity {
                 View btnFirst = actionView.findViewById(R.id.btn_go_first_page);
                 View btnLast = actionView.findViewById(R.id.btn_go_last_page);
                 if (btnFirst != null) {
-                    btnFirst.setOnClickListener(v -> {
+                    setClick(btnFirst, v -> {
                         if (comicViewPager != null) {
                             comicViewPager.setCurrentItem(0, false);
                         }
                     });
                 }
                 if (btnLast != null) {
-                    btnLast.setOnClickListener(v -> {
+                    setClick(btnLast, v -> {
                         if (imageFiles != null && !imageFiles.isEmpty() && comicViewPager != null) {
                             comicViewPager.setCurrentItem(imageFiles.size() - 1, false);
                         }
@@ -809,9 +837,7 @@ public class ReaderActivity extends BaseReaderActivity {
             comic.setClean(clean);
             item.setChecked(clean);
             Toast.makeText(this, clean ? R.string.msg_cleanup_on : R.string.msg_cleanup_off, Toast.LENGTH_SHORT).show();
-        }
-
-        else if (itemId == R.id.action_share) {
+        } else if (itemId == R.id.action_share) {
             shareFile();
         } else if (itemId == R.id.set_cover_image) {
             setCover();
@@ -909,7 +935,9 @@ public class ReaderActivity extends BaseReaderActivity {
     protected void onDestroy() {
         super.onDestroy();
         VideoPlaylistStore.clear(readerPlaylistProvider);
-        imageAdapter.releaseAllPlayer();
+        if (imageAdapter != null) {
+            imageAdapter.releaseAllPlayer();
+        }
         if (comic != null && comic.isClean()) {
             if (new File(comic.getPath()).getName().endsWith(FileUtils.SPECIAL_FORMATS)) {
                 File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
@@ -929,6 +957,20 @@ public class ReaderActivity extends BaseReaderActivity {
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
             onSwipe(false);
+            return true;
+        }
+        // TV 遥控器：控制栏隐藏时左右/上下翻页，OK 呼出工具栏
+        if (!mIsToolBarVisible) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                onSwipe(true);
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                onSwipe(false);
+                return true;
+            }
+        }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+            toggleToolBarVisibleOrGone();
             return true;
         }
         return super.onKeyDown(keyCode, event);

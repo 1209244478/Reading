@@ -27,7 +27,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- DLNA 投屏接收开关：开启后本机可作为 MediaRenderer 被其他设备投屏 -->
+    <!-- 接收投屏开关：开启后本机可按所选接收方式接收其他设备的投屏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -46,13 +46,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="接收投屏"
+                android:text="@string/setting_receive_cast"
                 android:textSize="16sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="允许本机作为 DLNA 接收端，被其他设备投屏"
+                android:text="@string/setting_receive_cast_desc"
                 android:textColor="@android:color/darker_gray"
                 android:textSize="12sp" />
 
@@ -65,13 +65,46 @@
 
     </LinearLayout>
 
-    <!-- DLNA 投屏接收开关：开启后本机可作为 MediaRenderer 被其他设备投屏 -->
+    <!-- 接收方式：选择本机作为接收端时使用的协议（DLNA / Chromecast / 全部） -->
+    <LinearLayout
+        android:id="@+id/ll_receive_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:defaultFocusHighlightEnabled="false"
+        android:focusable="true"
+        android:foreground="@drawable/bg_tv_focusable"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setting_receive_mode"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_receive_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/receive_mode_dlna"
+            android:textColor="@color/ios_blue"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- 本设备名称：作为接收端时在局域网内显示的名称 -->
     <LinearLayout
         android:id="@+id/ll_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:background="?android:attr/selectableItemBackground"
+        android:defaultFocusHighlightEnabled="false"
+        android:focusable="true"
+        android:foreground="@drawable/bg_tv_focusable"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:padding="16dp">
@@ -90,6 +123,35 @@
             android:textColor="@color/ios_blue"
             android:textSize="16sp" />
 
+
+    </LinearLayout>
+
+    <!-- 下载列表：查看接收投屏下载的视频，支持暂停/继续与断点续传 -->
+    <LinearLayout
+        android:id="@+id/ll_download_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:defaultFocusHighlightEnabled="false"
+        android:focusable="true"
+        android:foreground="@drawable/bg_tv_focusable"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setting_download_list"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/setting_download_list_desc"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

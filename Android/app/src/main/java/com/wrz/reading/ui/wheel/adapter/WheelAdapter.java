@@ -46,7 +46,7 @@ public class WheelAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder>
     protected void convert(@NonNull BaseViewHolder holder, List<Option> options) {
         RecyclerView rv_list = holder.getView(R.id.rv_list);
 
-        if (isLand()) {
+        if (isLand() && !isTv()) {
             rv_list.setLayoutManager(new GridLayoutManager(holder.itemView.getContext(), 2));
         } else {
             rv_list.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
@@ -70,8 +70,8 @@ public class WheelAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder>
 
         adapterMap.put(holder.getLayoutPosition(), adapter);
 
-        adapter.addChildLongClickViewIds(R.id.color_view, R.id.tv_weight, R.id.iv_delete, R.id.iv_add, R.id.tv_add, R.id.iv_batch_add, R.id.tv_batch_add);
-        adapter.addChildClickViewIds(R.id.color_view, R.id.tv_weight, R.id.iv_delete, R.id.iv_add, R.id.tv_add, R.id.iv_batch_add, R.id.tv_batch_add);
+        adapter.addChildLongClickViewIds(R.id.color_view, R.id.tv_weight, R.id.iv_delete, R.id.item_add, R.id.item_batch_add);
+        adapter.addChildClickViewIds(R.id.color_view, R.id.tv_weight, R.id.iv_delete, R.id.item_add, R.id.item_batch_add);
 
         adapter.setOnItemChildLongClickListener((adapter1, view1, position) -> {
             view1.setTag(position);
@@ -135,9 +135,9 @@ public class WheelAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder>
             showChangeWeight(position, vp_position);
         } else if (viewId == R.id.iv_delete) {
             delOption(position, vp_position);
-        } else if (viewId == R.id.iv_add || viewId == R.id.tv_add) {
+        } else if (viewId == R.id.item_add) {
             addOption("", vp_position);
-        } else if (viewId == R.id.iv_batch_add || viewId == R.id.tv_batch_add) {
+        } else if (viewId == R.id.item_batch_add) {
             batchAdd(vp_position);
         }
     }
@@ -287,14 +287,12 @@ public class WheelAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder>
         BatchAddActivity.start(activity, vp_position, CreateEditActivity.REQUEST_COE_BATCH_ADD);
     }
 
-    public void batchAdd(String result) {
-        for (String op : result.split("\n")) {
-
-        }
-    }
-
     public boolean isLand() {
         return (MyApplication.app.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
+    }
+
+    public boolean isTv() {
+        return (MyApplication.app.getResources().getBoolean(R.bool.is_tv));
     }
 
 }

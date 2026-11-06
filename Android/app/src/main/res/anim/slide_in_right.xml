@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 页面打开：新页从右侧滑入（iOS push 风格） -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:interpolator="@android:interpolator/decelerate_quad"
+    android:shareInterpolator="true">
+    <translate
+        android:fromXDelta="100%"
+        android:toXDelta="0" />
+    <alpha
+        android:fromAlpha="0.6"
+        android:toAlpha="1.0" />
+</set>

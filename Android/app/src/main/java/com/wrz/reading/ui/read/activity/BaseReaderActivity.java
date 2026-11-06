@@ -56,10 +56,6 @@ public abstract class BaseReaderActivity extends BaseActivity {
     public void configView() {
     }
 
-    @Override
-    public void goBack() {
-        finish();
-    }
 
     /** 后台加载 Comic，成功后回调 {@link #onComicLoaded(Comic)} */
     protected void loadComic() {

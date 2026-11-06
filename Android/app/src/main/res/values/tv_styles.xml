@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    电视端新粗野主义（Neo-brutalism）文字与控件样式。
+    仅被 layout-land-television 下的页面引用，手机/平板保持原有样式。
+-->
+<resources>
+
+    <style name="TvDisplayText">
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:textColor">@color/tv_paper</item>
+        <item name="android:textSize">48sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TvKickerText">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_yellow</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.22</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TvSummaryText">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_muted</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <!-- 顶栏操作块：获得焦点时反转为亮黄底黑字 -->
+    <style name="TvActionChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/tv_action_height</item>
+        <item name="android:minWidth">@dimen/tv_action_min_width</item>
+        <item name="android:background">@drawable/bg_tv_action</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">22dp</item>
+        <item name="android:paddingEnd">22dp</item>
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_action_text</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:stateListAnimator">@animator/tv_focus_lift</item>
+    </style>
+
+    <!-- 播放器控制台按钮 -->
+    <style name="TvPlayerChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/tv_player_chip_height</item>
+        <item name="android:minWidth">@dimen/tv_player_chip_min_width</item>
+        <item name="android:background">@drawable/bg_tv_player_chip</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_player_chip_text</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:stateListAnimator">@animator/tv_focus_lift</item>
+    </style>
+
+    <style name="TvCardTitle">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_paper</item>
+        <item name="android:textSize">21sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TvCardMeta">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/tv_muted</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TvBadgeText">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_ink</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TvEmptyTitle">
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:textColor">@color/tv_paper</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <style name="TvEmptyHint">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/tv_muted</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="TvPlayerTime">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textColor">@color/tv_paper</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
+    </style>
+
+    <!-- 播放器主键：亮黄块面 + 黑边 + 硬阴影 -->
+    <style name="TvPlayerButtonPrimary">
+        <item name="android:layout_width">102dp</item>
+        <item name="android:layout_height">66dp</item>
+        <item name="android:background">@drawable/bg_tv_player_primary</item>
+        <item name="android:clickable">true</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:stateListAnimator">@animator/tv_focus_lift</item>
+    </style>
+
+    <!-- 播放器次级键：深色底板，焦点亮黄 -->
+    <style name="TvPlayerButtonSecondary">
+        <item name="android:layout_width">80dp</item>
+        <item name="android:layout_height">66dp</item>
+        <item name="android:background">@drawable/bg_tv_player_secondary</item>
+        <item name="android:clickable">true</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:stateListAnimator">@animator/tv_focus_lift</item>
+    </style>
+
+</resources>

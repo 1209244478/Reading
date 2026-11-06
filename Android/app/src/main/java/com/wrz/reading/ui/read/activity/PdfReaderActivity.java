@@ -1,7 +1,7 @@
 package com.wrz.reading.ui.read.activity;
 
 import android.content.Context;
-import android.widget.TextView;
+import android.view.KeyEvent;
 
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -26,7 +26,6 @@ public class PdfReaderActivity extends BaseReaderActivity {
     private ViewPager2 pdfPager;
     private PdfPageAdapter pdfAdapter;
     private PdfDocument pdfDocument;
-    private TextView pageCounterText;
 
     private final ViewPager2.OnPageChangeCallback pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
         @Override
@@ -48,9 +47,8 @@ public class PdfReaderActivity extends BaseReaderActivity {
     @Override
     public void initView() {
         pdfPager = findViewById(R.id.pdf_pager);
-        pageCounterText = findViewById(R.id.page_counter_text);
 
-        pageCounterText.setOnClickListener(v -> showPageJumpDialog());
+        setClick(R.id.page_counter_text, v -> showPageJumpDialog());
     }
 
     @Override
@@ -124,7 +122,7 @@ public class PdfReaderActivity extends BaseReaderActivity {
         if (comic.getTotal() != count) {
             comic.setTotal(count);
         }
-        pageCounterText.setText((position + 1) + "/" + count);
+        setText((position + 1) + "/" + count, R.id.page_counter_text);
     }
 
     private void showPageJumpDialog() {
@@ -132,6 +130,32 @@ public class PdfReaderActivity extends BaseReaderActivity {
         DialogHelper.showPageJumpDialog(this,
                 pdfPager.getCurrentItem(), pdfAdapter.getItemCount(),
                 page -> pdfPager.setCurrentItem(page, true));
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (pdfPager != null && pdfAdapter != null) {
+            int current = pdfPager.getCurrentItem();
+            int count = pdfAdapter.getItemCount();
+            // TV 遥控器：控制栏隐藏时翻页，OK 呼出工具栏
+            if (!mIsToolBarVisible) {
+                if ((keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
+                        && current < count - 1) {
+                    pdfPager.setCurrentItem(current + 1, true);
+                    return true;
+                }
+                if ((keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_UP)
+                        && current > 0) {
+                    pdfPager.setCurrentItem(current - 1, true);
+                    return true;
+                }
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+                toggleToolBarVisibleOrGone();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端对话框列表项：焦点黄边、选中青柠边 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_surface_alt" />
+            <stroke
+                android:width="4dp"
+                android:color="@color/tv_yellow" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_selected_fill" />
+            <stroke
+                android:width="4dp"
+                android:color="@color/tv_lime" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_surface_alt" />
+            <stroke
+                android:width="4dp"
+                android:color="@color/tv_orange" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_surface" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_paper" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</selector>

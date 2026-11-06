@@ -2,11 +2,15 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/item_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="0dp"
+    android:defaultFocusHighlightEnabled="false"
+    android:focusable="true"
+    android:foreground="@drawable/bg_tv_focusable"
     app:strokeWidth="1dp"
     app:strokeColor="#F0F0F0"
     style="@style/Widget.MaterialComponents.CardView">
@@ -15,7 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="65dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="12dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground">
 
@@ -60,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:text="文件名"
                     android:textSize="16sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/text_primary"
                     android:textStyle="normal"
                     android:maxLines="1"
                     android:ellipsize="end"/>
@@ -71,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:text="详情信息"
                     android:textSize="13sp"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="4dp"/>
 
             </LinearLayout>
@@ -100,6 +105,7 @@
                 android:id="@+id/select_indicator"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
+                android:focusable="true"
                 app:cardCornerRadius="14dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="2dp"

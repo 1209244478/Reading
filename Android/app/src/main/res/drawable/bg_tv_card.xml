@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片：硬偏移阴影 + 粗描边；焦点/选中/按压分别用黄、青柠、橙强调 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item
+                android:left="@dimen/tv_card_shadow"
+                android:top="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_yellow" />
+                </shape>
+            </item>
+            <item
+                android:right="@dimen/tv_card_shadow"
+                android:bottom="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_surface_alt" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/tv_yellow" />
+                    <corners android:radius="14dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_activated="true">
+        <layer-list>
+            <item
+                android:left="@dimen/tv_card_shadow"
+                android:top="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_lime" />
+                </shape>
+            </item>
+            <item
+                android:right="@dimen/tv_card_shadow"
+                android:bottom="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_selected_fill" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/tv_lime" />
+                    <corners android:radius="14dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <layer-list>
+            <item
+                android:left="@dimen/tv_card_shadow"
+                android:top="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_orange" />
+                </shape>
+            </item>
+            <item
+                android:right="@dimen/tv_card_shadow"
+                android:bottom="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_surface_alt" />
+                    <stroke
+                        android:width="4dp"
+                        android:color="@color/tv_orange" />
+                    <corners android:radius="14dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item
+                android:left="@dimen/tv_card_shadow"
+                android:top="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_ink" />
+                </shape>
+            </item>
+            <item
+                android:right="@dimen/tv_card_shadow"
+                android:bottom="@dimen/tv_card_shadow">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/tv_surface" />
+                    <stroke
+                        android:width="2dp"
+                        android:color="@color/tv_paper" />
+                    <corners android:radius="14dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

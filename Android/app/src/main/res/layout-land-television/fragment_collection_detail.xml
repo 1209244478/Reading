@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    电视端集合详情（新粗野主义）：
+    标题信息块 + 两行遥控器操作区 + 漫画网格；不使用手机端溢出菜单，
+    每个动作都是可直接聚焦的块状按钮。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_tv_page"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/tv_page_padding_horizontal"
+        android:paddingTop="20dp"
+        android:paddingEnd="@dimen/tv_page_padding_horizontal">
+
+        <TextView
+            android:id="@+id/tv_btn_back"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="22dp"
+            android:nextFocusDown="@id/tv_btn_sort"
+            android:text="@string/tv_action_back_library" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_detail_title"
+                style="@style/TvDisplayText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/uncategorized"
+                android:textSize="32sp" />
+
+            <TextView
+                android:id="@+id/tv_detail_summary"
+                style="@style/TvSummaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                tools:text="24 本 · 排序 名称 ↑" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/add_comic_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tv_action_height"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/bg_tv_cta"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="false"
+            android:gravity="center"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="26dp"
+            android:stateListAnimator="@animator/tv_focus_lift">
+
+            <ImageView
+                android:id="@+id/add_comic_fab_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:contentDescription="@null"
+                android:src="@drawable/add_24px"
+                app:tint="@color/tv_ink" />
+
+            <TextView
+                android:id="@+id/add_comic_fab_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:fontFamily="sans-serif-condensed"
+                android:text="@string/tv_action_import"
+                android:textColor="@color/tv_ink"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tv_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/tv_page_padding_horizontal"
+        android:paddingTop="12dp"
+        android:paddingEnd="@dimen/tv_page_padding_horizontal"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/tv_btn_refresh"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_refresh" />
+
+        <TextView
+            android:id="@+id/tv_btn_sort"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_sort" />
+
+        <TextView
+            android:id="@+id/btn_search"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_search" />
+
+        <TextView
+            android:id="@+id/btn_select_mode"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_select" />
+
+        <TextView
+            android:id="@+id/btn_edit_name"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_rename"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_btn_move"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_move"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_btn_share"
+            style="@style/TvActionChip"
+            android:layout_marginEnd="10dp"
+            android:nextFocusDown="@id/comic_recycler_view"
+            android:text="@string/tv_action_share"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@color/tv_yellow" />
+
+    <LinearLayout
+        android:id="@+id/search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="66dp"
+        android:layout_marginStart="@dimen/tv_page_padding_horizontal"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="@dimen/tv_page_padding_horizontal"
+        android:background="@drawable/bg_tv_search"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center_vertical"
+        android:nextFocusDown="@id/comic_recycler_view"
+        android:orientation="horizontal"
+        android:paddingStart="22dp"
+        android:paddingEnd="26dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_search"
+            app:tint="@color/tv_yellow" />
+
+        <EditText
+            android:id="@+id/search_edit_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:fontFamily="sans-serif-condensed"
+            android:hint="@string/tv_search_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:textColor="@color/tv_paper"
+            android:textColorHint="@color/tv_muted"
+            android:textSize="19sp" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/comic_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:descendantFocusability="afterDescendants"
+            android:focusable="true"
+            android:overScrollMode="never"
+            android:paddingStart="@dimen/tv_page_padding_horizontal"
+            android:paddingTop="12dp"
+            android:paddingEnd="@dimen/tv_page_padding_horizontal"
+            android:paddingBottom="12dp"
+            android:scrollbars="none"
+            tools:listitem="@layout/item_comic" />
+
+        <LinearLayout
+            android:id="@+id/empty_state_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_tv_empty"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="56dp"
+            android:paddingTop="44dp"
+            android:paddingEnd="56dp"
+            android:paddingBottom="48dp"
+            android:visibility="gone">
+
+            <FrameLayout
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:background="@drawable/bg_tv_icon_box">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_photo_library"
+                    app:tint="@color/tv_ink" />
+
+            </FrameLayout>
+
+            <TextView
+                style="@style/TvEmptyTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="@string/tv_empty_comics_title" />
+
+            <TextView
+                style="@style/TvEmptyHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/tv_empty_comics_hint" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

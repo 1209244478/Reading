@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/main_nav_height"
     android:background="@color/ios_background"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
@@ -91,7 +92,8 @@
                 android:id="@+id/wheelContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center">
+                android:layout_gravity="center"
+                android:layout_weight="1">
 
                 <com.wrz.reading.ui.wheel.view.wheelview.WheelView
                     android:id="@+id/wheel"

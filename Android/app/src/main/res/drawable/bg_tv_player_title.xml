@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器标题卡：黑底 + 米白粗边 + 左侧亮黄色条 + 硬粉阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="6dp" android:top="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_pink" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item android:right="6dp" android:bottom="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#D90A0A0D" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_paper" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item
+        android:width="7dp"
+        android:height="72dp"
+        android:gravity="left|top"
+        android:left="14dp"
+        android:top="20dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+</layer-list>

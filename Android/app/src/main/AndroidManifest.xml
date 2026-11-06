@@ -10,29 +10,45 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" /> <!-- Android 13+ 需要的媒体权限 -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="PhotoAndVideoPolicy" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:ignore="PhotoAndVideoPolicy" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" /> <!-- Android 14+ 新增的部分媒体访问 -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" /> <!-- 如果需要所有文件访问权限（谨慎使用） -->
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" /> <!-- 声明要访问的文件类型（可选但推荐） -->
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" /> <!-- 声明要访问的文件类型（可选但推荐） -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    <!-- TV 端：无触摸屏也能安装/运行 -->
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 16+ 本地网络访问（AirPlay mDNS/RTSP） -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- Cling DLNA SSDP 发现需要组播权限与 WiFi 状态 -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- Cling AndroidRouter 创建 WifiLock 需要 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- 接收端 DLNA 服务以前台服务运行，避免退出 Activity 后进程被回收导致设备消失 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".app.MyApplication"
         android:allowBackup="true"
+        android:banner="@drawable/tv_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
@@ -71,8 +87,15 @@
         <activity
             android:name=".ui.read.activity.VideoPlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.ComicReader.FullScreen"
             android:exported="false"
             android:screenOrientation="sensor" />
+        <activity
+            android:name=".ui.read.airplay.AirPlayReceiverActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:theme="@style/Theme.ComicReader.FullScreen"
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
             android:name=".ui.main.activity.MainActivity"
             android:exported="true">
@@ -80,8 +103,12 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.main.activity.DownloadListActivity"
+            android:exported="false" />
 
         <!-- FileProvider：用于将视频文件以 content:// URI 共享给第三方播放器 -->
         <provider
@@ -106,6 +133,12 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="DLNA MediaRenderer,接收投屏" />
         </service>
+
+        <!-- AirPlay 接收端前台服务：保持进程存活，避免退出界面后被回收 -->
+        <service
+            android:name=".ui.read.airplay.AirPlayReceiverService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
 
     </application>
 

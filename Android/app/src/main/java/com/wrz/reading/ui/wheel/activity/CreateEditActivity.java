@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,6 +26,7 @@ import com.lxj.xpopup.XPopup;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
+import com.wrz.reading.common.TvInputHelper;
 import com.wrz.reading.ui.main.popupView.EmojiPopup;
 import com.wrz.reading.ui.main.popupView.WeightChangePopup;
 import com.wrz.reading.ui.main.utils.DialogHelper;
@@ -97,6 +99,8 @@ public class CreateEditActivity extends BaseActivity {
     public void initView() {
         tv_title = findViewById(R.id.tv_title);
         et_category = findViewById(R.id.et_category);
+        // TV：聚焦时只显示焦点，按 OK 才弹出输入法
+        TvInputHelper.bind(et_category);
 
         TextView tv_save = findViewById(R.id.tv_save);
         tv_save.setVisibility(View.VISIBLE);
@@ -110,6 +114,9 @@ public class CreateEditActivity extends BaseActivity {
         });
 
         tv_question = findViewById(R.id.tv_question);
+        if (tv_question instanceof EditText) {
+            TvInputHelper.bind((EditText) tv_question);
+        }
 
         vp_list = findViewById(R.id.vp_list);
 
@@ -395,10 +402,6 @@ public class CreateEditActivity extends BaseActivity {
         }, 100);
     }
 
-    @Override
-    public void goBack() {
-
-    }
 
     /**
      * 保存：根据模式写入对应表

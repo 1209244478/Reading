@@ -15,6 +15,8 @@ import android.util.Log;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
+import com.wrz.reading.ui.read.airplay.AirPlayReceiverManager;
+import com.wrz.reading.ui.read.wrzcast.WrzCastReceiverManager;
 
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
@@ -39,6 +41,10 @@ import java.util.UUID;
  * RenderingControl 两个服务），接收控制点的播放控制指令并转发给当前注册的
  * {@link PlayerBridge}（即接收模式的 VideoPlayerActivity）。
  *
+ * 接收方式（{@link ReceiveMode}）持久化在独立 SharedPreferences 中，{@link #start(Context)}
+ * 按当前方式启停对应协议（DLNA / WrzCast / AirPlay）；Chromecast 接收端受认证硬件限制
+ * 暂未实现，仅保留扩展入口。
+ *
  * 线程模型：AVTransport/RenderingControl 动作由 Cling 后台线程调用，状态字段使用 volatile
  * 保证可见性；对 ExoPlayer 的操作（play/pause/seek/setUri）通过主线程 Handler 派发，
  * 因为 ExoPlayer 只能在主线程访问。
@@ -50,6 +56,7 @@ public class DlnaRendererManager {
 
     private static final String PREF_NAME = "dlna_prefs";
     private static final String KEY_RECEIVER = "pref_receive_cast";
+    private static final String KEY_RECEIVER_MODE = "pref_receive_mode";
     private static final String KEY_UDN = "renderer_udn";
 
     private static volatile DlnaRendererManager instance;
@@ -58,6 +65,8 @@ public class DlnaRendererManager {
     private AndroidUpnpService upnpService;
     private LocalDevice rendererDevice;
     private volatile boolean started = false;
+    /** DLNA 的 Cling 服务是否已成功绑定（未绑定时 stop 不再 unbind）。 */
+    private volatile boolean serviceBound = false;
 
     private WifiManager.MulticastLock multicastLock;
     private WifiManager.WifiLock wifiLock;
@@ -81,20 +90,7 @@ public class DlnaRendererManager {
     }
 
     /** 由接收模式 VideoPlayerActivity 实现，桥接 ExoPlayer 控制。 */
-    public interface PlayerBridge {
-        void play();
-
-        void pause();
-
-        void stop();
-
-        void seekTo(long ms);
-
-        void setUri(String uri, String title, boolean isNewDevice, String casterName);
-
-        long getPositionMs();
-
-        long getDurationMs();
+    public interface PlayerBridge extends com.wrz.reading.ui.read.cast.CastPlayerBridge {
     }
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -147,6 +143,78 @@ public class DlnaRendererManager {
                 .apply();
     }
 
+    /**
+     * 接收投屏协议。DLNA 使用 Cling MediaRenderer 实现，WrzCast 为 App 间私有协议，
+     * AirPlay 使用内置 UxPlay 原生库；Chromecast 接收端需要认证硬件，当前仅保留扩展入口。
+     */
+    public enum ReceiveMode {
+        /** 仅 DLNA */
+        DLNA,
+        /** 仅 WrzCast（App 间私有协议） */
+        WRZCAST,
+        /** 仅 AirPlay */
+        AIRPLAY,
+        /** 仅 Chromecast */
+        CHROMECAST,
+        /** 全部协议（当前 DLNA + WrzCast + AirPlay 实际生效） */
+        ALL;
+
+        public boolean includesDlna() {
+            return this == DLNA || this == ALL;
+        }
+
+        public boolean includesChromecast() {
+            return this == CHROMECAST || this == ALL;
+        }
+
+        public boolean includesWrzCast() {
+            return this == WRZCAST || this == ALL;
+        }
+
+        public boolean includesAirPlay() {
+            return this == AIRPLAY || this == ALL;
+        }
+    }
+
+    /** 当前接收方式（持久化于独立 SharedPreferences，默认 DLNA）。 */
+    public static ReceiveMode getReceiveMode(Context ctx) {
+        String name = ctx.getApplicationContext()
+                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_RECEIVER_MODE, ReceiveMode.DLNA.name());
+        try {
+            return ReceiveMode.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return ReceiveMode.DLNA;
+        }
+    }
+
+    public static void setReceiveMode(Context ctx, ReceiveMode mode) {
+        ctx.getApplicationContext()
+                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_RECEIVER_MODE, mode.name())
+                .apply();
+    }
+
+    /**
+     * 当前设备是否支持 Chromecast 接收端。
+     * Cast 接收端需要 Google 认证的 Cast 运行时（如 Android TV 内置 Chromecast），
+     * 官方 SDK 未向手机/平板开放接收能力，因此当前统一返回 false；
+     * 后续在 Android TV 接入 Cast SDK 后在此按设备类型放开。
+     */
+    public static boolean isChromecastReceiverSupported(Context ctx) {
+        return false;
+    }
+
+    /**
+     * 当前设备是否支持 AirPlay 接收端。
+     * 由内置的 UxPlay 预编译原生库（libairplay_native.so）提供 AirPlay/RAOP 协议能力，
+     * 设备 ABI 无对应原生库时返回 false。
+     */
+    public static boolean isAirPlayReceiverSupported(Context ctx) {
+        return AirPlayReceiverManager.isSupported();
+    }
+
     /** 获取或创建持久化的 MediaRenderer UDN（跨重启稳定，不与其他设备冲突）。 */
     private UDN getOrCreateUdn() {
         android.content.SharedPreferences sp = appContext
@@ -159,13 +227,31 @@ public class DlnaRendererManager {
         return new UDN(UUID.fromString(id));
     }
 
-    /** 启动接收端：以前台服务方式启动并绑定 Cling 服务，服务就绪后注册 MediaRenderer 设备。 */
+    /** 启动接收端：按当前接收方式启动对应协议。 */
     public void start(Context context) {
         if (started) {
             return;
         }
         appContext = context.getApplicationContext();
         started = true;
+        ReceiveMode mode = getReceiveMode(appContext);
+        LogUtil.d(TAG, "启动接收端，接收方式: " + mode);
+        if (mode.includesDlna()) {
+            startDlnaReceiver();
+        }
+        if (mode.includesChromecast()) {
+            startChromecastReceiver();
+        }
+        if (mode.includesWrzCast()) {
+            WrzCastReceiverManager.getInstance().start(appContext);
+        }
+        if (mode.includesAirPlay()) {
+            startAirPlayReceiver();
+        }
+    }
+
+    /** 启动 DLNA 接收端（Cling MediaRenderer）。 */
+    private void startDlnaReceiver() {
         // 必须在 bindService 之前获取 MulticastLock，否则 Cling 初始化时发送 SSDP 会因 EPERM 失败
         acquireLocks();
         Intent intent = new Intent(appContext, CustomAndroidUpnpServiceImpl.class);
@@ -180,33 +266,33 @@ public class DlnaRendererManager {
             Log.w(TAG, "startService 失败", e);
         }
         boolean ok = appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        serviceBound = ok;
         if (!ok) {
             Log.w(TAG, "bindService 失败");
             started = false;
         }
     }
 
-    /** 停止接收端：注销设备、释放锁、解绑并停止服务。 */
+    /**
+     * 启动 Chromecast 接收端。
+     * 官方 Cast 接收端仅运行在 Google Cast 认证设备上，手机/平板暂不支持，
+     * 这里保留扩展入口，待接入 Cast SDK 后实现。
+     */
+    private void startChromecastReceiver() {
+        LogUtil.d(TAG, "当前设备暂不支持 Chromecast 接收端，已跳过");
+    }
+
+    /** 停止接收端：按当前接收方式停止对应协议。 */
     public void stop() {
         if (!started) {
             return;
         }
         started = false;
-        unregisterRendererDevice();
-        if (appContext != null) {
-            try {
-                appContext.unbindService(serviceConnection);
-            } catch (Exception e) {
-                Log.w(TAG, "unbindService 失败", e);
-            }
-            try {
-                Intent intent = new Intent(appContext, CustomAndroidUpnpServiceImpl.class);
-                appContext.stopService(intent);
-            } catch (Exception e) {
-                Log.w(TAG, "stopService 失败", e);
-            }
-        }
-        upnpService = null;
+        stopDlnaReceiver();
+        stopChromecastReceiver();
+        stopAirPlayReceiver();
+        // 无条件停止：切换接收方式后 reStart 时，当前 mode 已是新值
+        WrzCastReceiverManager.getInstance().stop();
         releaseLocks();
         bridge = null;
         activityLaunched = false;
@@ -216,11 +302,52 @@ public class DlnaRendererManager {
         currentTitle = null;
     }
 
+    /** 停止 DLNA 接收端：注销设备、解绑并停止 Cling 服务。 */
+    private void stopDlnaReceiver() {
+        unregisterRendererDevice();
+        if (appContext != null) {
+            if (serviceBound) {
+                try {
+                    appContext.unbindService(serviceConnection);
+                } catch (Exception e) {
+                    Log.w(TAG, "unbindService 失败", e);
+                }
+                serviceBound = false;
+            }
+            try {
+                Intent intent = new Intent(appContext, CustomAndroidUpnpServiceImpl.class);
+                appContext.stopService(intent);
+            } catch (Exception e) {
+                Log.w(TAG, "stopService 失败", e);
+            }
+        }
+        upnpService = null;
+    }
+
+    /** 停止 Chromecast 接收端（预留：接入 Cast SDK 后在此注销）。 */
+    private void stopChromecastReceiver() {
+    }
+
+    /**
+     * 启动 AirPlay 接收端（UxPlay 原生库，支持镜像与音频）。
+     */
+    private void startAirPlayReceiver() {
+        AirPlayReceiverManager.getInstance().start(appContext);
+    }
+
+    /** 停止 AirPlay 接收端。 */
+    private void stopAirPlayReceiver() {
+        AirPlayReceiverManager.getInstance().stop();
+    }
+
     public void reStart(Context context) {
         stop();
 
         mainHandler.postDelayed(() -> {
-            start(context);
+            // 延迟期间用户可能已关闭接收开关，避免重新拉起接收端
+            if (appContext != null && isReceiverEnabled(appContext)) {
+                start(context);
+            }
         }, 4000);
     }
 

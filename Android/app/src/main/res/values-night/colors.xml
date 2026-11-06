@@ -5,6 +5,9 @@
     <color name="ios_text_secondary">#98989D</color>
     <color name="ios_text_placeholder">#48484A</color>
     <color name="ios_background">#1C1C1E</color>
+    <color name="ios_background_primary">#A01C1C1E</color>
+    <color name="ios_background_reverse">#1C1C1E</color>
+
     <color name="ios_border">#38383A</color>
     <color name="ios_click_ripple">#2C2C2E</color>
     <color name="ios_blue">#0A84FF</color>

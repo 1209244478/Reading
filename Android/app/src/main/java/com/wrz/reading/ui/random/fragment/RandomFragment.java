@@ -62,9 +62,9 @@ public class RandomFragment extends BaseFragment {
 
         setClick(settingPopupL, btn_menu, tv_start, tv_end);
 
-        btn_generate.setOnClickListener(v -> generateUnique());
+        setClick(btn_generate, v -> generateUnique());
 
-        btn_clear.setOnClickListener(v -> {
+        setClick(btn_clear, v -> {
             list.clear();
             adapter.notifyDataSetChanged();
         });

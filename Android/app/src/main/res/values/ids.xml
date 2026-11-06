@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- PressFeedback 绑定标记：防止同一视图重复绑定触摸反馈 -->
+    <item name="tag_press_feedback" type="id" />
+</resources>

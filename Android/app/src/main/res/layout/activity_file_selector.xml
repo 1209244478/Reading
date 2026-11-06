@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f5f5f5"
+    android:background="@color/ios_background"
     android:fitsSystemWindows="true">
 
     <!-- 顶部导航栏 (Toolbar) -->
@@ -96,7 +96,7 @@
         android:id="@+id/top_actions_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@color/ios_background_reverse"
         android:orientation="horizontal"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -120,6 +120,8 @@
                 android:id="@+id/search_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:defaultFocusHighlightEnabled="false"
+                android:foreground="@drawable/bg_tv_focusable"
                 android:inputType="text"
                 android:maxLines="1" />
 
@@ -155,12 +157,12 @@
             android:id="@+id/btn_view_mode"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cd_view_mode"
             android:padding="12dp"
-            android:src="@drawable/ic_grid_view"
-            android:visibility="gone" />
+            android:src="@drawable/ic_grid_view" />
 
     </LinearLayout>
 
@@ -169,7 +171,7 @@
         android:id="@+id/folder_recycler_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#FFFFFF"
+        android:background="@color/ios_background_reverse"
         android:padding="8dp"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@+id/action_bar_layout"
@@ -183,7 +185,7 @@
         android:id="@+id/action_bar_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@color/ios_background_reverse"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="12dp"
@@ -214,7 +216,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#2196F3"
-            android:text="@string/btn_confirm_select"
+            android:text="@string/btn_confirm"
             android:textColor="@android:color/white" />
 
     </LinearLayout>
@@ -254,6 +256,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#2196F3"
+            android:focusable="true"
             android:text="@string/btn_go_back"
             android:textColor="@android:color/white" />
 

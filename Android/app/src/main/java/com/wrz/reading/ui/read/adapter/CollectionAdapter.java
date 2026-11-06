@@ -40,6 +40,8 @@ public class CollectionAdapter extends BaseQuickAdapter<CollectionItem, BaseView
     @Override
     protected void convert(@NonNull BaseViewHolder holder, CollectionItem item) {
         Collection collection = item.getCollection();
+        // 电视端卡片以 activated 状态显示青柠描边，选中反馈不只依赖右下角勾选框
+        holder.itemView.setActivated(isSelectMode && collection.isSelected());
         holder.setText(R.id.collection_name, collection.getName());
         holder.setText(R.id.collection_count, item.getComicCount() + " 本");
 

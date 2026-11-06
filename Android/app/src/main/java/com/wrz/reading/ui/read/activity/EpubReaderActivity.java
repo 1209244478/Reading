@@ -3,21 +3,19 @@ package com.wrz.reading.ui.read.activity;
 import static com.wrz.reading.common.Constant.EXTRA_COMIC_NAME;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.wrz.reading.R;
-import com.wrz.reading.app.MyApplication;
-import com.wrz.reading.ui.main.Log.LogUtil;
-import com.wrz.reading.ui.read.data.ComicDatabase;
-import com.wrz.reading.ui.read.model.BookMixAToc;
 import com.wrz.reading.common.BaseDialog;
 import com.wrz.reading.common.Constant;
-import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.adapter.EPubReaderAdapter;
+import com.wrz.reading.ui.read.data.ComicDatabase;
+import com.wrz.reading.ui.read.model.BookMixAToc;
+import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.view.dialog.ChaptersDialog;
 import com.wrz.reading.ui.read.view.epubview.DirectionalViewpager;
@@ -61,7 +59,7 @@ public class EpubReaderActivity extends BaseReaderActivity implements ReaderCall
     public void initView() {
         viewPager = findViewById(R.id.epubViewPager);
         ivMenu = findViewById(R.id.toolbar_menu);
-        ivMenu.setOnClickListener(view -> showMenu());
+        setClick(ivMenu, v -> showMenu());
         tvTitle = findViewById(R.id.toolbar_title);
     }
 

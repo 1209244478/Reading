@@ -51,18 +51,23 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
 
     @Override
     protected void convert(@NonNull BaseViewHolder holder, Comic comic) {
+        // 电视端卡片以 activated 状态显示青柠描边，选中反馈不只依赖角标
+        holder.itemView.setActivated(isSelectMode && comic.isSelected());
         holder.setText(R.id.comic_title_text, comic.getTitle());
 
         ImageView coverImageView = holder.getView(R.id.comic_cover_image);
         String coverPath = comic.getCoverPath();
         FileType fileType = comic.getFileTypeEnum();
 
-        if (coverPath != null && !coverPath.isEmpty() && new File(coverPath).exists()) {
+        // coverPath 的存在性已在数据加载时于后台线程预校验（失效的已被置空），
+        // 此处不再做磁盘 stat，避免滚动时每个 item 都产生文件系统调用
+        if (coverPath != null && !coverPath.isEmpty()) {
             Glide.with(holder.itemView)
                     .load(coverPath)
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.ic_launcher_background)
                     .into(coverImageView);
+            holder.setGone(R.id.tv_cover, true);
 
         } else if (fileType == FileType.VIDEO) {
             // 旧视频数据（coverPath 为空）：异步提取非首帧，避免纯黑封面；
@@ -98,6 +103,7 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
                     break;
                 default:
                     holder.setText(R.id.tv_cover, comic.getTitle());
+                    holder.setVisible(R.id.comic_cover_image, false);
                     break;
             }
         }
@@ -121,14 +127,15 @@ public class ComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
             }
         }
 
-        if (fileType != FileType.IMAGE) {
-            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length()));
+        // 文件本体大小已在数据加载时于后台线程预计算，绑定时直接读内存字段
+        long fileLength = comic.getFileSize();
+        if (fileType == FileType.ZIP) {
+            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(fileLength)
+                    + "\n缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
+        } else if (fileType != FileType.IMAGE) {
+            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(fileLength));
         } else {
             holder.setText(R.id.comic_cache, "缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
-        }
-        if (fileType == FileType.ZIP) {
-            holder.setText(R.id.comic_cache, "大小:" + FileUtils.formatFileSizeToString(new File(comic.getPath()).length())
-                    + "\n缓存大小:" + FileUtils.formatFileSizeToString(comic.getCacheSize()));
         }
 
         if (isSelectMode) {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端对话框面板：近黑底 + 黄色粗边 + 热粉顶部色条 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F50A0A0D" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+    <item
+        android:height="5dp"
+        android:gravity="top">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_pink" />
+        </shape>
+    </item>
+</layer-list>

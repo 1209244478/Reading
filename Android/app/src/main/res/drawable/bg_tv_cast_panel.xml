@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 投屏控制面板：黄边黑底，保持与播放器控制台一致的粗野语言 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F50A0A0D" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+    <item
+        android:height="6dp"
+        android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+</layer-list>

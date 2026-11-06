@@ -16,6 +16,7 @@ import com.lxj.xpopup.interfaces.OnCancelListener;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
+import com.wrz.reading.common.PressFeedback;
 
 /**
  * Description: 确定和取消的对话框
@@ -83,6 +84,9 @@ public class ConfirmPopupView extends CenterPopupView implements View.OnClickLis
             XPopupUtils.setVisible(divider2, false);
         }
         applyTheme();
+
+        // 为全部可点击控件绑定按压缩放/回弹/悬停反馈（WeightChangePopup 继承本类，自动覆盖）
+        PressFeedback.applyTree(this);
     }
 
     protected void applyLightTheme() {

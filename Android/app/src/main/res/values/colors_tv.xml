@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    电视端新粗野主义（Neo-brutalism）色板：
+    高对比、硬边框、块面撞色。深色底降低电视端眩光，亮黄/粉/青作为焦点与操作强调色。
+-->
+<resources>
+    <color name="tv_ink">#0A0A0D</color>
+    <color name="tv_ink_soft">#121218</color>
+    <color name="tv_paper">#F5F0E6</color>
+    <color name="tv_muted">#A9A6B8</color>
+    <color name="tv_surface">#17171F</color>
+    <color name="tv_surface_alt">#24242F</color>
+    <color name="tv_yellow">#FFDD3D</color>
+    <color name="tv_pink">#FF5C8A</color>
+    <color name="tv_cyan">#5BE1E6</color>
+    <color name="tv_lime">#B8FF4A</color>
+    <color name="tv_orange">#FF8A3D</color>
+    <color name="tv_scrim">#E60A0A0D</color>
+    <color name="tv_selected_fill">#173222</color>
+</resources>

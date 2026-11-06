@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,8 +13,7 @@
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         app:defaultNavHost="true"
         app:layout_constraintBottom_toTopOf="@+id/bottom_nav_container"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,30 +21,61 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navGraph="@navigation/nav_graph" />
 
-    <!-- 悬浮液态玻璃导航容器：左右与底部留白，圆角玻璃背景 + 柔和阴影 -->
-    <FrameLayout
+    <!-- 悬浮液态玻璃导航容器：左右与底部留白，圆角玻璃背景 + 柔和阴影。
+         高度固定 62dp，item 图标通过 scaleType=center + match_parent 恒定垂直居中 -->
+    <LinearLayout
         android:id="@+id/bottom_nav_container"
         android:layout_width="match_parent"
-        android:layout_height="62dp"
+        android:layout_height="@dimen/main_nav_height"
+        android:layout_alignParentBottom="true"
         android:layout_marginHorizontal="20dp"
-        android:background="@drawable/bg_liquid_glass_nav"
-        app:elevation="10dp">
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_liquid_glass_nav">
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
+        <com.wrz.reading.ui.main.view.BottomNavBar
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginTop="8dp"
-            android:background="@android:color/transparent"
-            app:backgroundTint="@android:color/transparent"
-            app:elevation="0dp"
-            app:itemIconTint="@color/bottom_nav_item_selector"
-            app:itemRippleColor="@android:color/transparent"
-            app:itemTextColor="@color/bottom_nav_item_selector"
-            app:labelVisibilityMode="unlabeled"
-            app:menu="@menu/bottom_nav_menu" />
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
-    </FrameLayout>
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/mainFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:src="@drawable/ic_home"
+                app:tint="@color/bottom_nav_default" />
 
-</LinearLayout>
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/wheelFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:src="@drawable/ic_wheel"
+                app:tint="@color/bottom_nav_default" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/randomFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:src="@drawable/ic_random"
+                app:tint="@color/bottom_nav_default" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/settingFragment"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:scaleType="center"
+                android:src="@drawable/ic_setting"
+                app:tint="@color/bottom_nav_default" />
+
+        </com.wrz.reading.ui.main.view.BottomNavBar>
+
+    </LinearLayout>
+
+</RelativeLayout>

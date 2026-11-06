@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseDialog;
+import com.wrz.reading.common.TvFocusHelper;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.adapter.PlayListAdapter;
@@ -50,6 +51,12 @@ public class PlayListDialog extends BaseDialog {
         return R.layout.dialog_play_list;
     }
 
+
+    @Override
+    protected boolean isPressFeedbackEnabled() {
+        return false;
+    }
+
     @Override
     public void initView() {
         recycler_view = findId(R.id.recycler_view);
@@ -76,6 +83,15 @@ public class PlayListDialog extends BaseDialog {
                 listener.onClicked(parent);
             }
         });
+    }
+
+    @Override
+    public void onShow() {
+        super.onShow();
+        // 电视端把遥控器焦点直接交给列表首项，避免停在不可操作的容器上
+        if (getContext().getResources().getBoolean(R.bool.is_tv)) {
+            TvFocusHelper.focusFirstIfNeeded(recycler_view);
+        }
     }
 
     public void setCurrentId(long id) {

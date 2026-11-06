@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 数量徽章：热粉底 + 黑描边 + 硬阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="3dp" android:top="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_ink" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+    <item android:right="3dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_pink" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_ink" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+</layer-list>

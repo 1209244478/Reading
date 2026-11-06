@@ -32,11 +32,6 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.channels.FileChannel;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,15 +41,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
  * 文件操作工具集（纯静态）：
  * <ul>
- *   <li>目录遍历：所有遍历统一走私有 {@code collect(File, Predicate, boolean)}，
- *       基于 {@link Files#walkFileTree} 实现（不跟随符号链接，天然避免循环）；
+ *   <li>目录遍历：所有遍历统一走私有 {@code collect(File, FilePredicate, boolean)}，
+ *       基于 File.listFiles 递归实现（通过 canonical path 去重避免符号链接循环），
+ *       兼容 Android 6（不依赖 java.nio.file / java.util.function）；
  *       getMediaFilesRecursive 等公开方法均为其不同谓词/深度组合</li>
  *   <li>媒体类型识别：图片/视频/音乐/压缩包/文档按扩展名判断</li>
  *   <li>封面：getAndSetCoverImagePath 生成"."开头的隐藏封面图并缓存路径</li>
@@ -94,47 +89,56 @@ public class FileUtils {
     }
 
     /**
+     * 文件过滤条件（自定义接口，避免 java.util.function.Predicate 对 Android 6 的依赖）。
+     */
+    private interface FilePredicate {
+        boolean accept(File file);
+    }
+
+    /**
      * 单趟遍历核心：深度优先遍历目录树，收集满足条件的文件。
      * 无法访问的条目直接跳过（与 listFiles 返回 null 的容错语义一致），
-     * 且不会跟随符号链接，天然避免循环递归。
+     * 并通过 canonical path 去重，避免符号链接造成循环递归。
      *
      * @param root      起始目录
      * @param accept    文件过滤条件
      * @param recursive 是否递归遍历子目录
      * @return 按遍历顺序（目录内条目顺序）排列的文件列表
      */
-    private static List<File> collect(File root, Predicate<File> accept, boolean recursive) {
+    private static List<File> collect(File root, FilePredicate accept, boolean recursive) {
         List<File> result = new ArrayList<>();
         if (root == null || !root.isDirectory()) {
             return result;
         }
-        Path rootPath = root.toPath();
-        FileVisitResult dirResult = recursive ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
-        try {
-            Files.walkFileTree(rootPath, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                    File f = file.toFile();
-                    if (accept.test(f)) {
-                        result.add(f);
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    return dir.equals(rootPath) ? FileVisitResult.CONTINUE : dirResult;
-                }
-
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException e) {
-            LogUtil.e(TAG, "collect: ", e);
-        }
+        collectInto(root, accept, recursive, result, new HashSet<>());
         return result;
+    }
+
+    private static void collectInto(File dir, FilePredicate accept, boolean recursive,
+                                    List<File> result, Set<String> visited) {
+        String canonicalPath;
+        try {
+            canonicalPath = dir.getCanonicalPath();
+        } catch (IOException e) {
+            canonicalPath = dir.getAbsolutePath();
+        }
+        // 符号链接可能造成环，按真实路径去重
+        if (!visited.add(canonicalPath)) {
+            return;
+        }
+        File[] children = dir.listFiles();
+        if (children == null) {
+            return;
+        }
+        for (File child : children) {
+            if (child.isDirectory()) {
+                if (recursive) {
+                    collectInto(child, accept, recursive, result, visited);
+                }
+            } else if (accept.accept(child)) {
+                result.add(child);
+            }
+        }
     }
 
     /**
@@ -175,14 +179,20 @@ public class FileUtils {
         if (directory == null || !directory.isDirectory()) {
             return subdirs;
         }
-        Path rootPath = directory.toPath();
+        String rootPath = directory.getAbsolutePath();
+        String prefix = rootPath.endsWith(File.separator) ? rootPath : rootPath + File.separator;
         Set<String> seen = new HashSet<>();
         for (File image : collect(directory, f -> isImageFile(f.getName()), true)) {
-            Path relative = rootPath.relativize(image.toPath());
-            if (relative.getNameCount() < 2) {
+            String absPath = image.getAbsolutePath();
+            if (!absPath.startsWith(prefix)) {
+                continue;
+            }
+            String relative = absPath.substring(prefix.length());
+            int separator = relative.indexOf(File.separatorChar);
+            if (separator < 0) {
                 continue; // 图片直接位于根目录下，不属于任何子目录
             }
-            File top = rootPath.resolve(relative.getName(0)).toFile();
+            File top = new File(directory, relative.substring(0, separator));
             if (seen.add(top.getAbsolutePath())) {
                 subdirs.add(top);
             }

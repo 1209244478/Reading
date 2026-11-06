@@ -11,18 +11,19 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseActivity;
+import com.wrz.reading.common.TvInputHelper;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.adapter.FolderAdapter;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.model.FolderBean;
@@ -30,6 +31,7 @@ import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -41,16 +43,12 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
 
     private FolderAdapter folderAdapter;
 
-    private LinearLayout emptyStateLayout;
-
     private TextView tvSelectedCount;
     private TextView currentPathTextView;
 
     private File currentDir;
 
     private String search = "";
-
-    private MaterialButton btnSelectAll;
 
 
     private TextInputEditText searchEditText;
@@ -76,11 +74,12 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
 
         currentPathTextView = findViewById(R.id.tv_current_path);
 
-        btnSelectAll = findViewById(R.id.btn_select_all);
-
         /*-----------------------------搜索-----------------------------*/
 
         searchEditText = findViewById(R.id.search_edit_text);
+
+        // TV：聚焦时只显示焦点，按 OK 才弹出输入法
+        TvInputHelper.bind(searchEditText);
 
         searchEditText.addTextChangedListener(watcher);
 
@@ -88,9 +87,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
 
         /*-----------------------------空白缺省-----------------------------*/
 
-        emptyStateLayout = findViewById(R.id.empty_state_layout);
-        MaterialButton btn_go_back = findViewById(R.id.btn_go_back);
-        btn_go_back.setOnClickListener(this);
+        setClick(R.id.btn_go_back, this);
 
         /*-----------------------------中间-----------------------------*/
 
@@ -102,39 +99,59 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
         folderRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         folderRecyclerView.setAdapter(folderAdapter);
 
-        // 设置列表点击事件
-        folderAdapter.addChildClickViewIds(R.id.ll_item, R.id.select_indicator);
-        folderAdapter.setOnItemChildClickListener((adapter, view, position) -> {
-            FolderBean item = currentList.get(position);
-
-            int viewId = view.getId();
-            if (viewId == R.id.ll_item) {
-                if (currentList.get(position).getFile().isDirectory()) {
-                    currentDir = currentList.get(position).getFile().getAbsoluteFile();
-                    updateFolderList();
-                } else {
-                    setSelect(item, position);
-                }
-            } else if (viewId == R.id.select_indicator) {
-                setSelect(item, position);
-            }
-        });
-
+        setAdapterClick();
 
         /*-----------------------------底部-----------------------------*/
 
         tvSelectedCount = findViewById(R.id.tv_selected_count);
 
-        MaterialButton confirmButton = findViewById(R.id.btn_confirm);
-        MaterialButton cancelButton = findViewById(R.id.btn_cancel);
+        setClick(R.id.btn_confirm, this);
+        setClick(R.id.btn_cancel, this);
+        setClick(R.id.btn_select_all, this);
 
-        // 设置按钮点击事件
-        confirmButton.setOnClickListener(this);
-
-        cancelButton.setOnClickListener(this);
-
-        btnSelectAll.setOnClickListener(this);
+        setClick(R.id.btn_view_mode, v -> {
+            if (linear) {
+                folderRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+                folderAdapter = new FolderAdapter(R.layout.item_file_grid, currentList);
+            } else {
+                folderRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+                folderAdapter = new FolderAdapter(R.layout.item_file, currentList);
+            }
+            folderRecyclerView.setAdapter(folderAdapter);
+            setAdapterClick();
+            linear = !linear;
+        });
     }
+
+    private void setAdapterClick() {
+        // TV 遥控器：焦点落在 item 根布局上，OK 键通过 item 点击事件处理
+        folderAdapter.setOnItemClickListener((adapter, view, position) -> handleFolderClick(position));
+        // 触摸端的勾选指示器保留独立点击
+        folderAdapter.addChildClickViewIds(R.id.select_indicator);
+        folderAdapter.setOnItemChildClickListener((adapter, view, position) -> {
+            if (view.getId() == R.id.select_indicator) {
+                setSelect(currentList.get(position), position);
+            }
+        });
+    }
+
+    /**
+     * 目录进入下一级；文件切换选中状态（遥控器 OK / 触摸点击 item 均走这里）。
+     */
+    private void handleFolderClick(int position) {
+        if (position < 0 || position >= currentList.size()) {
+            return;
+        }
+        FolderBean item = currentList.get(position);
+        if (item.getFile().isDirectory()) {
+            currentDir = item.getFile().getAbsoluteFile();
+            updateFolderList();
+        } else {
+            setSelect(item, position);
+        }
+    }
+
+    boolean linear = true;
 
     TextWatcher watcher = new TextWatcher() {
         @Override
@@ -213,19 +230,16 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
             if (parent != null) {
                 currentDir = parent;
                 updateFolderList();
-            } else {
-                finish();
             }
-        } else {
-            finish();
         }
+        super.goBack();
     }
 
     private void setButtonText() {
         if (isAllSelected()) {
-            btnSelectAll.setText(R.string.select_nothing);
+            setText(R.string.select_nothing, R.id.btn_select_all);
         } else {
-            btnSelectAll.setText(R.string.select_all);
+            setText(R.string.select_all, R.id.btn_select_all);
         }
         SpannableStringBuilder builder = new SpannableStringBuilder();
         builder.append(getString(R.string.msg_selected_count_paren, selectedFolders.size()));
@@ -263,10 +277,15 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
         File lastAddDir = new File(lastAddPath);
 
         if (MyApplication.manager.getLastAdd().isEmpty() || !lastAddDir.exists()) {
-            currentDir = Environment.getExternalStorageDirectory();
+            if (isStorageDirectReadable()) {
+                currentDir = Environment.getExternalStorageDirectory();
+            } else {
+                currentDir = this.getExternalFilesDir("");
+            }
             if (currentDir == null || !currentDir.exists()) {
                 currentDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             }
+            LogUtil.e(TAG, "initData: currentDir=" + currentDir.getName());
         } else {
             currentDir = lastAddDir;
         }
@@ -292,6 +311,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
 
             // 处理文件夹
             if (files != null) {
+                LogUtil.e(TAG, "updateFolderList: files=" + Arrays.stream(files));
                 for (File file : files) {
                     if (!file.getName().startsWith(".") && !file.isHidden()) {
                         if (file.isDirectory()) {
@@ -362,9 +382,11 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
                 currentPathTextView.setText(currentDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), getString(R.string.path_internal_storage)));
                 folderAdapter.notifyDataSetChanged();
                 if (currentList.isEmpty()) {
-                    emptyStateLayout.setVisibility(View.VISIBLE);
+                    gone(R.id.btn_select_all);
+                    visible(R.id.empty_state_layout);
                 } else {
-                    emptyStateLayout.setVisibility(View.GONE);
+                    visible(R.id.btn_select_all);
+                    gone(R.id.empty_state_layout);
                 }
             });
         });
@@ -381,6 +403,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
     }
 
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onClick(View view) {
         int viewId = view.getId();
@@ -427,7 +450,7 @@ public class FolderPickerActivity extends BaseActivity implements View.OnClickLi
             }
             setButtonText();
             folderAdapter.notifyDataSetChanged();
-
         }
     }
+
 }

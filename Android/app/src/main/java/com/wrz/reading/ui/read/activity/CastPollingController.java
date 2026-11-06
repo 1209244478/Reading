@@ -46,7 +46,8 @@ public class CastPollingController {
 
         void setLastCastPositionMs(long positionMs);
 
-        DlnaManager getDlnaManager();
+        /** 查询当前投屏协议（DLNA / WrzCast）的播放进度与状态 */
+        void requestCastPlaybackInfo(DlnaManager.PlaybackInfoListener listener);
 
         void stopCasting();
 
@@ -135,7 +136,7 @@ public class CastPollingController {
         pollTimedOut = false;
         stopPollTimeOut();
         startPollTimeOut();
-        host.getDlnaManager().getPlaybackInfo(new DlnaManager.PlaybackInfoListener() {
+        host.requestCastPlaybackInfo(new DlnaManager.PlaybackInfoListener() {
             @Override
             public void onResult(long positionMs, long durationMs, String transportState) {
                 host.runOnUiThread(() -> {

@@ -19,6 +19,7 @@ import com.wrz.reading.ui.read.model.FileType;
 import com.wrz.reading.ui.read.utils.FileUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,14 @@ import java.util.Map;
 public class PlayListAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
     private final String TAG = "PlayListAdapter";
     private long currentId;
-    /** 记录每个目录型 Comic 的展开状态 */
+    /**
+     * 记录每个目录型 Comic 的展开状态
+     */
     private final Map<Long, Boolean> expandedMap = new HashMap<>();
-    /** 子项点击回调：(parentComic, childFile) */
+
+    /**
+     * 子项点击回调：(parentComic, childFile)
+     */
     public interface OnSubItemClickListener {
         void onSubItemClick(Comic parent, File videoFile);
     }
@@ -86,16 +92,18 @@ public class PlayListAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
         if (isDir) {
             // 扫描目录下的视频文件
             List<File> videoFiles = FileUtils.getVideoFiles(dir);
-            Log.e(TAG, "convert: " + videoFiles.isEmpty() );
+            Log.e(TAG, "convert: " + videoFiles.isEmpty());
             if (!videoFiles.isEmpty()) {
                 ivArrow.setVisibility(View.VISIBLE);
 
                 boolean expanded = Boolean.TRUE.equals(expandedMap.get(comic.getId()));
-                /*ivArrow.setRotation(expanded ? 180f : 0f);*/
+                ivArrow.setRotation(expanded ? 180f : 0f);
                 subRecycler.setVisibility(expanded ? View.VISIBLE : View.GONE);
 
                 if (expanded) {
                     setupSubList(subRecycler, comic, videoFiles);
+                } else {
+                    clearSubList(subRecycler);
                 }
 
                 // 点击主行切换展开/收起
@@ -116,9 +124,17 @@ public class PlayListAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
         }
     }
 
+    private void clearSubList(RecyclerView subRecycler) {
+        if (subRecycler.getAdapter() != null) {
+            ((SubAdapter) subRecycler.getAdapter()).setData(new ArrayList<>());
+        }
+        subRecycler.setVisibility(View.GONE);
+    }
 
 
-    /** 设置子列表 */
+    /**
+     * 设置子列表
+     */
     private void setupSubList(RecyclerView subRecycler, Comic parent, List<File> videoFiles) {
         if (subRecycler.getAdapter() != null) {
             // 已设置过，只更新数据
@@ -136,7 +152,9 @@ public class PlayListAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> {
         subRecycler.setAdapter(subAdapter);
     }
 
-    /** 子列表 Adapter */
+    /**
+     * 子列表 Adapter
+     */
     private static class SubAdapter extends BaseQuickAdapter<File, BaseViewHolder> {
 
         private String fileName;

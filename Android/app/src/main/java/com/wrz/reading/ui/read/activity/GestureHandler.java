@@ -72,7 +72,7 @@ public class GestureHandler {
     private final Runnable longSeekRunnable = new Runnable() {
         @Override
         public void run() {
-            if (host.player == null || host.isCasting) return;
+            if (host.player == null /*|| host.isCasting*/) return;
             long dur = host.player.getDuration();
             if (dur <= 0) return;
             long target = host.player.getCurrentPosition() + (longSeekForward ? LONG_TAP_SEEK_MS : -LONG_TAP_SEEK_MS);
@@ -139,7 +139,7 @@ public class GestureHandler {
 
             @Override
             public void onLongPress(@NonNull MotionEvent e) {
-                if (host.player == null || host.isCasting) return;
+                if (host.player == null /*|| host.isCasting*/) return;
                 long dur = host.player.getDuration();
                 if (dur <= 0) return;
                 longSeekForward = e.getX() >= host.player_view.getWidth() / 2f;
@@ -148,7 +148,7 @@ public class GestureHandler {
 
             @Override
             public boolean onDoubleTap(@NonNull MotionEvent e) {
-                if (host.player == null || host.isCasting) return true;
+                if (host.player == null /*|| host.isCasting*/) return true;
                 long dur = host.player.getDuration();
                 if (dur <= 0) return true;
 
@@ -179,7 +179,12 @@ public class GestureHandler {
     }
 
     private boolean handleGestureTouch(MotionEvent event) {
-        if (host.player == null || host.isCasting) {
+        // 锁定时只允许右侧中部的解锁按钮响应，其余触摸全部吞掉
+        if (host.isControlsLocked()) {
+            gestureMode = MODE_NONE;
+            return true;
+        }
+        if (host.player == null /*|| host.isCasting*/) {
             gestureMode = MODE_NONE;
             return false;
         }

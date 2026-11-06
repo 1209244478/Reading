@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
@@ -87,8 +86,7 @@ public class WheelListActivity extends BaseActivity {
             finish();
         });
 
-        FloatingActionButton btn_add = findViewById(R.id.btn_add);
-        btn_add.setOnClickListener(v -> showCreateOptions());
+        setClick(R.id.btn_add, v -> showCreateOptions());
 
         tv_title = findViewById(R.id.tv_title);
 
@@ -281,8 +279,4 @@ public class WheelListActivity extends BaseActivity {
         tv_title.setText(R.string.my_wheel);
     }
 
-    @Override
-    public void goBack() {
-        finish();
-    }
 }

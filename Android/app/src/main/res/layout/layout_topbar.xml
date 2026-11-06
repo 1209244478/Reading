@@ -11,8 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/ios_background"
-        app:title=" "
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:title=" ">
 
         <!-- 自定义标题 -->
         <TextView
@@ -32,15 +32,15 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|center_vertical"
             android:layout_marginEnd="12dp"
-            android:visibility="gone"
+            android:focusable="true"
             android:gravity="center"
             android:paddingHorizontal="20dp"
             android:paddingVertical="8dp"
             android:text="@string/btn_save"
             android:textColor="@color/ios_blue"
             android:textSize="16sp"
-            android:textStyle="bold" />
-
+            android:textStyle="bold"
+            android:visibility="gone" />
 
 
     </com.google.android.material.appbar.MaterialToolbar>
@@ -48,6 +48,6 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/gray_200"/>
+        android:background="@color/gray_200" />
 
 </com.google.android.material.appbar.AppBarLayout>

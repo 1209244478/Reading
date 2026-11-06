@@ -3,7 +3,6 @@ package com.wrz.reading.ui.wheel.fragment;
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,7 +31,6 @@ public class WheelFragment extends BaseFragment {
     CardView mainCard;
     private Wheel wheel;
     private boolean isSpinning = false;
-    private ImageView pointer;
 
     @Override
     public int getLayoutResId() {
@@ -47,12 +45,9 @@ public class WheelFragment extends BaseFragment {
         editBtn = findId(R.id.editBtn);
         resultText = findId(R.id.tv_result);
         titleText = findId(R.id.tv_title);
-        /*resultCard = findId(R.id.resultCard);*/
-
 
         mainCard = findId(R.id.mainCard);
         btn_menu = findId(R.id.btn_menu);
-        pointer = findId(R.id.pointer);
 
         setClick(titleText, v -> showExplanation());
     }
@@ -133,16 +128,15 @@ public class WheelFragment extends BaseFragment {
     }
 
     private void setUpButtonClick() {
-        startBtn.setOnClickListener(v -> startSpinning());
-        editBtn.setOnClickListener(v -> showEditPage());
-        mainCard.setOnClickListener(v -> {
+        setClick(R.id.startBtn, v -> startSpinning());
+        setClick(R.id.editBtn, v -> showEditPage());
+        setClick(R.id.mainCard, v -> {
             if (isSpinning) return;
             resetWheel();
         });
 
-        btn_menu.setOnClickListener(v -> showList());
-
-        pointer.setOnClickListener(v -> startSpinning());
+        setClick(R.id.btn_menu, v -> showList());
+        setClick(R.id.pointer, v -> startSpinning());
 
         setClick(R.id.nextBtn, v -> {
             wheelView.setNext();
@@ -238,24 +232,10 @@ public class WheelFragment extends BaseFragment {
     public void onPause() {
         super.onPause();
         wheelView.stopSpin();
+
+        singleThread.execute(() -> {
+            MyApplication.wheelRepository.updateWheel(wheel);
+        });
     }
-
-    /*class WheelViewAdapter extends BaseQuickAdapter<List<Option>, BaseViewHolder> {
-
-        public boolean isSpinning = false;
-
-        public WheelViewAdapter(int layoutResId, @Nullable List<List<Option>> data) {
-            super(layoutResId, data);
-        }
-
-        @Override
-        protected void convert(@NonNull BaseViewHolder holder, List<Option> list) {
-            ImageView pointer = holder.getView(R.id.pointer);
-
-            pointer.setOnClickListener(v -> startSpinning());
-
-        }
-
-    }*/
 
 }

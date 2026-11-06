@@ -4,8 +4,12 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
+import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.ui.read.utils.FileUtils;
 import com.wrz.reading.ui.read.utils.MapConverter;
+import com.wrz.reading.ui.read.utils.VideoUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +54,22 @@ public class Comic {
     private boolean isSelected = false; // 是否被选中
 
     private boolean isClean = false; // 是否退出阅读后清理缓存
+
+    /*-------------------------------列表性能预计算（非数据库字段）----------------*/
+
+    /**
+     * 文件本体大小。加载列表时在后台线程预计算，供列表展示与排序使用，
+     * 避免绑定时在主线程做磁盘 stat。
+     */
+    @androidx.room.Ignore
+    private long fileSize;
+
+    /**
+     * path 是否为目录。加载列表时在后台线程预计算，供排序比较器使用，
+     * 避免主线程排序过程中做磁盘 stat。
+     */
+    @androidx.room.Ignore
+    private boolean isDirectory;
 
 
     /*-------------------------------排序相关------------------------------------*/
@@ -293,6 +313,22 @@ public class Comic {
         this.cacheSize = cacheSize;
     }
 
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public boolean isDirectory() {
+        return isDirectory;
+    }
+
+    public void setDirectory(boolean directory) {
+        isDirectory = directory;
+    }
+
     /** 深拷贝：仅复制标题相关字段，取消时不影响原始数据 */
     public static List<Comic> deepCopy(List<Comic> data) {
         if (data == null) return null;
@@ -323,6 +359,8 @@ public class Comic {
         copy.setSort(comic.getSort());
         copy.setAutoPlay(comic.getAutoPlay());
         copy.setCacheSize(comic.getCacheSize());
+        copy.setFileSize(comic.getFileSize());
+        copy.setDirectory(comic.isDirectory());
         return copy;
     }
 
@@ -333,6 +371,55 @@ public class Comic {
             dest.add(new SubProgress(sp.getTitle(), sp.getProgress()));
         }
         return dest;
+    }
+
+    /**
+     * 根据文件类型构建 Comic 对象。
+     * 支持图片目录、zip、pdf、epub。
+     */
+    public static Comic buildComicFromFile(File file) {
+        String name = file.getName();
+        String ext = FileUtils.isSupportedExtFormat(name);
+
+        if (file.isDirectory()) {
+            // 文件夹：统计图片+视频作为漫画内容
+            List<ReadItem> media = FileUtils.getMediaFilesRecursive(file);
+            if (media.isEmpty()) return null;
+            File cover = FileUtils.getFirstImageFile(file);
+            String coverPath = cover != null ? cover.getAbsolutePath() : "";
+            return Comic.uncompressed(name, file.getAbsolutePath(), coverPath, media.size(), "image");
+        }
+
+        if (FileUtils.SPECIAL_FORMATS.equals(ext)) {
+            return Comic.uncompressed(name, file.getAbsolutePath(), "", 0, FileType.ZIP.getCode());
+        }
+        if (FileUtils.PDF_FORMATS.equals(ext)) {
+            return Comic.uncompressed(name, file.getAbsolutePath(), "", 0, FileType.PDF.getCode());
+        }
+        if (FileUtils.EPUB_FORMATS.equals(ext)) {
+            return Comic.uncompressed(name, file.getAbsolutePath(), "", 0, FileType.EPUB.getCode());
+        }
+        // 视频文件：交由播放器打开
+        if (FileUtils.isVideoFile(name)) {
+            // 生成非首帧缩略图作为封面，避免纯黑封面
+            String cover = VideoUtils.generateThumbnailFile(file, name);
+            return Comic.uncompressed(name, file.getAbsolutePath(), cover, 1, FileType.VIDEO.getCode());
+        }
+        // 音乐文件：交由播放器打开
+        if (FileUtils.isMusicFile(name)) {
+            return Comic.uncompressed(name, file.getAbsolutePath(), "", 1, FileType.MUSIC.getCode());
+        }
+        return null;
+    }
+
+    public static boolean isComicExists(String originalPath) {
+        List<Comic> all = MyApplication.comicDatabase.comicDao().getAllComics();
+        for (Comic c : all) {
+            if (originalPath.equals(c.getOriginalPath())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

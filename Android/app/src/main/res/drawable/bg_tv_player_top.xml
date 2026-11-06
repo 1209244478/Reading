@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器顶部标题条 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#D90A0A0D" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_paper" />
+        </shape>
+    </item>
+    <item
+        android:height="4dp"
+        android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_pink" />
+        </shape>
+    </item>
+</layer-list>

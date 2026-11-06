@@ -977,7 +977,7 @@ public class DlnaManager {
     /**
      * 获取本机局域网 IPv4 地址（优先 wlan，排除 loopback）
      */
-    private static String getLocalIpAddress() {
+    public static String getLocalIpAddress() {
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
                  en.hasMoreElements(); ) {

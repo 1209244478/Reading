@@ -17,7 +17,9 @@ public final class ComicSizeCalculator {
     }
 
     /**
-     * 统计列表中所有漫画的体积，并把每个漫画的缓存大小写入其 cacheSize 字段。
+     * 统计列表中所有漫画的体积，并把每个漫画的缓存大小写入其 cacheSize 字段；
+     * 同时预计算文件本体大小（fileSize）与目录标志（isDirectory），
+     * 供列表绑定与排序使用，避免主线程做磁盘 stat。
      *
      * @param comics 待统计的漫画列表
      * @return [0] 解压缓存总大小；[1] 文件本体总大小
@@ -26,9 +28,14 @@ public final class ComicSizeCalculator {
         final long[] totalSize = {0, 0};
         for (Comic comic : comics) {
             File file = new File(comic.getPath());
+            boolean isDir = file.isDirectory();
+            comic.setDirectory(isDir);
+            long fileLength = 0;
             if (file.exists()) {
-                totalSize[1] += file.length();
+                fileLength = file.length();
+                totalSize[1] += fileLength;
             }
+            comic.setFileSize(fileLength);
 
             long size = 0;
             File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());

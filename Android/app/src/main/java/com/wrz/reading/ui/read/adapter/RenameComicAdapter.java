@@ -14,6 +14,7 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
+import com.wrz.reading.common.TvInputHelper;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
 import com.wrz.reading.ui.read.model.Comic;
@@ -78,6 +79,8 @@ public class RenameComicAdapter extends BaseQuickAdapter<Comic, BaseViewHolder> 
             }
         });
 
+        // 最后绑定，确保电视端 TvInputHelper 的焦点/输入法策略不被适配器监听覆盖
+        TvInputHelper.bind(nameEdit, nameLayout);
     }
 
     private static void requestIme(View view) {

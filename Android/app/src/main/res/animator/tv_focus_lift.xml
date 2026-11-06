@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视焦点抬升：焦点项轻微放大，形成硬朗的“贴纸浮起”感 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <set android:ordering="together">
+            <objectAnimator
+                android:duration="120"
+                android:interpolator="@android:interpolator/decelerate_quint"
+                android:propertyName="scaleX"
+                android:valueTo="1.045"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="120"
+                android:interpolator="@android:interpolator/decelerate_quint"
+                android:propertyName="scaleY"
+                android:valueTo="1.045"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set android:ordering="together">
+            <objectAnimator
+                android:duration="160"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="160"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

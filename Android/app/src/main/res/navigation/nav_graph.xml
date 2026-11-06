@@ -7,36 +7,47 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.wrz.reading.ui.read.fragment.CollectionFragment"
+        android:name="com.wrz.reading.ui.read.fragment.CollectionComposeFragment"
         android:label="MainFragment"
-        tools:layout="@layout/fragment_collection">
+        tools:layout="@layout/fragment_collection_compose">
         <action
             android:id="@+id/action_main_to_collectionDetail"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/collectionDetailFragment" />
+        <action
+            android:id="@+id/action_main_to_settingfragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:destination="@id/settingFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/collectionDetailFragment"
-        android:name="com.wrz.reading.ui.read.fragment.CollectionDetailFragment"
+        android:name="com.wrz.reading.ui.read.fragment.CollectionDetailComposeFragment"
         android:label="CollectionDetailFragment"
-        tools:layout="@layout/fragment_collection_detail" />
+        tools:layout="@layout/fragment_collection_detail_compose" />
 
     <fragment
         android:id="@+id/wheelFragment"
-        android:name="com.wrz.reading.ui.wheel.fragment.WheelFragment"
+        android:name="com.wrz.reading.ui.wheel.fragment.WheelComposeFragment"
         android:label="WheelFragment"
-        tools:layout="@layout/fragment_wheel" />
+        tools:layout="@layout/fragment_wheel_compose" />
 
     <fragment
         android:id="@+id/randomFragment"
-        android:name="com.wrz.reading.ui.random.fragment.RandomFragment"
+        android:name="com.wrz.reading.ui.random.fragment.RandomComposeFragment"
         android:label="RandomFragment"
-        tools:layout="@layout/fragment_random" />
+        tools:layout="@layout/fragment_random_compose" />
 
     <fragment
         android:id="@+id/settingFragment"
-        android:name="com.wrz.reading.ui.main.fragment.SettingFragment"
+        android:name="com.wrz.reading.ui.main.fragment.SettingComposeFragment"
         android:label="SettingFragment"
-        tools:layout="@layout/fragment_setting" />
+        tools:layout="@layout/fragment_setting_compose" />
 
 </navigation>

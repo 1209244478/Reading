@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 空状态面板：深色块 + 米白粗边框 + 青色硬阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="6dp" android:top="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_cyan" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+    <item android:right="6dp" android:bottom="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_surface" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/tv_paper" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+</layer-list>

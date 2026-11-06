@@ -516,6 +516,24 @@
     <string name="title_cast_request">投屏请求</string>
     <string name="title_cast_receive">投屏接收</string>
 
+    <!-- 接收投屏方式 -->
+    <string name="setting_receive_cast">接收投屏</string>
+    <string name="setting_receive_cast_desc">允许本机接收其他设备的投屏，接收协议可在下方选择</string>
+    <string name="setting_receive_mode">接收方式</string>
+    <string name="title_receive_mode">选择接收方式</string>
+    <string name="receive_mode_dlna">DLNA</string>
+    <string name="receive_mode_wrzcast">WrzCast（App 互投）</string>
+    <string name="receive_mode_airplay">AirPlay（镜像 + 音频）</string>
+    <string name="receive_mode_chromecast">Chromecast</string>
+    <string name="receive_mode_all">全部（DLNA + WrzCast + AirPlay）</string>
+    <string name="msg_chromecast_not_supported">当前设备暂不支持 Chromecast 接收，请使用 DLNA、WrzCast 或 AirPlay</string>
+    <string name="msg_airplay_not_supported">当前设备不支持 AirPlay 接收（原生库不可用）</string>
+    <string name="msg_receive_mode_unsupported_protocol">部分接收方式在当前设备不可用，其余方式已启用</string>
+    <string name="msg_wrzcast_device_name">%1$s（WrzCast）</string>
+    <string name="airplay_receiver_waiting">AirPlay 接收端已就绪，等待投屏画面…</string>
+    <string name="airplay_receiver_notification_title">AirPlay 接收已开启</string>
+    <string name="airplay_receiver_notification_text">正在等待 iPhone / iPad / Mac 投屏</string>
+
     <string name="msg_renamed">已重命名</string>
     <string name="msg_collection_created">已创建集合「%1$s」</string>
     <string name="msg_select_comics_first">请先选择漫画</string>
@@ -526,6 +544,29 @@
     <string name="msg_cannot_read_folder">无法读取所选文件夹</string>
     <string name="msg_folder_no_import_content">所选文件夹中没有可导入的内容</string>
     <string name="msg_imported_comics">已导入 %1$d 本漫画</string>
+
+    <!-- 导入方式选择 / 远程导入 -->
+    <string name="import_dialog_title">导入漫画</string>
+    <string name="import_dialog_subtitle">选择导入方式</string>
+    <string name="import_remote_title">远程导入</string>
+    <string name="import_remote_desc">电脑浏览器扫码，通过局域网发送 zip / 视频</string>
+    <string name="import_local_title">本地导入</string>
+    <string name="import_local_desc">从设备文件夹中选择漫画</string>
+    <string name="import_remote_starting">正在启动接收服务…</string>
+    <string name="import_remote_waiting">等待上传…</string>
+    <string name="import_remote_hint">用电脑或手机浏览器扫描二维码，选择 zip、视频等文件上传。\n请确保设备与手机连接同一个 Wi-Fi。</string>
+    <string name="import_remote_close">关闭并停止接收</string>
+    <string name="import_remote_stop">停止接收</string>
+    <string name="import_remote_receiving">正在接收：%1$s（%2$d%%）</string>
+    <string name="import_remote_received">已接收：%1$s，正在导入…</string>
+    <string name="import_remote_imported">已导入：%1$s</string>
+    <string name="import_remote_import_failed">导入失败：%1$s</string>
+    <string name="import_remote_upload_failed">上传失败：%1$s</string>
+    <string name="import_remote_imported_count">本次已导入 %1$d 个文件</string>
+    <string name="import_remote_url">地址：%1$s</string>
+    <string name="msg_remote_no_wifi">无法获取本机 IP，请确认已连接 Wi-Fi</string>
+    <string name="msg_remote_dir_failed">无法创建接收目录</string>
+    <string name="msg_remote_server_failed">接收服务启动失败，请重试</string>
     <string name="msg_video_not_found">视频文件不存在</string>
     <string name="msg_dir_no_video">目录中没有视频文件</string>
     <string name="msg_select_delete_collection">请选择要删除的集合（未分组不可删除）</string>
@@ -546,6 +587,19 @@
     <string name="msg_cast_searching">搜索中...</string>
     <string name="msg_cast_search_no_device">搜索中...未发现设备</string>
     <string name="msg_cast_found_devices">已发现 %1$d 个设备，点击投屏</string>
+
+    <string name="btn_audio_track">音轨</string>
+    <string name="cd_audio_track">选择音轨</string>
+    <string name="title_select_audio_track">选择音轨</string>
+    <string name="title_processing_audio">处理音轨</string>
+    <string name="audio_track_auto">自动</string>
+    <string name="audio_track_default">默认（原文件）</string>
+    <string name="audio_track_number">音轨 %1$d</string>
+    <string name="audio_track_with_lang">音轨 %1$d（%2$s）</string>
+    <string name="msg_remux_preparing">正在处理音轨… %1$d%%</string>
+    <string name="msg_remux_failed">该音轨编码不支持换轨投屏，继续播放原文件</string>
+    <string name="msg_recast_audio_success">音轨已切换</string>
+    <string name="msg_recast_audio_failed">音轨切换失败: %1$s</string>
     <string name="msg_brightness">亮度 %1$d%%</string>
     <string name="msg_volume">音量 %1$d%%</string>
     <string name="msg_delete_collections_confirm">删除 %1$d 个集合\n\n是否同时删除集合中的所有漫画？</string>
@@ -586,4 +640,79 @@
     <!-- 文件夹选择器 -->
     <string name="msg_selected_count_paren">已选择: (%1$d) 项</string>
     <string name="msg_select_at_least_one">请至少选择一个文件夹</string>
+    <string name="file_name">文件名</string>
+    <string name="previous_page">上一页</string>
+    <string name="next_page">下一页</string>
+    <string name="tag">标签</string>
+    <string name="option_setting">选项设置</string>
+    <string name="option">选项</string>
+    <string name="input_your_question">输入你的问题</string>
+    <string name="question_">问题:</string>
+    <string name="question">问题</string>
+    <string name="category">分类</string>
+
+    <!-- 视频下载 -->
+    <string name="cd_download">下载视频</string>
+    <string name="cd_lock_screen">锁定屏幕</string>
+    <string name="cd_unlock_screen">解锁屏幕</string>
+    <string name="title_download_list">下载列表</string>
+    <string name="setting_download_list">下载列表</string>
+    <string name="setting_download_list_desc">查看下载进度，支持暂停与断点续传</string>
+    <string name="msg_download_added">已加入下载列表</string>
+    <string name="msg_download_exists">已有下载任务，可在下载列表查看</string>
+    <string name="msg_download_completed">该视频已下载完成</string>
+    <string name="msg_download_in_progress">该视频正在下载</string>
+    <string name="msg_download_no_source">当前没有可下载的视频</string>
+    <string name="msg_download_failed_retry">下载失败，请稍后重试</string>
+    <string name="msg_download_empty">暂无下载任务</string>
+    <string name="msg_download_not_completed">下载尚未完成，无法播放</string>
+    <string name="msg_download_delete_confirm">确定删除「%1$s」及其已下载文件？</string>
+    <string name="download_status_pending">等待下载</string>
+    <string name="download_status_downloading">下载中</string>
+    <string name="download_status_paused">已暂停</string>
+    <string name="download_status_completed">已完成</string>
+    <string name="download_status_failed">下载失败</string>
+    <string name="download_progress_sizes">%1$s / %2$s</string>
+    <string name="download_progress_unknown">已下载 %1$s</string>
+    <string name="download_percent">%1$d%%</string>
+    <string name="btn_download_pause">暂停</string>
+    <string name="btn_download_resume">继续</string>
+
+    <!-- 电视端新粗野主义 UI -->
+    <string name="tv_library_title">书库</string>
+    <string name="tv_library_kicker">LIBRARY · 私人漫画宇宙</string>
+    <string name="tv_action_refresh">刷新</string>
+    <string name="tv_action_select">选择</string>
+    <string name="tv_action_exit_select">退出选择</string>
+    <string name="tv_action_rename">重命名</string>
+    <string name="tv_action_new_collection">新建合集</string>
+    <string name="tv_action_delete_selected">删除选中</string>
+    <string name="tv_action_import">导入</string>
+    <string name="tv_action_sort">排序</string>
+    <string name="tv_sort_format">排序 · %1$s</string>
+    <string name="tv_action_move">移动</string>
+    <string name="tv_action_share">分享</string>
+    <string name="tv_action_search">搜索</string>
+    <string name="tv_action_back_library">‹ 返回书库</string>
+    <string name="tv_action_playlist">播放列表</string>
+    <string name="tv_action_audio">音轨</string>
+    <string name="tv_action_cast">投屏</string>
+    <string name="tv_action_download">下载</string>
+    <string name="tv_action_play">播放</string>
+    <string name="tv_action_pause">暂停</string>
+    <string name="tv_action_rewind">快退 10s</string>
+    <string name="tv_action_forward">快进 10s</string>
+    <string name="tv_action_back_player">返回</string>
+    <string name="tv_empty_library_title">书架还是空的</string>
+    <string name="tv_empty_library_hint">按「新建合集」，开始搭建你的漫画宇宙</string>
+    <string name="tv_empty_comics_title">这里还没有漫画</string>
+    <string name="tv_empty_comics_hint">按「导入」添加本地文件，或扫码远程导入</string>
+    <string name="tv_sort_name_asc">名称 ↑</string>
+    <string name="tv_sort_name_desc">名称 ↓</string>
+    <string name="tv_sort_size">体积</string>
+    <string name="tv_sort_progress">进度</string>
+    <string name="tv_sort_last_read">最近阅读</string>
+    <string name="tv_summary_format">%1$d 本 · 排序 %2$s</string>
+    <string name="tv_player_hint">OK 播放/暂停 · ← → 快退快进 · ↑ 聚焦控制台 · ↓ 收起</string>
+    <string name="tv_search_hint">搜索漫画标题…</string>
 </resources>

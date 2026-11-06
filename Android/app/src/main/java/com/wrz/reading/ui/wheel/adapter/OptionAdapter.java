@@ -10,6 +10,7 @@ import com.chad.library.adapter.base.BaseMultiItemQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.wrz.reading.R;
+import com.wrz.reading.common.TvInputHelper;
 import com.wrz.reading.ui.wheel.model.Option;
 
 public class OptionAdapter extends BaseMultiItemQuickAdapter<Option, BaseViewHolder> {
@@ -45,6 +46,10 @@ public class OptionAdapter extends BaseMultiItemQuickAdapter<Option, BaseViewHol
             }
 
             TextInputEditText et_option = holder.getView(R.id.et_option);
+
+            // TV：以整行 item 作为焦点目标（RecyclerView 的直接子 View），
+            // 聚焦时只显示焦点框，按 OK 才让输入框获得焦点并弹出输入法
+            TvInputHelper.bind(et_option, holder.itemView);
 
             // 移除旧的 TextWatcher，避免 ViewHolder 复用时累积导致重复回调
             Object oldWatcher = et_option.getTag(R.id.et_option);

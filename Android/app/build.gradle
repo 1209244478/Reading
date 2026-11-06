@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -10,9 +12,9 @@ android {
 
     defaultConfig {
         applicationId "com.wrz.reading"
-        minSdk 27
+        minSdk 23
         targetSdk 36
-        versionCode 2026092001
+        versionCode 2026102202
         versionName "Reading_v1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -25,8 +27,18 @@ android {
         }
     }
     compileOptions {
+        // Android 6（API 23）电视端：java.util.function / List.sort / removeIf 等由脱糖提供
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildFeatures {
+        compose true
     }
 
     testOptions {
@@ -49,7 +61,18 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
     implementation libs.activity.ktx
+    implementation libs.androidx.activity.compose
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material
+    implementation libs.androidx.lifecycle.runtime.compose
+    debugImplementation libs.androidx.compose.ui.tooling
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
@@ -124,15 +147,26 @@ dependencies {
     }
     // Jetty 8：Cling 的 AndroidUpnpServiceConfiguration 默认用 JettyServletContainer
     // 作为 StreamServer（非 optional 依赖在 Gradle 中不传递，需显式引入，否则运行时 NoClassDefFoundError）
-    implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
-    implementation 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
-    implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+    // 排除 jetty.orbit:javax.servlet：其 artifactType=orbit 无法参与脱糖后的 dex 转换，
+    // 项目已显式引入 javax.servlet:javax.servlet-api:3.1.0
+    implementation('org.eclipse.jetty:jetty-server:8.1.22.v20160922') {
+        exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+    }
+    implementation('org.eclipse.jetty:jetty-servlet:8.1.22.v20160922') {
+        exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+    }
+    implementation('org.eclipse.jetty:jetty-client:8.1.22.v20160922') {
+        exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+    }
     // javax.servlet API：jetty-servlet 依赖其为 provided 作用域，Android 不自带，需显式引入
     implementation 'javax.servlet:javax.servlet-api:3.1.0'
     // CDI API：Cling 部分类带 @Alternative 等注解，继承/覆盖时编译期需要该类，运行时不用（compileOnly）
     compileOnly 'javax.enterprise:cdi-api:1.2'
-    // NanoHTTPD：投屏时本地提供视频文件给电视拉取
+    // NanoHTTPD：投屏时本地提供视频文件给电视拉取；远程导入时接收浏览器上传
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+    // ZXing：远程导入时把局域网地址生成二维码供浏览器扫描
+    implementation 'com.google.zxing:core:3.5.3'
 
     api fileTree(include: ['*.jar'], dir: 'libs')
 

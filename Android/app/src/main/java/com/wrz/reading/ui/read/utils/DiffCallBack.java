@@ -50,6 +50,8 @@ public class DiffCallBack {
                     && old.getVideoPosition() == newComic.getVideoPosition()
                     && old.getTotal() == newComic.getTotal()
                     && old.getLastRead() == newComic.getLastRead()
+                    && old.getCacheSize() == newComic.getCacheSize()
+                    && old.getFileSize() == newComic.getFileSize()
                     && old.isSelected() == newComic.isSelected()
                     && old.isHorizontal() == newComic.isHorizontal();
         }
@@ -86,7 +88,9 @@ public class DiffCallBack {
             return a.getCollection().getId() == b.getCollection().getId()
                     && Objects.equals(a.getCollection().getName(), b.getCollection().getName())
                     && Objects.equals(a.getCollection().getCreatedAt(), b.getCollection().getCreatedAt())
-                    && a.getComicCount() == b.getComicCount();
+                    && a.getComicCount() == b.getComicCount()
+                    && a.getCollection().getCacheSize() == b.getCollection().getCacheSize()
+                    && a.getCollection().getFileSize() == b.getCollection().getFileSize();
         }
     }
 

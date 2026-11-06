@@ -64,6 +64,7 @@ public class Collection {
         if (collectionItem == null) return null;
 
         Collection c = new Collection();
+        c.setName(collectionItem.getCollection().getName());
         c.setId(collectionItem.getCollection().getId());
 
         c.setCreatedAt(collectionItem.getCollection().getCreatedAt());

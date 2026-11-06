@@ -23,6 +23,7 @@ public class WheelTemplateListAdapter extends BaseMultiItemQuickAdapter<Wheel, B
             // 分类标题项：title 字段即分类名
             holder.setText(R.id.tv_title, wheel.getTitle());
         } else {
+            holder.itemView.setFocusable(true);
             holder.setText(R.id.tv_option, wheel.getTitle());
 
             if (wheel.getSubtitle() == null || wheel.getSubtitle().isBlank()) {

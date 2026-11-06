@@ -9,6 +9,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.lxj.xpopup.core.BottomPopupView;
 import com.wrz.reading.R;
+import com.wrz.reading.common.PressFeedback;
 import com.wrz.reading.ui.wheel.data.EmojiData;
 import com.wrz.reading.ui.wheel.model.Emoji;
 import com.wrz.reading.ui.wheel.adapter.EmojiAdapter;
@@ -93,6 +94,9 @@ public class EmojiPopup extends BottomPopupView {
                 emojiAdapter.setPosition(position);
             }
         });
+
+        // 为全部可点击控件绑定按压缩放/回弹/悬停反馈
+        PressFeedback.applyTree(this);
     }
 
 

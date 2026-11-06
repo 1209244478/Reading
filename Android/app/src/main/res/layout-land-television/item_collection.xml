@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端合集卡片：图标块 + 计数徽章 + 硬阴影；焦点/选中由根背景切换 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/tv_card_gap"
+    android:background="@drawable/bg_tv_card"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:defaultFocusHighlightEnabled="false"
+    android:focusable="true"
+    android:focusableInTouchMode="false"
+    android:nextFocusUp="@id/btn_splash"
+    android:stateListAnimator="@animator/tv_focus_lift">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="22dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="@dimen/tv_collection_icon_box"
+                android:layout_height="@dimen/tv_collection_icon_box"
+                android:background="@drawable/bg_tv_icon_box">
+
+                <ImageView
+                    android:id="@+id/collection_icon"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_folder"
+                    android:tint="@color/tv_ink" />
+
+            </FrameLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/collection_count"
+                style="@style/TvBadgeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tv_badge"
+                android:gravity="center"
+                android:minWidth="54dp"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp"
+                tools:text="12 本" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/collection_name"
+            style="@style/TvCardTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="未分组" />
+
+        <TextView
+            android:id="@+id/comic_cache"
+            style="@style/TvCardMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textSize="12sp"
+            tools:text="缓存大小 1.2 GB\n文件大小 3.4 GB" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/select_indicator_collection"
+        android:layout_width="@dimen/tv_select_size"
+        android:layout_height="@dimen/tv_select_size"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="18dp"
+        android:background="@drawable/bg_tv_checkbox"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/check_icon_collection"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/cd_select_indicator"
+            android:padding="8dp"
+            android:src="@drawable/ic_check"
+            android:tint="@color/tv_lime"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</FrameLayout>

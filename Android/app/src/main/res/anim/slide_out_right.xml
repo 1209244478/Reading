@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 页面返回：顶层页面向右滑出（与 slide_out_left 成对） -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:interpolator="@android:interpolator/decelerate_quad"
+    android:shareInterpolator="true">
+    <translate
+        android:fromXDelta="0"
+        android:toXDelta="100%" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.6" />
+</set>

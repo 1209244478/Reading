@@ -9,8 +9,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.AttributeSet;
@@ -22,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.wrz.reading.R;
-import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.wheel.model.Option;
 import com.wrz.reading.ui.wheel.model.Wheel;
 
@@ -86,6 +83,7 @@ public class WheelView extends View {
     private static final long VIBRATION_INITIAL_MS = 50L;
     private static final long VIBRATION_DECAY_MS = 10L;
     private static final long VIBRATION_MIN_MS = 1L;
+    private static final long VIBRATION_INTERVAL_MAX_MS = 100L;
 
     // ==================== 画笔 ====================
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -105,6 +103,16 @@ public class WheelView extends View {
     private final List<Float> sectorStartAngles = new ArrayList<>();
     private final List<Float> sectorEndAngles = new ArrayList<>();
     private final List<Float> sectorAngles = new ArrayList<>();
+
+    /**
+     * 扇形文字绘制参数缓存（截断文本/字号/颜色/baseline 偏移）。
+     * 数据或尺寸变化时重建一次，绘制时直接读取，避免每次重绘做字符串
+     * 拼接、亮度计算与 FontMetrics 分配。
+     */
+    private final List<String> sectorTexts = new ArrayList<>();
+    private final List<Float> sectorTextSizes = new ArrayList<>();
+    private final List<Integer> sectorTextColors = new ArrayList<>();
+    private final List<Float> sectorBaselineOffsets = new ArrayList<>();
 
     // ==================== 几何（onSizeChanged 缓存） ====================
     private float centerX;
@@ -126,11 +134,6 @@ public class WheelView extends View {
 
     // ==================== 震动 ====================
     private Vibrator vibrator;
-    private Handler vibrationHandler;
-    private boolean isVibrating;
-    private long vibrationDuration = VIBRATION_INITIAL_MS;
-    private long vibrationInterval;
-    private Runnable vibrationRunnable;
 
     // ==================== 动画 ====================
     private boolean isSpinning;
@@ -169,7 +172,6 @@ public class WheelView extends View {
 
     private void init(Context context) {
         vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        vibrationHandler = new Handler(Looper.getMainLooper());
 
         textPaint.setAntiAlias(true);
         textPaint.setTextAlign(Paint.Align.CENTER);
@@ -199,6 +201,18 @@ public class WheelView extends View {
         isTablet = getResources().getBoolean(R.bool.is_table);
         textSizeDefault = getResources().getDimension(R.dimen.text_size_medium);
         textSizeMedium = getResources().getDimension(R.dimen.text_size_medium);
+
+        // 尺寸/资源就绪后重建文字缓存
+        rebuildSectorTextCaches();
+    }
+
+    /**
+     * 从窗口分离时停止震动，避免旋转中退出页面后震动继续
+     */
+    @Override
+    protected void onDetachedFromWindow() {
+        stopContinuousVibration();
+        super.onDetachedFromWindow();
     }
 
     @Override
@@ -259,6 +273,8 @@ public class WheelView extends View {
                 sectorEndAngles.set(last, sectorStartAngles.get(last) + sectorAngles.get(last));
             }
         }
+
+        rebuildSectorTextCaches();
     }
 
     // ==================== 绘制：背景 ====================
@@ -317,22 +333,13 @@ public class WheelView extends View {
     }
 
     /**
-     * 绘制扇形文字（自动调整大小、自动深浅色）
+     * 绘制扇形文字。文本/字号/颜色/baseline 偏移均读预计算缓存，
+     * 绘制路径不做字符串拼接、亮度计算与 FontMetrics 分配。
      */
     private void drawSectorText(Canvas canvas, int index, float startAngle, float sweepAngle) {
-        String text = items.get(index).getOption();
-        if (text.length() > 5) {
-            text = text.substring(0, 5) + "...";
-        }
-
-        float textSize = resolveTextSize(text, index);
-
-        // 文字颜色：根据背景亮度自动切换
-        int bgColor = items.get(index).getColor();
-        double luminance = Color.red(bgColor) * 0.299 + Color.green(bgColor) * 0.587 + Color.blue(bgColor) * 0.114;
-        textPaint.setColor(luminance > LUMINANCE_THRESHOLD ? textColorDefault : Color.WHITE);
-        LogUtil.d("WheelView", "drawSectorText: luminance=" + luminance + ", text=" + text);
-        textPaint.setTextSize(textSize);
+        String text = sectorTexts.get(index);
+        textPaint.setTextSize(sectorTextSizes.get(index));
+        textPaint.setColor(sectorTextColors.get(index));
 
         // 文字位置：扇形中心半径 70% 处
         float textAngle = startAngle + sweepAngle / 2f;
@@ -348,15 +355,47 @@ public class WheelView extends View {
             rotation += 180f;
         }
 
-        // baseline 居中补偿：drawText 的 y 是基线而非视觉中心，
-        // 用 FontMetrics 将文字视觉中心精确对齐锚点，否则各角度文字位置忽内忽外
-        Paint.FontMetrics fm = textPaint.getFontMetrics();
-        float baselineOffset = -(fm.ascent + fm.descent) / 2f;
-
         canvas.save();
         canvas.rotate(rotation, textX, textY);
-        canvas.drawText(text, textX, textY + baselineOffset, textPaint);
+        canvas.drawText(text, textX, textY + sectorBaselineOffsets.get(index), textPaint);
         canvas.restore();
+    }
+
+    /**
+     * 重建扇形文字绘制参数缓存，在数据变化（calculateSectorAngles）与
+     * 尺寸/资源就绪（onSizeChanged）时调用。
+     */
+    private void rebuildSectorTextCaches() {
+        sectorTexts.clear();
+        sectorTextSizes.clear();
+        sectorTextColors.clear();
+        sectorBaselineOffsets.clear();
+        if (items.isEmpty()) return;
+
+        for (int i = 0; i < items.size(); i++) {
+            String text = items.get(i).getOption();
+            if (text.length() > 5) {
+                text = text.substring(0, 5) + "...";
+            }
+
+            float textSize = resolveTextSize(text, i);
+
+            // 文字颜色：根据背景亮度自动切换
+            int bgColor = items.get(i).getColor();
+            double luminance = Color.red(bgColor) * 0.299 + Color.green(bgColor) * 0.587 + Color.blue(bgColor) * 0.114;
+            int textColor = luminance > LUMINANCE_THRESHOLD ? textColorDefault : Color.WHITE;
+
+            // baseline 居中补偿：drawText 的 y 是基线而非视觉中心，
+            // 用 FontMetrics 将文字视觉中心精确对齐锚点
+            textPaint.setTextSize(textSize);
+            Paint.FontMetrics fm = textPaint.getFontMetrics();
+            float baselineOffset = -(fm.ascent + fm.descent) / 2f;
+
+            sectorTexts.add(text);
+            sectorTextSizes.add(textSize);
+            sectorTextColors.add(textColor);
+            sectorBaselineOffsets.add(baselineOffset);
+        }
     }
 
     /**
@@ -526,7 +565,12 @@ public class WheelView extends View {
         }
 
         isSpinning = true;
-        startContinuousVibration();
+
+        // 旋转动画时长
+        long spinDurationMs = wheel.getTime() * 1000L;
+
+        // 整段触感波形一次性下发（HAL 按时间轴自动执行），旋转期间主线程零周期性工作
+        startContinuousVibration(spinDurationMs);
 
         int selectedIdx = getWeightedRandomIndex();
         if (selectedIdx == -1) {
@@ -543,11 +587,6 @@ public class WheelView extends View {
         int maxOffset = Math.max(1, (int) halfSector);
         int randomOffset = ThreadLocalRandom.current().nextInt(-maxOffset, maxOffset + 1);
 
-        /*
-         * 旋转动画时长
-         */
-        long SPIN_DURATION_MS = wheel.getTime() * 1000L;
-
         // 额外旋转圈数
         int extraSpins = random.nextInt(MAX_EXTRA_SPINS - MIN_EXTRA_SPINS + 1) + MIN_EXTRA_SPINS;
         float targetAngle = randomOffset - selectedCenter - extraSpins * 360f;
@@ -556,7 +595,7 @@ public class WheelView extends View {
         // 创建动画
         cancelSpinAnimator();
         spinAnimator = ObjectAnimator.ofFloat(this, PROP_ROTATION, currentRotation, targetAngle);
-        spinAnimator.setDuration(SPIN_DURATION_MS);
+        spinAnimator.setDuration(spinDurationMs);
         spinAnimator.setInterpolator(spinInterpolator);
 
         spinAnimator.addUpdateListener(animation -> {
@@ -722,37 +761,58 @@ public class WheelView extends View {
 
     // ==================== 震动 ====================
 
-    private void startContinuousVibration() {
-        if (vibrator == null || !vibrator.hasVibrator() || isVibrating) return;
+    /**
+     * 旋转期间的连续触感：把整段「触感时长 50→1ms 衰减、间隔 50→100ms 锯齿递增」
+     * 的波形一次性下发（{@link VibrationEffect#createWaveform}），
+     * 由震动 HAL 按时间轴自动执行。相比在主线程每 50~100ms post 一次
+     * vibrate()（binder IPC + 效果对象分配），旋转期间主线程零周期性工作，
+     * 消除与 16.6ms 帧预算叠加造成的周期性掉帧。
+     */
+    private void startContinuousVibration(long totalDurationMs) {
+        if (vibrator == null || !vibrator.hasVibrator() || totalDurationMs <= 0) return;
+        stopContinuousVibration();
 
-        isVibrating = true;
-        vibrationDuration = VIBRATION_INITIAL_MS;
-        vibrationInterval = VIBRATION_INITIAL_MS;
+        List<Long> timingsList = new ArrayList<>();
+        List<Integer> amplitudesList = new ArrayList<>();
+        long elapsed = 0;
+        long onDuration = VIBRATION_INITIAL_MS;
+        long offInterval = VIBRATION_INITIAL_MS;
+        while (elapsed < totalDurationMs && timingsList.size() < 2000) {
+            // 触感段
+            timingsList.add(onDuration);
+            amplitudesList.add(VibrationEffect.DEFAULT_AMPLITUDE);
+            elapsed += onDuration;
+            if (elapsed >= totalDurationMs) break;
+            // 间隔段（关闭）
+            timingsList.add(offInterval);
+            amplitudesList.add(0);
+            elapsed += offInterval;
+            // 指数衰减：时长 50→1，间隔锯齿 50→100→50→100→…
+            onDuration = Math.max(VIBRATION_MIN_MS, onDuration - VIBRATION_DECAY_MS);
+            offInterval += VIBRATION_DECAY_MS;
+            if (offInterval > VIBRATION_INTERVAL_MAX_MS) offInterval = VIBRATION_INITIAL_MS;
+        }
 
-        vibrationRunnable = () -> {
-            if (!isVibrating || !isSpinning) return;
-            performVibration();
+        long[] timings = new long[timingsList.size()];
+        for (int i = 0; i < timings.length; i++) timings[i] = timingsList.get(i);
+        int[] amplitudes = new int[amplitudesList.size()];
+        for (int i = 0; i < amplitudes.length; i++) amplitudes[i] = amplitudesList.get(i);
 
-            // 指数衰减：振幅 50→1，间隔锯齿 50→100→50→100→…
-            vibrationDuration = Math.max(VIBRATION_MIN_MS, vibrationDuration - VIBRATION_DECAY_MS);
-            vibrationInterval += VIBRATION_DECAY_MS;
-            if (vibrationInterval > 100) vibrationInterval = VIBRATION_INITIAL_MS;
-
-            vibrationHandler.postDelayed(vibrationRunnable, vibrationInterval);
-        };
-        vibrationHandler.post(vibrationRunnable);
+        vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
     }
 
     public void stopContinuousVibration() {
-        isVibrating = false;
-        if (vibrationHandler != null && vibrationRunnable != null) {
-            vibrationHandler.removeCallbacks(vibrationRunnable);
+        if (vibrator != null) {
+            vibrator.cancel();
         }
     }
 
+    /**
+     * 单次触感反馈（点击扇形），固定强度与时长
+     */
     public void performVibration() {
         if (vibrator == null || !vibrator.hasVibrator()) return;
 
-        vibrator.vibrate(VibrationEffect.createOneShot(vibrationDuration, VibrationEffect.DEFAULT_AMPLITUDE));
+        vibrator.vibrate(VibrationEffect.createOneShot(VIBRATION_INITIAL_MS, VibrationEffect.DEFAULT_AMPLITUDE));
     }
 }

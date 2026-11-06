@@ -12,6 +12,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.lxj.xpopup.core.BottomPopupView;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.common.PressFeedback;
 
 public class RandomSettingPopup extends BottomPopupView {
     TextInputEditText tv_start;
@@ -145,6 +146,9 @@ public class RandomSettingPopup extends BottomPopupView {
         isChecked = MyApplication.manager.getRandomAllowDuplicates();
 
         switchAllowDuplicates.setChecked(isChecked);
+
+        // 为全部可点击控件绑定按压缩放/回弹/悬停反馈
+        PressFeedback.applyTree(this);
     }
 
     boolean isChecked;

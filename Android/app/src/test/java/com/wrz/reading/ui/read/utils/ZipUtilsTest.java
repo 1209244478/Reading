@@ -9,9 +9,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -19,7 +20,8 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * ZipUtils 解压单元测试（纯 JVM，使用真实 zip 包验证）。
- * 覆盖：目录结构保留、非图片过滤、Zip-Slip 路径穿越防护、异常输入容错。
+ * 覆盖：目录结构保留、非图片过滤、Zip-Slip 路径穿越防护、绝对路径归一化、
+ * UTF-8/GBK 文件名解码、异常输入容错。
  */
 public class ZipUtilsTest {
 
@@ -112,5 +114,79 @@ public class ZipUtilsTest {
         File extractDir = tmp.newFolder("extract_empty");
         List<File> result = ZipUtils.extractImagesFromZip(zip.getAbsolutePath(), extractDir);
         assertTrue(result.isEmpty());
+    }
+
+    /**
+     * 打包工具误写入绝对路径时，应去掉前缀后安全解出，而不是丢弃整个包的图片；
+     * 去掉前缀后仍含 ".." 的条目依旧必须拦截。
+     */
+    @Test
+    public void extractImages_normalizesAbsoluteEntryPaths() throws IOException {
+        File zip = tmp.newFile("absolute.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zip))) {
+            putEntry(zos, "/sub/003.jpg", "abs-unix");
+            putEntry(zos, "\\win\\004.jpg", "abs-win");
+            putEntry(zos, "D:/drive/005.jpg", "abs-drive");
+            putEntry(zos, "/../evil2.jpg", "traversal-absolute");
+        }
+        File extractDir = tmp.newFolder("extract_absolute");
+
+        List<File> result = ZipUtils.extractImagesFromZip(zip.getAbsolutePath(), extractDir);
+
+        assertEquals(3, result.size());
+        for (File f : result) {
+            assertTrue(f.getAbsolutePath().startsWith(extractDir.getAbsolutePath() + File.separator));
+        }
+        assertTrue(new File(extractDir, "sub/003.jpg").isFile());
+        assertTrue(new File(extractDir, "win/004.jpg").isFile());
+        assertTrue(new File(extractDir, "drive/005.jpg").isFile());
+        assertFalse(new File(extractDir.getParentFile(), "evil2.jpg").exists());
+    }
+
+    /** 带 UTF-8 标志的中文条目名应保持原样，不能被 ISO-8859-1 打开方式破坏。 */
+    @Test
+    public void extractImages_utf8ChineseNames() throws IOException {
+        File zip = createZipWithNames(StandardCharsets.UTF_8, "漫画/第01页.jpg", "漫画/第02页.jpg");
+        File extractDir = tmp.newFolder("extract_utf8_names");
+
+        List<File> result = ZipUtils.extractImagesFromZip(zip.getAbsolutePath(), extractDir);
+
+        assertEquals(2, result.size());
+        File firstPage = new File(extractDir, "漫画/第01页.jpg");
+        assertTrue(firstPage.isFile());
+        assertTrue(new File(extractDir, "漫画/第02页.jpg").isFile());
+        assertEquals("content-漫画/第01页.jpg",
+                new String(Files.readAllBytes(firstPage.toPath()), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Windows 工具生成的 GBK 文件名（未设置 UTF-8 标志）在系统默认 UTF-8 严格解码下
+     * 会抛 MALFORMED；应自动回退为 GBK/GB18030 并正确还原文件名。
+     */
+    @Test
+    public void extractImages_gbkChineseNames() throws IOException {
+        File zip = createZipWithNames(Charset.forName("GBK"), "中文/第一页.jpg", "中文/第二页.jpg");
+        File extractDir = tmp.newFolder("extract_gbk_names");
+
+        List<File> result = ZipUtils.extractImagesFromZip(zip.getAbsolutePath(), extractDir);
+
+        assertEquals(2, result.size());
+        File firstPage = new File(extractDir, "中文/第一页.jpg");
+        assertTrue(firstPage.isFile());
+        assertTrue(new File(extractDir, "中文/第二页.jpg").isFile());
+        assertEquals("content-中文/第一页.jpg",
+                new String(Files.readAllBytes(firstPage.toPath()), StandardCharsets.UTF_8));
+    }
+
+    private File createZipWithNames(Charset charset, String... names) throws IOException {
+        File zip = tmp.newFile("names-" + charset.name() + ".zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zip), charset)) {
+            for (String name : names) {
+                zos.putNextEntry(new ZipEntry(name));
+                zos.write(("content-" + name).getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+        }
+        return zip;
     }
 }

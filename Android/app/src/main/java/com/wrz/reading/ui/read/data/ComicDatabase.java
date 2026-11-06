@@ -13,12 +13,13 @@ import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.ui.main.utils.ExecutorManager;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.Comic;
+import com.wrz.reading.ui.read.model.DownloadTask;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Database(entities = {Comic.class, Collection.class}, version = 4)
+@Database(entities = {Comic.class, Collection.class, DownloadTask.class}, version = 5)
 public abstract class ComicDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "comic_database";
     private static ComicDatabase instance;
@@ -26,6 +27,8 @@ public abstract class ComicDatabase extends RoomDatabase {
     public abstract ComicDao comicDao();
 
     public abstract CollectionDao collectionDao();
+
+    public abstract DownloadDao downloadDao();
 
     /**
      * v1 -> v2：comics 表新增 isClean 列
@@ -58,11 +61,31 @@ public abstract class ComicDatabase extends RoomDatabase {
         }
     };
 
+    /**
+     * v4 -> v5：新增 download_tasks 表（视频下载任务，支持暂停/断点续传）
+     */
+    private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `download_tasks` ("
+                    + "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + "`url` TEXT, "
+                    + "`title` TEXT, "
+                    + "`filePath` TEXT, "
+                    + "`totalSize` INTEGER NOT NULL, "
+                    + "`downloadedSize` INTEGER NOT NULL, "
+                    + "`status` INTEGER NOT NULL, "
+                    + "`error` TEXT, "
+                    + "`createdAt` INTEGER NOT NULL, "
+                    + "`updatedAt` INTEGER NOT NULL)");
+        }
+    };
+
     public static synchronized ComicDatabase getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
                             ComicDatabase.class, DATABASE_NAME)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build();
         }

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端漫画卡片：大封面 + 粗边框 + 硬阴影；进度条叠在封面底部以压缩卡片高度 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/tv_card_gap"
+    android:background="@drawable/bg_tv_card"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:defaultFocusHighlightEnabled="false"
+    android:focusable="true"
+    android:focusableInTouchMode="false"
+    android:nextFocusUp="@id/tv_btn_sort"
+    android:stateListAnimator="@animator/tv_focus_lift">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="5dp"
+        android:paddingTop="5dp"
+        android:paddingEnd="5dp"
+        android:paddingBottom="8dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tv_comic_cover_height"
+            android:background="@color/tv_surface_alt">
+
+            <ImageView
+                android:id="@+id/comic_cover_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_item_comic"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop" />
+
+            <TextView
+                android:id="@+id/tv_cover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textColor="@color/tv_muted"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="漫画标题" />
+
+            <ProgressBar
+                android:id="@+id/comic_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="6dp"
+                android:indeterminate="false"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_tv_brutal" />
+
+            <FrameLayout
+                android:id="@+id/select_indicator"
+                android:layout_width="@dimen/tv_select_size"
+                android:layout_height="@dimen/tv_select_size"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_tv_checkbox"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/checkIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/cd_select_indicator"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_check"
+                    android:tint="@color/tv_lime"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="10dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
+
+            <TextView
+                android:id="@+id/comic_title_text"
+                style="@style/TvCardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                tools:text="漫画标题" />
+
+            <TextView
+                android:id="@+id/comic_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-condensed"
+                android:maxLines="1"
+                android:textColor="@color/tv_yellow"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="12/48" />
+
+            <TextView
+                android:id="@+id/comic_cache"
+                style="@style/TvCardMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textSize="12sp"
+                tools:text="大小:120 MB" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

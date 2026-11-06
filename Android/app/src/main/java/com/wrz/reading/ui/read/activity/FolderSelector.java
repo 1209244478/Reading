@@ -28,7 +28,9 @@ import android.app.Activity;
  */
 public class FolderSelector {
 
-    /** 宿主回调：position==0 表示「全部文件夹」；files 为所选文件夹收集到的原始列表（可能为空） */
+    /**
+     * 宿主回调：position==0 表示「全部文件夹」；files 为所选文件夹收集到的原始列表（可能为空）
+     */
     public interface Host {
         void onFolderSelected(int position, List<ReadItem> files);
     }
@@ -95,7 +97,9 @@ public class FolderSelector {
         });
     }
 
-    /** 隐藏 Spinner 并清空选择状态 */
+    /**
+     * 隐藏 Spinner 并清空选择状态
+     */
     public void hide() {
         if (spinner != null) {
             spinner.setVisibility(View.GONE);

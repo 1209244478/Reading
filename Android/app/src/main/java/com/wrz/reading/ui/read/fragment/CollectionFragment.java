@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -17,18 +19,18 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.wrz.reading.R;
 import com.wrz.reading.app.MyApplication;
 import com.wrz.reading.common.BaseFragment;
+import com.wrz.reading.common.TvFocusHelper;
 import com.wrz.reading.ui.main.utils.DialogHelper;
 import com.wrz.reading.ui.read.adapter.CollectionAdapter;
+import com.wrz.reading.ui.read.data.ComicSizeCalculator;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
 import com.wrz.reading.ui.read.model.Comic;
 import com.wrz.reading.ui.read.utils.DiffCallBack;
-import com.wrz.reading.ui.read.utils.FileUtils;
-import com.wrz.reading.ui.read.utils.ZipUtils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 书库首页：展示漫画集合列表。点击集合进入详情页查看集合内漫画。
@@ -44,12 +46,26 @@ public class CollectionFragment extends BaseFragment {
     public static final String ARG_COLLECTION_NAME = "collectionName";
 
     private final ArrayList<CollectionItem> collectionItems = new ArrayList<>();
+
+    /**
+     * 最近一次「未分组」体积统计结果（缓存目录总大小）。
+     * 进入页面先展示该旧值让列表立即可见，后台统计完成后修正。
+     */
+    private volatile long lastUncategorizedCacheSize = 0;
+
+    /**
+     * 加载代际号：体积统计已移至共享线程池，并发加载时以此丢弃过期的回调结果。
+     */
+    private final AtomicInteger loadGeneration = new AtomicInteger();
+
     private RecyclerView collectionRecyclerView;
     private CollectionAdapter collectionAdapter;
     private View emptyStateText;
-    private FloatingActionButton addFab;
-    private ImageButton btnSelectMode;
-    private ImageButton btnEditName;
+    private View addFab;
+    private ImageView addFabIcon;
+    private TextView addFabLabel;
+    private View btnSelectMode;
+    private View btnEditName;
     private View btnSplash;
     private NavController navController;
 
@@ -63,6 +79,8 @@ public class CollectionFragment extends BaseFragment {
         collectionRecyclerView = findId(R.id.collection_recycler_view);
         emptyStateText = findId(R.id.empty_state_text);
         addFab = findId(R.id.add_comic_fab);
+        addFabIcon = findId(R.id.add_comic_fab_icon);
+        addFabLabel = findId(R.id.add_comic_fab_label);
         btnSelectMode = findId(R.id.btn_select_mode);
         btnSplash = findId(R.id.btn_splash);
         btnEditName = findId(R.id.btn_edit_name);
@@ -77,17 +95,29 @@ public class CollectionFragment extends BaseFragment {
 
     @Override
     public void configViews() {
-        collectionRecyclerView.setLayoutManager(new GridLayoutManager(activity, (MyApplication.isTablet || isLand()) ? 4 : 3));
+        collectionRecyclerView.setLayoutManager(new GridLayoutManager(activity, isTv() ? 5 : (MyApplication.isTablet || isLand()) ? 4 : 3));
         collectionAdapter = new CollectionAdapter(collectionItems);
         collectionRecyclerView.setAdapter(collectionAdapter);
+        collectionRecyclerView.setHasFixedSize(true);
 
-        btnSplash.setOnClickListener(v -> loadCollections(true));
+        setClick(btnSplash,v -> loadCollections(true));
 
-        addFab.setOnClickListener(v -> showCreateCollectionDialog());
+        setClick(addFab, v -> {
+            if (collectionAdapter == null) return;
+            if (collectionAdapter.isSelectMode()) {
+                showDeleteCollectionsDialog();
+            } else {
+                showCreateCollectionDialog();
+            }
+        });
 
-        btnSelectMode.setOnClickListener(v -> toggleSelectMode());
+        setClick(btnSelectMode, v -> toggleSelectMode());
 
-        btnEditName.setOnClickListener(v -> {
+        setClick(R.id.btn_setting, v -> {
+            navController.navigate(R.id.action_main_to_settingfragment);
+        });
+
+        setClick(btnEditName, v -> {
             List<CollectionItem> collections = new ArrayList<>();
             for (CollectionItem collection : collectionItems) {
                 if (collection.getCollection().isSelected() && collection.getCollection().getId() != UNCATEGORIZED_ID) {
@@ -100,13 +130,6 @@ public class CollectionFragment extends BaseFragment {
                         "重命名合集", "输入新的合集名称", "保存", collections,
                         this::renameCollections);
             }
-
-            /*for (CollectionItem item : collectionItems) {
-                if (item.getCollection().isSelected() && item.getCollection().getId() != UNCATEGORIZED_ID) {
-                    showRenameDialog(item.getCollection().getId(), item.getCollection().getName());
-                    break;
-                }
-            }*/
         });
 
         collectionAdapter.setOnItemClickListener((adapter, view, position) -> {
@@ -163,28 +186,21 @@ public class CollectionFragment extends BaseFragment {
 
     @SuppressLint("NotifyDataSetChanged")
     private void loadCollections(boolean useDiff) {
-        singleThread.execute(() -> {
+        final int gen = loadGeneration.incrementAndGet();
+        // 只读查询与重磁盘 IO 均在共享线程池执行，不阻塞数据库单线程
+        threadPool.execute(() -> {
+            // 阶段一：仅查库构建列表并立即渲染，进页不再等待体积统计
             List<Collection> collections = MyApplication.comicDatabase.collectionDao().getAllCollections();
-            int uncategorizedCount = MyApplication.comicDatabase.comicDao().getUncategorizedComics().size();
             List<Comic> comics = MyApplication.comicDatabase.comicDao().getUncategorizedComics();
+            int uncategorizedCount = comics.size();
 
             // 在后台线程构建临时列表，避免与主线程 Adapter 访问竞态
             ArrayList<CollectionItem> tempList = new ArrayList<>();
-            // 未分组入口始终置顶
+            // 未分组入口始终置顶；体积先沿用上次统计值，阶段二修正
             Collection uncategorized = new Collection();
             uncategorized.setId(UNCATEGORIZED_ID);
             uncategorized.setName("未分组");
-            final long[] totalSize = {0};
-            comics.forEach(comic -> {
-                long size = 0;
-                File tempExtractDir = ZipUtils.getTempExtractDir(comic.getPath());
-                if (tempExtractDir != null && tempExtractDir.isDirectory()) {
-                    size = FileUtils.getFolderSize(tempExtractDir.getAbsolutePath());
-                }
-                totalSize[0] += size;
-                comic.setCacheSize(size);
-            });
-            uncategorized.setCacheSize(totalSize[0]);
+            uncategorized.setCacheSize(lastUncategorizedCacheSize);
             tempList.add(new CollectionItem(uncategorized, uncategorizedCount));
 
             for (Collection c : collections) {
@@ -192,8 +208,10 @@ public class CollectionFragment extends BaseFragment {
                 tempList.add(new CollectionItem(c, count));
             }
 
-            /*boolean empty = collections.isEmpty() && uncategorizedCount == 0;*/
             runOnUiIfAlive(() -> {
+                if (gen != loadGeneration.get()) {
+                    return;
+                }
                 if (useDiff) {
                     List<CollectionItem> oldList = new ArrayList<>(collectionItems);
 
@@ -209,6 +227,33 @@ public class CollectionFragment extends BaseFragment {
                     collectionItems.clear();
                     collectionItems.addAll(tempList);
                     collectionAdapter.notifyDataSetChanged();
+                }
+
+                if (isTv()) {
+                    TvFocusHelper.focusFirstIfNeeded(collectionRecyclerView);
+                }
+            });
+
+            // 阶段二：统计未分组体积（递归遍历解压目录，重磁盘 IO），完成后仅刷新「未分组」项
+            ComicSizeCalculator.calculate(comics);
+            long totalSize = 0;
+            for (Comic c : comics) {
+                totalSize += c.getCacheSize();
+            }
+            lastUncategorizedCacheSize = totalSize;
+            final long freshTotalSize = totalSize;
+            runOnUiIfAlive(() -> {
+                if (gen != loadGeneration.get()) {
+                    return;
+                }
+                for (int i = 0; i < collectionItems.size(); i++) {
+                    CollectionItem item = collectionItems.get(i);
+                    if (item.getCollection().getId() == UNCATEGORIZED_ID
+                            && item.getCollection().getCacheSize() != freshTotalSize) {
+                        item.getCollection().setCacheSize(freshTotalSize);
+                        collectionAdapter.notifyItemChanged(i);
+                        break;
+                    }
                 }
             });
         });
@@ -233,18 +278,50 @@ public class CollectionFragment extends BaseFragment {
     private void toggleSelectMode() {
         collectionAdapter.toggleSelectMode();
         if (collectionAdapter.isSelectMode()) {
-            btnSelectMode.setImageResource(R.drawable.ic_close);
             btnEditName.setVisibility(View.VISIBLE);
-            addFab.setImageResource(R.drawable.delete_24px);
-            addFab.setOnClickListener(v -> showDeleteCollectionsDialog());
+            updateSelectModeIcons(true);
         } else {
-            btnSelectMode.setImageResource(R.drawable.ic_photo_library);
             btnEditName.setVisibility(View.GONE);
-            addFab.setImageResource(R.drawable.add_24px);
-            addFab.setOnClickListener(v -> showCreateCollectionDialog());
             clearSelections();
+            updateSelectModeIcons(false);
         }
         collectionAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * 电视端操作块使用文字标签，手机端仍使用图标按钮：统一在这里切换外观。
+     */
+    private void updateSelectModeIcons(boolean selectMode) {
+        if (btnSelectMode instanceof ImageButton) {
+            ((ImageButton) btnSelectMode).setImageResource(
+                    selectMode ? R.drawable.ic_close : R.drawable.ic_photo_library);
+        } else if (btnSelectMode instanceof TextView) {
+            ((TextView) btnSelectMode).setText(selectMode
+                    ? R.string.tv_action_exit_select : R.string.tv_action_select);
+        }
+
+        if (addFab instanceof FloatingActionButton) {
+            ((FloatingActionButton) addFab).setImageResource(
+                    selectMode ? R.drawable.delete_24px : R.drawable.add_24px);
+        } else {
+            if (addFabIcon != null) {
+                addFabIcon.setImageResource(selectMode
+                        ? R.drawable.delete_24px : R.drawable.add_24px);
+            }
+            if (addFabLabel != null) {
+                addFabLabel.setText(selectMode
+                        ? R.string.tv_action_delete_selected : R.string.tv_action_new_collection);
+            }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // 电视端从详情页返回时，若焦点因视图重建丢失，则回到列表首项
+        if (isTv() && getView() != null && getView().findFocus() == null) {
+            TvFocusHelper.focusFirstIfNeeded(collectionRecyclerView);
+        }
     }
 
     private void clearSelections() {

@@ -34,6 +34,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/ios_card_background"
+                android:defaultFocusHighlightEnabled="false"
+                android:foreground="@drawable/bg_tv_focusable"
                 android:paddingBottom="24dp"
                 android:text="@string/dialog_title"
                 android:textColor="@color/ios_text_primary"

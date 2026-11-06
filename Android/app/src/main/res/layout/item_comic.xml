@@ -6,6 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="6dp"
+    android:defaultFocusHighlightEnabled="false"
+    android:focusable="true"
+    android:foreground="@drawable/bg_tv_focusable"
     app:cardCornerRadius="8dp"
     app:cardElevation="1dp"
     app:cardUseCompatPadding="true">

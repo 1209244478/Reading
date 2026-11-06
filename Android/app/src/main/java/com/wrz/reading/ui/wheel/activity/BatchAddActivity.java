@@ -3,9 +3,7 @@ package com.wrz.reading.ui.wheel.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.wrz.reading.R;
@@ -29,9 +27,7 @@ public class BatchAddActivity extends BaseActivity {
     public static String RESULT_BATCH_ADD = "result_batch_add";
     public static String RESULT_VP_POSITION = "result_vp_position";
 
-    private TextView tv_title;
     private EditText et_input;
-    private TextView tv_save;
 
     private int vp_position;
 
@@ -55,12 +51,11 @@ public class BatchAddActivity extends BaseActivity {
 
     @Override
     public void initView() {
-        tv_title = findViewById(R.id.tv_title);
-        tv_save = findViewById(R.id.tv_save);
-        tv_save.setVisibility(View.VISIBLE);
+        visible(R.id.tv_save);
         et_input = findViewById(R.id.et_input);
+        et_input.setFocusable(true);
 
-        tv_save.setOnClickListener(v -> {
+        setClick(R.id.tv_save, v -> {
             if (et_input.getText() != null && !et_input.getText().toString().isEmpty()) {
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra(RESULT_BATCH_ADD, et_input.getText().toString());
@@ -80,11 +75,8 @@ public class BatchAddActivity extends BaseActivity {
 
     @Override
     public void configView() {
-        tv_title.setText(R.string.add_batch_option);
+        setText(R.string.add_batch_option, R.id.tv_title);
     }
 
-    @Override
-    public void goBack() {
-        finish();
-    }
+
 }

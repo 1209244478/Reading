@@ -16,6 +16,9 @@
     <!-- 进度条高度 -->
     <dimen name="progress_height">4dp</dimen>
 
+    <!-- 导入弹窗二维码尺寸（电视端在 values-land-television 中放大） -->
+    <dimen name="import_qr_size">220dp</dimen>
+
     <!-- 图标大小 -->
     <dimen name="icon_size_small">18dp</dimen>
     <dimen name="icon_size_medium">24dp</dimen>
@@ -60,4 +63,19 @@
 
     <dimen name="wheel_width">300dp</dimen>
     <dimen name="wheel_height">300dp</dimen>
+
+    <dimen name="main_nav_height">62dp</dimen>
+
+    <!-- 电视端新粗野主义 UI 尺寸（values-land-television 中放大覆盖） -->
+    <dimen name="tv_page_padding_horizontal">32dp</dimen>
+    <dimen name="tv_page_padding_vertical">20dp</dimen>
+    <dimen name="tv_action_height">52dp</dimen>
+    <dimen name="tv_action_min_width">80dp</dimen>
+    <dimen name="tv_card_gap">6dp</dimen>
+    <dimen name="tv_card_shadow">5dp</dimen>
+    <dimen name="tv_comic_cover_height">150dp</dimen>
+    <dimen name="tv_collection_icon_box">52dp</dimen>
+    <dimen name="tv_select_size">38dp</dimen>
+    <dimen name="tv_player_chip_height">52dp</dimen>
+    <dimen name="tv_player_chip_min_width">88dp</dimen>
 </resources>

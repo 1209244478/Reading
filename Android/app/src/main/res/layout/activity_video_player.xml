@@ -10,12 +10,14 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:keepScreenOn="true"
         android:visibility="visible"
         app:resize_mode="fit"
         app:show_buffering="when_playing"
         app:use_controller="true" />
 
     <LinearLayout
+        android:id="@+id/player_top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
@@ -38,6 +40,36 @@
             tools:text="@string/about_us" />
 
 
+        <!-- 下载按钮：仅接收投屏模式下显示（把发送端视频下载到本地） -->
+        <ImageButton
+            android:id="@+id/download_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cd_download"
+            android:focusable="true"
+            android:src="@drawable/ic_download"
+            android:visibility="gone"
+            app:tint="@android:color/white" />
+
+        <!-- 音轨按钮：多音轨视频可选音轨（本地/接收模式切换播放器音轨；投屏模式重封装后重投） -->
+        <ImageButton
+            android:id="@+id/audio_track_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="4dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cd_audio_track"
+            android:focusable="true"
+            android:src="@drawable/ic_audio_track"
+            android:visibility="gone"
+            app:tint="@android:color/white" />
+
         <!-- 投屏按钮：点击弹出 DLNA 设备列表（投屏到智能电视） -->
         <ImageButton
             android:id="@+id/cast_button"
@@ -48,6 +80,7 @@
             android:layout_marginEnd="12dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="投屏"
+            android:focusable="true"
             android:src="@drawable/ic_cast"
             app:tint="@android:color/white" />
 
@@ -61,10 +94,25 @@
             android:layout_marginEnd="12dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="播放列表"
+            android:focusable="true"
             android:src="@drawable/menu_24px"
             app:tint="@android:color/white" />
 
     </LinearLayout>
+
+    <!-- 锁定按钮：右侧中部；锁定时仅保留此按钮用于解锁 -->
+    <ImageButton
+        android:id="@+id/lock_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="12dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cd_lock_screen"
+        android:focusable="true"
+        android:src="@drawable/ic_lock_open"
+        android:visibility="gone"
+        app:tint="@android:color/white" />
 
 
     <!-- 手势提示：双击/滑动时居中短暂显示位置/亮度/音量变化 -->
@@ -121,6 +169,18 @@
                 android:textSize="14sp" />
 
             <TextView
+                android:id="@+id/tv_keep_black"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="黑屏观看"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+
+            <TextView
                 android:id="@+id/tv_keep_watch"
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
@@ -130,6 +190,19 @@
                 android:text="本机继续看"
                 android:textColor="@android:color/white"
                 android:textSize="14sp" />
+
+            <!-- 音轨按钮：多音轨视频投屏时重封装并重投（仅多音轨时显示） -->
+            <TextView
+                android:id="@+id/cast_audio_track"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:text="@string/btn_audio_track"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:visibility="gone" />
 
             <ImageButton
                 android:id="@+id/cast_stop"
@@ -204,5 +277,13 @@
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>
+
+
+    <View
+        android:id="@+id/view_blank"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:visibility="gone" />
 
 </FrameLayout>

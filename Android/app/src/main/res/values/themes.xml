@@ -20,6 +20,8 @@
         <!-- 移除 ActionBar -->
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
+        <!-- 全局 Activity 跳转/返回转场动画（水平滑动，前进与返回成对） -->
+        <item name="android:windowAnimationStyle">@style/WindowAnimations.Reading</item>
 
         <!--<item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>
@@ -148,6 +150,14 @@
     <style name="BottomNavigationItem" parent="Widget.MaterialComponents.BottomNavigationView">
         <item name="itemIconTint">@color/bottom_nav_item_selector</item>
         <item name="itemTextColor">@color/bottom_nav_item_selector</item>
+    </style>
+
+    <!-- 全局 Activity 转场动画：打开=右滑入+左视差；返回=左滑回+右滑出（水平滑动，300ms） -->
+    <style name="WindowAnimations.Reading" parent="">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
 </resources>

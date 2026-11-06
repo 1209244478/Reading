@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视搜索框：深色块 + 黄色描边 + 硬阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="5dp" android:top="5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:right="5dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_surface_alt" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_yellow" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</layer-list>

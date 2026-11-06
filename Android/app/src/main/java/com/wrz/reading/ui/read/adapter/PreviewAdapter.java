@@ -1,6 +1,7 @@
 package com.wrz.reading.ui.read.adapter;
 
 import android.annotation.SuppressLint;
+import android.os.Build;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -43,6 +44,7 @@ public class PreviewAdapter extends BaseQuickAdapter<ReadItem, BaseViewHolder> {
 
     @Override
     protected void convert(@NonNull BaseViewHolder holder, ReadItem item) {
+        holder.itemView.setFocusable(true);
         File file = item.getFile();
         boolean isCurrent = (holder.getAbsoluteAdapterPosition() == centerPage);
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 电视端二维码需更大，便于手机/摄像头在较远距离扫描；
+         同时受弹窗高度限制，240dp 可在 1080p 电视上完整显示二维码与底部按钮 -->
+    <dimen name="import_qr_size">240dp</dimen>
+
+    <!-- 电视端大屏新粗野主义 UI：更大留白、更大焦点目标与遥控器可读字号 -->
+    <dimen name="tv_page_padding_horizontal">32dp</dimen>
+    <dimen name="tv_page_padding_vertical">28dp</dimen>
+    <dimen name="tv_action_height">58dp</dimen>
+    <dimen name="tv_action_min_width">94dp</dimen>
+    <dimen name="tv_card_gap">7dp</dimen>
+    <dimen name="tv_card_shadow">7dp</dimen>
+    <dimen name="tv_comic_cover_height">150dp</dimen>
+    <dimen name="tv_collection_icon_box">58dp</dimen>
+    <dimen name="tv_select_size">42dp</dimen>
+    <dimen name="tv_player_chip_height">58dp</dimen>
+    <dimen name="tv_player_chip_min_width">92dp</dimen>
+</resources>

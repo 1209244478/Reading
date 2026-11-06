@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.util.XPopupUtils;
 import com.wrz.reading.R;
@@ -83,10 +82,9 @@ public class WheelTemplateActivity extends BaseActivity {
 
         tv_title = findViewById(R.id.tv_title);
         tv_save = findViewById(R.id.tv_save);
-        tv_save.setOnClickListener(view -> goBack());
+        setClick(R.id.tv_save, view -> goBack());
 
-        FloatingActionButton btn_add = findViewById(R.id.btn_add);
-        btn_add.setOnClickListener(v ->
+        setClick(R.id.btn_add, v ->
                 CreateEditActivity.start(this, REQUEST_CODE_CREATE_TEMPLATE, Request.Create_Template));
     }
 
@@ -196,8 +194,5 @@ public class WheelTemplateActivity extends BaseActivity {
         tv_save.setVisibility(View.VISIBLE);
     }
 
-    @Override
-    public void goBack() {
-        finish();
-    }
+
 }

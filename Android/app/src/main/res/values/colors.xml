@@ -234,13 +234,16 @@
     <color name="border_light">#e0e0e0</color>
     <color name="shadow_light">#1a000000</color>
     <color name="color_null">#00000000</color>
+    <color name="ios_background_reverse">#FFFF</color>
 
     <color name="ios_text_primary">#1D1D1F</color>
     <color name="ios_background">#F5F7FA</color>
+    <color name="ios_background_primary">#A0F5F7FA</color>
     <color name="ios_button_background">#0071E3</color>
     <color name="ios_click_ripple">#E5E5EA</color>
     <color name="color_wheel_list">#FFFFFF</color>
     <color name="ios_blue">#0071E3</color>
+    <color name="ios_red">#FF3B30</color>
     <color name="ios_border">#E5E5EA</color>
     <color name="ios_card_background">#FFFFFF</color>
     <color name="ios_text_secondary">#86868B</color>

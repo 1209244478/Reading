@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端“移动到集合”弹窗 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="720dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_tv_dialog"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="18dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_move_folder"
+            android:tint="@color/tv_yellow" />
+
+        <TextView
+            android:id="@+id/move_dialog_title"
+            style="@style/TvDisplayText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="移动到"
+            android:textSize="26sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/move_dialog_subtitle"
+        style="@style/TvSummaryText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="选择目标集合" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/move_target_list"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="14dp"
+        android:clipToPadding="false"
+        android:descendantFocusability="afterDescendants"
+        android:focusable="true"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:scrollbars="none" />
+
+    <TextView
+        android:id="@+id/move_btn_create"
+        style="@style/TvActionChip"
+        android:layout_width="match_parent"
+        android:layout_marginTop="14dp"
+        android:nextFocusDown="@id/move_btn_cancel"
+        android:text="+ 创建新集合" />
+
+    <TextView
+        android:id="@+id/move_btn_cancel"
+        style="@style/TvActionChip"
+        android:layout_width="match_parent"
+        android:layout_marginTop="8dp"
+        android:text="取消" />
+
+</LinearLayout>

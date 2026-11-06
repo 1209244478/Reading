@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseDialog;
+import com.wrz.reading.common.TvFocusHelper;
 import com.wrz.reading.ui.read.adapter.MoveTargetAdapter;
 
 import java.util.ArrayList;
@@ -61,6 +62,14 @@ public class MoveDialog extends BaseDialog {
         void onItemClick(MoveTargetAdapter.MoveTarget target);
 
         void onCreate();
+    }
+
+    @Override
+    public void onShow() {
+        super.onShow();
+        if (getContext().getResources().getBoolean(R.bool.is_tv)) {
+            TvFocusHelper.focusFirstIfNeeded(findId(R.id.move_target_list));
+        }
     }
 
 

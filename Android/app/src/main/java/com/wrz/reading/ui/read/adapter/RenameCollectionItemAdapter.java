@@ -14,6 +14,8 @@ import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
+import com.wrz.reading.common.TvInputHelper;
+import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.model.Collection;
 import com.wrz.reading.ui.read.model.CollectionItem;
 
@@ -32,6 +34,7 @@ public class RenameCollectionItemAdapter extends BaseQuickAdapter<CollectionItem
 
     @Override
     protected void convert(@NonNull BaseViewHolder holder, CollectionItem collectionItem) {
+        LogUtil.e("RenameCollectionItemAdapter", "collectionItem.getCollection().getName()=" + collectionItem.getCollection().getName());
         holder.setText(R.id.et_collection_name, collectionItem.getCollection().getName());
 
         TextInputEditText nameEdit = holder.getView(R.id.et_collection_name);
@@ -75,6 +78,8 @@ public class RenameCollectionItemAdapter extends BaseQuickAdapter<CollectionItem
             }
         });
 
+        // 最后绑定，确保电视端 TvInputHelper 的焦点/输入法策略不被适配器监听覆盖
+        TvInputHelper.bind(nameEdit, nameLayout);
     }
 
     public List<CollectionItem> getEdited() {

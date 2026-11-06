@@ -47,6 +47,9 @@ public class FolderAdapter extends BaseQuickAdapter<FolderBean, BaseViewHolder> 
             file_icon.setImageResource(R.drawable.ic_file_excel);
         }
 
+        helper.itemView.setNextFocusRightId(R.id.select_indicator);
+        helper.getView(R.id.select_indicator).setNextFocusLeftId(R.id.item_view);
+
     }
 
 }

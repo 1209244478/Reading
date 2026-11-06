@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件夹图标块：亮黄底 + 黑描边 + 硬阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="4dp" android:top="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_ink" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/tv_ink" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</layer-list>

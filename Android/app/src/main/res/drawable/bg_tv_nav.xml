@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 电视端导航条：近黑块面 + 顶部亮黄色条 + 粗描边，与书库/详情页的新粗野语言一致 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F20A0A0D" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+    <item
+        android:height="5dp"
+        android:gravity="top">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+        </shape>
+    </item>
+</layer-list>

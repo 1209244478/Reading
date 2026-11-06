@@ -10,11 +10,12 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.wrz.reading.R;
 import com.wrz.reading.common.BaseDialog;
+import com.wrz.reading.common.TvFocusHelper;
+import com.wrz.reading.common.TvInputHelper;
 import com.wrz.reading.ui.read.adapter.RenameCollectionItemAdapter;
 import com.wrz.reading.ui.read.adapter.RenameComicAdapter;
 import com.wrz.reading.ui.read.model.CollectionItem;
@@ -156,11 +157,13 @@ public final class DialogHelper {
                 TextView dialog_title = findId(R.id.dialog_title);
                 TextView dialog_subtitle = findId(R.id.dialog_subtitle);
 
-                MaterialButton btn_confirm = findId(R.id.btn_confirm);
+                TextView btn_confirm = findId(R.id.btn_confirm);
                 setClick(R.id.btn_cancel, v -> this.dismiss());
 
                 TextInputLayout collection_name_layout = findId(R.id.collection_name_layout);
                 TextInputEditText et_collection_name = findId(R.id.et_collection_name);
+                // 电视端：输入框容器接收遥控器焦点，按 OK 才唤起输入法
+                TvInputHelper.bind(et_collection_name, collection_name_layout);
 
                 if (title != null) setText(dialog_title, title);
                 if (subtitle != null) setText(dialog_subtitle, subtitle);
@@ -223,6 +226,9 @@ public final class DialogHelper {
                 LinearLayoutManager manager = new LinearLayoutManager(getContext());
                 manager.setOrientation(LinearLayoutManager.VERTICAL);
                 recyclerView.setLayoutManager(manager);
+                if (getContext().getResources().getBoolean(R.bool.is_tv)) {
+                    TvFocusHelper.focusFirstIfNeeded(recyclerView);
+                }
 
                 findId(R.id.btn_cancel).setOnClickListener(v -> this.dismiss());
                 findId(R.id.btn_confirm).setOnClickListener(v -> {
@@ -278,6 +284,9 @@ public final class DialogHelper {
                 LinearLayoutManager manager = new LinearLayoutManager(getContext());
                 manager.setOrientation(LinearLayoutManager.VERTICAL);
                 recyclerView.setLayoutManager(manager);
+                if (getContext().getResources().getBoolean(R.bool.is_tv)) {
+                    TvFocusHelper.focusFirstIfNeeded(recyclerView);
+                }
 
                 findId(R.id.btn_cancel).setOnClickListener(v -> this.dismiss());
                 findId(R.id.btn_confirm).setOnClickListener(v -> {

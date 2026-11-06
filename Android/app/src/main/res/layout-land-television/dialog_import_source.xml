@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_rounded"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- 内容区可滚动，底部操作按钮固定可见，避免电视端二维码占满后按钮被裁掉 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:descendantFocusability="afterDescendants"
+        android:fillViewport="false"
+        android:focusable="false"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 标题区 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_qr_code"
+                    app:tint="@color/ios_blue" />
+
+                <TextView
+                    android:id="@+id/import_dialog_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/import_dialog_title"
+                    android:textColor="@color/ios_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/import_dialog_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/import_dialog_subtitle"
+                android:textColor="@color/ios_text_secondary"
+                android:textSize="13sp" />
+
+            <!-- 导入方式选择 -->
+            <LinearLayout
+                android:id="@+id/import_options"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/import_remote_option"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_import_option"
+                    android:clickable="true"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_tv_focusable"
+                    android:gravity="center_vertical"
+                    android:nextFocusDown="@id/import_local_option"
+                    android:orientation="horizontal"
+                    android:padding="14dp">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginEnd="12dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_qr_code"
+                        app:tint="@color/ios_blue" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/import_remote_title"
+                            android:textColor="@color/ios_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="@string/import_remote_desc"
+                            android:textColor="@color/ios_text_secondary"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_forward"
+                        app:tint="@color/ios_text_secondary" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/import_local_option"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_import_option"
+                    android:clickable="true"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_tv_focusable"
+                    android:gravity="center_vertical"
+                    android:nextFocusDown="@id/import_btn_cancel"
+                    android:nextFocusUp="@id/import_remote_option"
+                    android:orientation="horizontal"
+                    android:padding="14dp">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginEnd="12dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_folder"
+                        app:tint="@color/ios_blue" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/import_local_title"
+                            android:textColor="@color/ios_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:text="@string/import_local_desc"
+                            android:textColor="@color/ios_text_secondary"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_forward"
+                        app:tint="@color/ios_text_secondary" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- 远程导入：二维码与接收状态 -->
+            <LinearLayout
+                android:id="@+id/import_remote_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/import_remote_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/import_remote_starting"
+                    android:textColor="@color/ios_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <ProgressBar
+                    android:id="@+id/import_remote_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="10dp"
+                    android:max="100"
+                    android:progressTint="@color/ios_blue"
+                    android:progressBackgroundTint="@color/ios_border"
+                    android:visibility="gone" />
+
+                <FrameLayout
+                    android:id="@+id/import_qr_frame"
+                    android:layout_width="@dimen/import_qr_size"
+                    android:layout_height="@dimen/import_qr_size"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_qr_frame"
+                    android:padding="10dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/import_qr_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/import_remote_title"
+                        android:scaleType="fitCenter" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/import_remote_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:textColor="@color/ios_blue"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/import_remote_hint"
+                    android:textColor="@color/ios_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/import_remote_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:textColor="@color/ios_text_secondary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- 固定底部操作区：远程模式并排显示「停止接收 / 关闭」，选择模式只显示「取消」 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/import_btn_stop_remote"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:defaultFocusHighlightEnabled="false"
+            android:focusable="true"
+            android:foreground="@drawable/bg_tv_focusable"
+            android:nextFocusDown="@id/import_btn_cancel"
+            android:text="@string/import_remote_stop"
+            android:textColor="@color/ios_text_secondary"
+            android:visibility="gone"
+            app:cornerRadius="12dp"
+            app:strokeColor="@color/ios_border"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/import_btn_cancel"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:defaultFocusHighlightEnabled="false"
+            android:focusable="true"
+            android:foreground="@drawable/bg_tv_focusable"
+            android:nextFocusUp="@id/import_local_option"
+            android:text="@string/btn_cancel"
+            android:textColor="@color/ios_text_secondary"
+            app:cornerRadius="12dp"
+            app:strokeColor="@color/ios_border"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

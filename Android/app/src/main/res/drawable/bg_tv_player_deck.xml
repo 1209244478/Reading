@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器底部控制台：悬浮黑色块面 + 米白粗边 + 顶部黄色条 + 粉色硬阴影 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="8dp" android:top="8dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_pink" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <item android:right="8dp" android:bottom="8dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#F20A0A0D" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/tv_paper" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <item
+        android:height="5dp"
+        android:gravity="top"
+        android:left="1dp"
+        android:right="9dp"
+        android:top="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/tv_yellow" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</layer-list>
