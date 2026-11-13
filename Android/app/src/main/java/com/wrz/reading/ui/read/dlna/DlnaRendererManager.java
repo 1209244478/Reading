@@ -13,6 +13,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import com.wrz.reading.app.MyApplication;
+import com.wrz.reading.common.LocalNetworkPermission;
 import com.wrz.reading.ui.main.Log.LogUtil;
 import com.wrz.reading.ui.read.activity.VideoPlayerActivity;
 import com.wrz.reading.ui.read.airplay.AirPlayReceiverManager;
@@ -233,6 +234,12 @@ public class DlnaRendererManager {
             return;
         }
         appContext = context.getApplicationContext();
+        // Android 16+：SSDP/mDNS/局域网 Socket 需要本地网络权限，未授权时跳过启动
+        // （避免 NsdManager/Socket 抛 SecurityException），授权后可再次 start
+        if (!LocalNetworkPermission.isGranted(appContext)) {
+            LogUtil.w(TAG, "缺少本地网络权限，接收端未启动");
+            return;
+        }
         started = true;
         ReceiveMode mode = getReceiveMode(appContext);
         LogUtil.d(TAG, "启动接收端，接收方式: " + mode);

@@ -1,5 +1,6 @@
 package com.wrz.reading.ui.main.fragment
 
+import android.content.Context
 import android.content.DialogInterface
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -11,6 +12,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.wrz.reading.R
 import com.wrz.reading.app.MyApplication
 import com.wrz.reading.common.BaseFragment
+import com.wrz.reading.common.LocalNetworkPermission
 import com.wrz.reading.ui.compose.theme.ReadingComposeTheme
 import com.wrz.reading.ui.main.activity.DownloadListActivity
 import com.wrz.reading.ui.main.compose.SettingScreen
@@ -34,6 +36,8 @@ class SettingComposeFragment : BaseFragment() {
     private var receiveEnabled by mutableStateOf(false)
     private var receiveMode by mutableStateOf(ReceiveMode.DLNA)
     private var castName by mutableStateOf("")
+    /** 本次页面内是否已发起本地网络权限请求（避免 initData 重复弹窗） */
+    private var localNetworkRequested = false
 
     override fun getLayoutResId(): Int = R.layout.fragment_setting_compose
 
@@ -62,6 +66,14 @@ class SettingComposeFragment : BaseFragment() {
         castName = MyApplication.manager.castName.orEmpty()
         receiveEnabled = DlnaRendererManager.isReceiverEnabled(ctx)
         receiveMode = DlnaRendererManager.getReceiveMode(ctx)
+        // 已开启接收但缺少本地网络权限（如升级到 Android 16+）：进入设置页时补授权
+        if (receiveEnabled && !LocalNetworkPermission.isGranted(ctx) && !localNetworkRequested) {
+            localNetworkRequested = true
+            requestPermissions(
+                arrayOf(LocalNetworkPermission.PERMISSION),
+                LocalNetworkPermission.REQUEST_CODE
+            )
+        }
     }
 
     override fun configViews() {
@@ -72,14 +84,55 @@ class SettingComposeFragment : BaseFragment() {
     }
 
     private fun onReceiveEnabledChange(checked: Boolean) {
-        receiveEnabled = checked
         val ctx = context ?: return
-        DlnaRendererManager.setReceiverEnabled(ctx, checked)
-        if (checked) {
-            DlnaRendererManager.getInstance().start(ctx)
-        } else {
+        if (!checked) {
+            receiveEnabled = false
+            DlnaRendererManager.setReceiverEnabled(ctx, false)
             DlnaRendererManager.getInstance().stop()
+            return
         }
+        // Android 16+：调度本地网络权限，授权成功后再真正启动接收端
+        if (LocalNetworkPermission.isGranted(ctx)) {
+            enableReceiver(ctx)
+            return
+        }
+        receiveEnabled = true
+        localNetworkRequested = true
+        requestPermissions(
+            arrayOf(LocalNetworkPermission.PERMISSION),
+            LocalNetworkPermission.REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != LocalNetworkPermission.REQUEST_CODE) {
+            return
+        }
+        val ctx = context ?: return
+        if (LocalNetworkPermission.isGranted(ctx)) {
+            enableReceiver(ctx)
+        } else {
+            // 未授权：回退开关并持久化关闭，避免下次启动时静默启动失败
+            receiveEnabled = false
+            DlnaRendererManager.setReceiverEnabled(ctx, false)
+            DlnaRendererManager.getInstance().stop()
+            Toast.makeText(
+                ctx,
+                R.string.msg_local_network_permission_required,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun enableReceiver(ctx: Context) {
+        receiveEnabled = true
+        DlnaRendererManager.setReceiverEnabled(ctx, true)
+        DlnaRendererManager.getInstance().start(ctx)
     }
 
     /** 接收方式单选弹窗：与原实现一致的协议支持校验和重启行为。 */

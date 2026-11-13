@@ -11,6 +11,7 @@ import android.os.PowerManager
 import android.util.Log
 import android.view.Surface
 import com.wrz.reading.app.MyApplication
+import com.wrz.reading.common.LocalNetworkPermission
 import com.wrz.reading.ui.main.Log.LogUtil
 import io.github.jqssun.airplay.bridge.LogListener
 import io.github.jqssun.airplay.bridge.NativeBridge
@@ -91,6 +92,11 @@ class AirPlayReceiverManager private constructor() : RaopCallbackHandler, LogLis
         val app = context.applicationContext
         appContext = app
         if (!isSupported()) {
+            return
+        }
+        // Android 16+：NsdManager 注册 mDNS 需要本地网络权限
+        if (!LocalNetworkPermission.isGranted(app)) {
+            LogUtil.w(TAG, "缺少本地网络权限，AirPlay 接收端未启动")
             return
         }
         try {

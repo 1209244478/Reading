@@ -529,6 +529,7 @@
     <string name="msg_chromecast_not_supported">当前设备暂不支持 Chromecast 接收，请使用 DLNA、WrzCast 或 AirPlay</string>
     <string name="msg_airplay_not_supported">当前设备不支持 AirPlay 接收（原生库不可用）</string>
     <string name="msg_receive_mode_unsupported_protocol">部分接收方式在当前设备不可用，其余方式已启用</string>
+    <string name="msg_local_network_permission_required">未授予本地网络权限，无法开启投屏接收。请在系统设置中允许本应用访问本地网络</string>
     <string name="msg_wrzcast_device_name">%1$s（WrzCast）</string>
     <string name="airplay_receiver_waiting">AirPlay 接收端已就绪，等待投屏画面…</string>
     <string name="airplay_receiver_notification_title">AirPlay 接收已开启</string>
